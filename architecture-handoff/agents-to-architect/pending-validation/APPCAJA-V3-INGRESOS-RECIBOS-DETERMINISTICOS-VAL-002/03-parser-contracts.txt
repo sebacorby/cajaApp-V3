@@ -1,0 +1,35 @@
+# Parser Contracts Test - Gate B2
+
+**Fecha:** 2026-07-29 20:51  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-parser.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/salary-receipt-parser.test.ts (8 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+```
+
+## Cobertura
+- parses 1.234,56 to exact cents ✓
+- parses $ 1.234,50 to exact cents ✓
+- parses 1234.56 to exact cents ✓
+- parses -250,10 to exact cents ✓
+- formats exact cents without floating point operations ✓
+- normalizes line endings and repeated horizontal whitespace ✓
+- fails closed when no parser supports the layout ✓
+- rejects ambiguous layout detection ✓
+
+## Duración: 267ms
+
+## Veredicto: PASS

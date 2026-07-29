@@ -1,0 +1,31 @@
+# Cutover Guard Test - Gate B5
+
+**Fecha:** 2026-07-29 20:51  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts (2 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+```
+
+## Cobertura
+- servicio activo no importa módulos IA ✓
+- servicio activo no crea AiExtractionRun ✓
+- nuevos borradores usan aiRunId: null ✓
+- recálculo conserva exactitud monetaria ✓
+
+## Duración: 385ms
+
+## Veredicto: PASS

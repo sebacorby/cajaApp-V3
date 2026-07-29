@@ -1,0 +1,33 @@
+# Static Inspection Results
+
+**Fecha:** 2026-07-29 20:52  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando
+```powershell
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'modules/ai|\.\./ai/'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiExtractionRun\.create'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiRunId:\s*null'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts' -Pattern 'import\.meta'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'normalizeSalaryReceiptModelResponse'
+```
+
+## Resultados
+
+| Patrón | Archivo | Resultado |
+|--------|---------|-----------|
+| `modules/ai` o `../ai/` | salary-receipt-extraction.service.ts | Sin coincidencias ✓ |
+| `aiExtractionRun.create` | salary-receipts.service.ts | Sin coincidencias ✓ |
+| `aiRunId:\s*null` | salary-receipts.service.ts | 1 coincidencia (línea 79) ✓ |
+| `import.meta` | salary-receipt-deterministic-cutover.test.ts | Sin coincidencias ✓ |
+| `normalizeSalaryReceiptModelResponse` | salary-receipt-extraction.service.ts | 1 coincidencia (línea 13) ✓ |
+
+## Análisis
+
+- Sin imports IA en servicio de extracción ✓
+- Sin creación de AiExtractionRun ✓
+- aiRunId: null presente en servicio activo ✓
+- import.meta ausente (problema de VAL-001 corregido) ✓
+- Exportación de compatibilidad normalizeSalaryReceiptModelResponse presente ✓
+
+## Veredicto: PASS

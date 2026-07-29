@@ -1,0 +1,40 @@
+# Backend Combined Test - Gate B7
+
+**Fecha:** 2026-07-29 20:51  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-parser.test.ts src/modules/salary-receipts/generic-argentina.salary-receipt.parser.test.ts src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts tests/salary-receipts/salary-receipts.test.ts
+```
+
+## Exit code: 1
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ❯ tests/salary-receipts/salary-receipts.test.ts (5 tests | 1 failed) 7ms
+   × salary receipt normalization > normalizes Argentine and international decimal amounts 5ms
+     → expected '0.00' to be '1234.56' // Object.is equality
+   ✓ salary receipt normalization > recognizes salary receipt vocabulary 0ms
+   ✓ salary receipt normalization > preserves concept order and calculates authoritative totals 0ms
+   ✓ salary receipt normalization > recalculates the draft after user edits 0ms
+   ✓ salary receipt normalization > builds a stable employer-employee-period identity 0ms
+ ✓ src/modules/salary-receipts/generic-argentina.salary-receipt.parser.test.ts (5 tests) 5ms
+ ✓ src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts (2 tests) 1ms
+ ✓ src/modules/salary-receipts/salary-receipt-parser.test.ts (8 tests) 1ms
+ ✓ src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts (4 tests) 3ms
+
+ Test Files  1 failed (5)
+      Tests  1 failed | 23 passed (24)
+```
+
+## Resumen
+- 1 failed (mismo fallo de B6)
+- 23 passed
+- Sin interferencias entre archivos de prueba
+
+## Duración: 530ms
+
+## Veredicto: FAIL

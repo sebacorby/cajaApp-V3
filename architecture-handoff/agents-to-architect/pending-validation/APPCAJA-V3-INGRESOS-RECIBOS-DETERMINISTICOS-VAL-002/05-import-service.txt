@@ -1,0 +1,31 @@
+# Import Service Test - Gate B4
+
+**Fecha:** 2026-07-29 20:51  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts (4 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+```
+
+## Cobertura
+- extracción local ✓
+- normalización previa al parser ✓
+- PDF sin texto utilizable ✓
+- preview inválido frente al schema canónico ✓
+
+## Duración: 345ms
+
+## Veredicto: PASS

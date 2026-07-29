@@ -1,0 +1,48 @@
+# Frontend Build - Gate F2
+
+**Fecha:** 2026-07-29 20:52  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\frontend
+
+## Comando
+```powershell
+npm run build
+```
+
+## Exit code: 0
+
+## stdout
+```
+> nextjs_tailwind_shadcn_ts@0.2.0 build
+> npm run typecheck && next build && node -e "const fs=require('fs'); fs.cpSync('.next/static','.next/standalone/.next/static',{recursive:true}); if(fs.existsSync('public')) fs.cpSync('public','.next/standalone/public',{recursive:true});"
+
+> nextjs_tailwind_shadcn_ts@0.2.0 typecheck
+> tsc --noEmit
+
+▲ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.3s
+  Running TypeScript ...
+  Finished TypeScript in 6.7s ...
+  Collecting page data using 6 workers ...
+  Generating static pages using 6 workers (0/5) ...
+  Generating static pages using 6 workers (5/5) in 520ms
+✓ Generating static pages using 5/5) in 520ms
+ Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/client-log
+└ ○ /test/future-debt
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)   server-rendered on demand
+```
+
+(ningún error de filesystem/Dropbox)
+
+## Duración: ~15 segundos
+
+## Veredicto: PASS

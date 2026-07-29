@@ -1,0 +1,38 @@
+# E2E Not Executed Confirmation
+
+**Fecha:** 2026-07-29
+
+## Confirmación
+
+NO SE EJECUTÓ PLAYWRIGHT, CYPRESS NI NINGUNA SUITE E2E.
+
+---
+
+## Gates ejecutados (no E2E)
+
+| Gate | Tipo |
+|------|------|
+| B1 | Build TypeScript |
+| B2 | Test unitario (vitest) |
+| B3 | Test unitario (vitest) |
+| B4 | Test unitario (vitest) |
+| B5 | Test unitario (vitest) |
+| B6 | Test unitario (vitest) |
+| B7 | Test unitario (vitest) |
+| F1 | Typecheck |
+| F2 | Build producción |
+| Static | Inspección código |
+
+---
+
+## Restricciones respetadas
+
+- No se inició backend para tests E2E
+- No se usó Playwright, Cypress ni ninguna suite E2E
+- No se usó Ollama ni APIs compatibles con OpenAI
+- No se ejecutó ninguna prueba contra servicios externos
+
+---
+
+**Firma:** Agente de validación opencode  
+**Fecha:** 2026-07-29
