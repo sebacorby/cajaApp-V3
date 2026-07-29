@@ -7,6 +7,12 @@ import {
 } from "./salary-receipt-parser.utils.js";
 import type { SalaryReceiptPreview } from "./salary-receipts.types.js";
 
+export {
+  looksLikeSalaryReceipt,
+  normalizeLegacySalaryAmount,
+  normalizeSalaryReceiptModelResponse,
+} from "./salary-receipt-legacy-compatibility.js";
+
 interface ExtractionResult {
   preview: SalaryReceiptPreview;
   promptPath: string;

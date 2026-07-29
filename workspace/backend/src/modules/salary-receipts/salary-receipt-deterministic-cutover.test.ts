@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   normalizeSalaryAmount,
@@ -7,9 +8,10 @@ import {
 
 describe("deterministic salary receipt cutover", () => {
   it("keeps the active extraction and persistence flow free of AI dependencies", async () => {
+    const moduleDir = path.resolve(process.cwd(), "src/modules/salary-receipts");
     const [extractionSource, serviceSource] = await Promise.all([
-      fs.readFile(new URL("./salary-receipt-extraction.service.ts", import.meta.url), "utf8"),
-      fs.readFile(new URL("./salary-receipts.service.ts", import.meta.url), "utf8"),
+      fs.readFile(path.join(moduleDir, "salary-receipt-extraction.service.ts"), "utf8"),
+      fs.readFile(path.join(moduleDir, "salary-receipts.service.ts"), "utf8"),
     ]);
 
     expect(extractionSource).not.toMatch(/modules\/ai|\.\.\/ai\//);
