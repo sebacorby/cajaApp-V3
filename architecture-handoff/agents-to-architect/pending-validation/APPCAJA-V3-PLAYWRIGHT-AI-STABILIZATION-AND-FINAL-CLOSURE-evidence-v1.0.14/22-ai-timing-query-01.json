@@ -1,9 +1,0 @@
-{
-  "query": 1,
-  "question": "Balance del período actual.",
-  "status": "201",
-  "duration_ms": 20636,
-  "attempts": 1,
-  "match": true,
-  "fingerprint": "verified"
-}

@@ -1,7 +1,0 @@
-
-Running 2 tests using 1 worker
-
-  ok 1 [chromium] › tests\ai-advisor.spec.ts:19:5 › Asesor IA mantiene fingerprint, claims y citas consistentes (34.5s)
-  ok 2 [chromium] › tests\ai-advisor.spec.ts:60:5 › Asesor IA responde en UI desktop y conserva acceso mobile (1.3m)
-
-  2 passed (1.9m)

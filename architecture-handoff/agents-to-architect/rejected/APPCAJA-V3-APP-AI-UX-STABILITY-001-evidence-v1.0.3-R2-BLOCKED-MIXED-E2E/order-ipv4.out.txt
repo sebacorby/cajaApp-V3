@@ -1,9 +1,0 @@
-
-Running 4 tests using 1 worker
-
-  ok 1 [chromium] › tests\ai-advisor.spec.ts:19:5 › Asesor IA mantiene fingerprint, claims y citas consistentes (36.0s)
-  ok 2 [chromium] › tests\ai-advisor.spec.ts:60:5 › Asesor IA responde en UI desktop y conserva acceso mobile (1.1m)
-  ok 3 [chromium] › tests\month-close.spec.ts:82:5 › Cierres crea un snapshot, muestra ARS/USD y reabre sólo la versión autorizada (980ms)
-  ok 4 [chromium] › tests\month-close.spec.ts:181:5 › Cierres recupera errores y conserva acciones por teclado en mobile (3.1s)
-
-  4 passed (1.8m)

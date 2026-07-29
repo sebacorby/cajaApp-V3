@@ -1,9 +1,0 @@
-{
-  "new_backend_pid": 54448,
-  "new_start_time": "2026-07-23T00:54:46-03:00",
-  "new_path": "I:\\Tools\\node-v24.18.0-win-x64\\node.exe",
-  "new_working_set_bytes": 110297088,
-  "new_private_memory_bytes": 105267200,
-  "new_port": 11436,
-  "command_used": "Start-Process -FilePath I:\\Tools\\node-v24.18.0-win-x64\\node.exe -ArgumentList .\\dist\\main.js -WorkingDirectory workspace\\backend -NoNewWindow -PassThru -RedirectStandardOutput/Error"
-}

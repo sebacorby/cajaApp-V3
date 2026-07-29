@@ -5,6 +5,23 @@ node_modules/
 dist/
 build/
 coverage/
+*.tsbuildinfo
+.tsbuildinfo/
+
+# next.js / vite / bundlers
+.next/
+out/
+.vite/
+.turbo/
+.svelte-kit/
+.cache/
+
+# testing artifacts (frontend only — architecture-handoff evidence is preserved)
+workspace/frontend/playwright-report/
+workspace/frontend/test-results/
+workspace/frontend/test-result*.json
+workspace/frontend/playwright-run.err
+workspace/frontend/playwright-run.out
 
 # env/secrets
 .env
@@ -14,9 +31,20 @@ coverage/
 *.key
 *.p12
 *.pfx
+# backup/timestamped env files (rotated configs, never commit)
+.env.backup
+.env.bak
+.env.bak-*
+.env.before-*
+.env.candidate
+.env.candidate.bak-*
+.env.original
+.env.replaced-*
 
 # logs
 *.log
+*.err
+*.out
 logs/
 
 # local agent/sandbox garbage
@@ -32,22 +60,55 @@ pending-validation/*
 # diagnostics: captured requests for debugging (never commit)
 .diagnostics/
 *.ollama-request.json
+*.ollama-response.json
 backend-request-*.json
 
 # OS/editor
 .DS_Store
 Thumbs.db
+desktop.ini
 .vscode/
 .idea/
 
 # temp/debug
 *.tmp
 *.bak
+*.backup
+*.old
 debug_*.py
 debug_*.js
 test_*.py
 
+# databases (Prisma SQLite dev/staging)
+*.db
+*.sqlite
+*.sqlite3
+prisma/*.db
+prisma/dev.db.*
+
 # Python
 .venv/
+venv/
 python/__pycache__/
+**/__pycache__/
 *.pyc
+*.pyo
+
+# Dropbox / Windows quirks
+sync.ffs_db
+nul
+
+# local one-off scripts at repo root
+check-*.js
+clear-*.js
+e2e-test.js
+parse-*.js
+save-*.js
+test-*.js
+tmp_*.js
+
+# architecture-handoff: keep only .md files (history/details) and the folder structure
+architecture-handoff/**
+!architecture-handoff/**/
+!architecture-handoff/**/*.md
+!architecture-handoff/**/.gitkeep
