@@ -18,6 +18,24 @@ export class AmbiguousSalaryReceiptLayoutError extends Error {
   }
 }
 
+export class SalaryReceiptTextExtractionEmptyError extends Error {
+  readonly code = "SALARY_RECEIPT_TEXT_EXTRACTION_EMPTY";
+
+  constructor() {
+    super("El PDF no contiene texto utilizable para interpretar el recibo.");
+    this.name = "SalaryReceiptTextExtractionEmptyError";
+  }
+}
+
+export class SalaryReceiptPreviewValidationError extends Error {
+  readonly code = "SALARY_RECEIPT_PREVIEW_INVALID";
+
+  constructor(public readonly issues: string[]) {
+    super(`El parser produjo una vista previa inválida: ${issues.join("; ")}`);
+    this.name = "SalaryReceiptPreviewValidationError";
+  }
+}
+
 export class SalaryReceiptParserIncompleteError extends Error {
   readonly code = "SALARY_RECEIPT_PARSER_INCOMPLETE";
 
