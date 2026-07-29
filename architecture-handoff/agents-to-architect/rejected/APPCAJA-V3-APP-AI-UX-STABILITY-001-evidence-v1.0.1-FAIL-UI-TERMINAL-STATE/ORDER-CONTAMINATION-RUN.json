@@ -1,0 +1,32 @@
+﻿{
+    "passed":  3,
+    "retries":  0,
+    "skipped":  0,
+    "tests":  [
+                  {
+                      "retries":  0,
+                      "status":  "passed",
+                      "name":  "ai-advisor.spec.ts \u003e Asesor IA mantiene fingerprint, claims y citas consistentes",
+                      "durationMs":  20426
+                  },
+                  {
+                      "retries":  0,
+                      "status":  "failed",
+                      "name":  "ai-advisor.spec.ts \u003e Asesor IA responde en UI desktop y conserva acceso mobile",
+                      "durationMs":  193521
+                  },
+                  {
+                      "retries":  0,
+                      "status":  "passed",
+                      "name":  "month-close.spec.ts \u003e Cierres crea un snapshot, muestra ARS/USD y reabre s├│lo la versi├│n autorizada",
+                      "durationMs":  1039
+                  },
+                  {
+                      "retries":  0,
+                      "status":  "passed",
+                      "name":  "month-close.spec.ts \u003e Cierres recupera errores y conserva acciones por teclado en mobile",
+                      "durationMs":  2365
+                  }
+              ],
+    "failed":  1
+}

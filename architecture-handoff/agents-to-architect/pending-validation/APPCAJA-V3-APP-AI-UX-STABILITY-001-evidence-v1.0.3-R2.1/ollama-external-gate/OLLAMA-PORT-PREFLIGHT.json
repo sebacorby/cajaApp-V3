@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-07-22T16:31:39.788Z",
+  "step": "PREFLIGHT",
+  "checks": {
+    "backend_11436": {
+      "listening": false,
+      "result": "no connection"
+    },
+    "frontend_11437": {
+      "listening": false,
+      "result": "no connection"
+    },
+    "ollama_11434": {
+      "listening": true,
+      "state": "LISTENING",
+      "pid": 2696,
+      "processName": "ollama",
+      "path": "C:\\Users\\javie\\AppData\\Local\\Programs\\Ollama\\ollama.exe"
+    }
+  },
+  "prohibited_processes_check": {
+    "backend_running": false,
+    "frontend_running": false,
+    "playwright_running": false,
+    "vitest_running": false
+  },
+  "note": "CajaApp backend and frontend confirmed NOT running. Ollama confirmed running on 11434."
+}

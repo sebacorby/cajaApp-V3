@@ -1,0 +1,7 @@
+"use client";
+
+import { CardPaymentsView } from "@/components/finance/transactions/CardPaymentsView";
+
+export function DeudaFuturaSection() {
+  return <CardPaymentsView />;
+}

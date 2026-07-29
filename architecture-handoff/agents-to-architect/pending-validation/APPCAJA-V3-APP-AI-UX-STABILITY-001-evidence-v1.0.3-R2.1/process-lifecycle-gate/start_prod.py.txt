@@ -1,0 +1,111 @@
+import subprocess
+import http.client
+import time
+import os
+import signal
+import json
+
+node = r"I:\Tools\node-v24.18.0-win-x64\node.exe"
+backend_dir = r"C:\Users\javie\AppData\Local\CajaApp\validation\APP-AI-UX-STABILITY-001-v1.0.3-R2.1\candidate\workspace\backend"
+frontend_dir = r"C:\Users\javie\AppData\Local\CajaApp\validation\APP-AI-UX-STABILITY-001-v1.0.3-R2.1\candidate\workspace\frontend"
+
+backend_env = {
+    "NODE_ENV": "test",
+    "PORT": "11436",
+    "HOST": "127.0.0.1",
+    "OLLAMA_MODE": "local-proxy",
+    "OLLAMA_PREFLIGHT_ENABLED": "false",
+    "OLLAMA_BASE_URL": "http://127.0.0.1:11434",
+    "OLLAMA_MODEL": "kimi-k2.7-code:cloud",
+    "OLLAMA_TIMEOUT_MS": "420000",
+    "OLLAMA_MAX_RETRIES": "0",
+    "AI_PROVIDER": "ollama",
+    "AI_BASE_URL": "http://127.0.0.1:11434/v1",
+    "AI_CHAT_COMPLETIONS_PATH": "/chat/completions",
+    "AI_MODEL": "kimi-k2.7-code:cloud",
+    "AI_TIMEOUT_MS": "420000",
+    "AI_JOB_TIMEOUT_MS": "480000",
+    "AI_PROCESSING_STALE_AFTER_MS": "600000",
+    "AI_WORKER_POLL_INTERVAL_MS": "2000",
+    "AI_MAX_OUTPUT_TOKENS": "65533",
+    "AI_TEMPERATURE": "0",
+}
+
+frontend_env = {
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "PORT": "11437",
+}
+
+def probe(port, path="/", timeout=8000):
+    try:
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout/1000)
+        conn.request("GET", path)
+        resp = conn.getresponse()
+        status = resp.status
+        body = resp.read(500).decode('utf-8', errors='replace')
+        conn.close()
+        return status, body
+    except Exception as e:
+        return -1, str(e)
+
+print("=== Starting backend on 11436 ===")
+backend_proc = subprocess.Popen(
+    [node, "dist/main.js"],
+    cwd=backend_dir,
+    env={**os.environ, **backend_env},
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+print(f"Backend PID={backend_proc.pid}")
+
+print("Waiting 10s...")
+time.sleep(10)
+
+print("Probing backend 11436...")
+status, body = probe(11436, "/api/movements/categories")
+print(f"Backend HTTP: {status}")
+if status != 200:
+    print(f"FAIL: backend not ready. Body: {body[:200]}")
+    backend_proc.kill()
+    exit(1)
+
+print("=== Starting frontend (next start) on 11437 ===")
+frontend_proc = subprocess.Popen(
+    [node, "node_modules\\next\\dist\\bin\\next", "start", "--hostname", "127.0.0.1", "--port", "11437"],
+    cwd=frontend_dir,
+    env={**os.environ, **frontend_env},
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+print(f"Frontend PID={frontend_proc.pid}")
+
+print("Waiting 15s for frontend...")
+time.sleep(15)
+
+print("Probing frontend 11437...")
+status, body = probe(11437, "/", timeout=10000)
+print(f"Frontend HTTP: {status}")
+if status != 200:
+    print(f"Warning: frontend HTTP {status}. Body: {body[:500]}")
+
+print("=== 3 consecutive HTTP 200 checks ===")
+fe_ok = False
+for i in range(3):
+    time.sleep(2)
+    s, b = probe(11437, "/", timeout=10000)
+    print(f"  Check {i+1}: HTTP {s}")
+    if s == 200:
+        fe_ok = True
+    else:
+        fe_ok = False
+
+print("=== RESULT ===")
+result = {
+    "backendPid": backend_proc.pid,
+    "frontendPid": frontend_proc.pid,
+    "backendHttp": probe(11436, "/api/movements/categories")[0],
+    "frontendHttp": probe(11437, "/")[0],
+    "frontend3x200": fe_ok,
+}
+print(json.dumps(result, indent=2))

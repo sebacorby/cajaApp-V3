@@ -1,0 +1,266 @@
+{
+  "source_local": "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\APP-AI-UX-STABILITY-001-v1.0.3-R2.1\\candidate-unresolved",
+  "destination_dropbox": "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\architecture-handoff\\agents-to-architect\\pending-validation\\APPCAJA-V3-APP-AI-UX-STABILITY-001-evidence-v1.0.3-R2.1\\candidate-unresolved-rejected-run",
+  "total_items_copied": 124,
+  "total_root_entries": 41,
+  "execution_ids": ["002", "010", "011", "012", "013", "018", "020", "022", "023", "024", "034", "035", "036", "037", "038", "039", "041", "042", "043"],
+  "execution_chronology": [
+    {
+      "order": 1,
+      "id": "002",
+      "test": "ai-advisor.spec.ts:60",
+      "result": "FAIL_INFRA",
+      "attempt": 1,
+      "backend_pid_start": 63000,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 53968,
+      "restart_approx_time": "2026-07-22T19:50:00Z",
+      "note": "Backend died during AI advisor cleanup"
+    },
+    {
+      "order": 2,
+      "id": "002",
+      "test": "ai-advisor.spec.ts:60",
+      "result": "FAIL_INFRA",
+      "attempt": 2,
+      "backend_pid_start": 53968,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 58752,
+      "restart_approx_time": "2026-07-22T19:55:00Z",
+      "note": "Backend died again during AI advisor cleanup"
+    },
+    {
+      "order": 3,
+      "id": "010",
+      "test": "debit-csv-import.spec.ts:16",
+      "result": "PASS",
+      "backend_pid_start": 58752,
+      "backend_pid_end": 58752,
+      "restart_triggered": false
+    },
+    {
+      "order": 4,
+      "id": "011",
+      "test": "card-statement-import.spec.ts:121",
+      "result": "FAIL",
+      "reason": "500 INTERNAL_ERROR",
+      "backend_pid_start": 58752,
+      "backend_pid_end": 58752,
+      "restart_triggered": false
+    },
+    {
+      "order": 5,
+      "id": "012",
+      "test": "card-statement-import.spec.ts:309",
+      "result": "FAIL_TIMEOUT",
+      "backend_pid_start": 58752,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 51412,
+      "restart_approx_time": "2026-07-22T20:10:00Z",
+      "note": "Test timed out after 300s; backend died"
+    },
+    {
+      "order": 6,
+      "id": "013",
+      "test": "dashboard.spec.ts:48",
+      "result": "PASS",
+      "backend_pid_start": 51412,
+      "backend_pid_end": 51412,
+      "restart_triggered": false
+    },
+    {
+      "order": 7,
+      "id": "018",
+      "test": "card-history.spec.ts:8",
+      "result": "PASS",
+      "backend_pid_start": 51412,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 10052,
+      "restart_approx_time": "2026-07-22T20:25:00Z",
+      "note": "Backend died after test 018"
+    },
+    {
+      "order": 8,
+      "id": "020",
+      "test": "dashboard-alerts.spec.ts:15",
+      "result": "PASS",
+      "backend_pid_start": 10052,
+      "backend_pid_end": 10052,
+      "restart_triggered": false
+    },
+    {
+      "order": 9,
+      "id": "022",
+      "test": "future.spec.ts:16",
+      "result": "PASS",
+      "backend_pid_start": 10052,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 61784,
+      "restart_approx_time": "2026-07-22T20:35:00Z",
+      "note": "Backend died after test 022"
+    },
+    {
+      "order": 10,
+      "id": "023",
+      "test": "movements-export.spec.ts:16",
+      "result": "PASS",
+      "backend_pid_start": 61784,
+      "backend_pid_end": 61784,
+      "restart_triggered": false
+    },
+    {
+      "order": 11,
+      "id": "024",
+      "test": "reports.spec.ts:219",
+      "result": "PASS",
+      "backend_pid_start": 61784,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 33300,
+      "restart_approx_time": "2026-07-22T20:45:00Z",
+      "note": "Backend died after test 024"
+    },
+    {
+      "order": 12,
+      "id": "034",
+      "test": "reports.spec.ts:293",
+      "result": "PASS",
+      "backend_pid_start": 33300,
+      "backend_pid_end": 33300,
+      "restart_triggered": false
+    },
+    {
+      "order": 13,
+      "id": "035",
+      "test": "settings.spec.ts:6",
+      "result": "PASS",
+      "backend_pid_start": 33300,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 57224,
+      "restart_approx_time": "2026-07-22T20:55:00Z",
+      "note": "Backend died after test 035"
+    },
+    {
+      "order": 14,
+      "id": "036",
+      "test": "incomes.spec.ts:20",
+      "result": "FAIL_INFRA",
+      "backend_pid_start": 57224,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 43884,
+      "restart_approx_time": "2026-07-22T21:00:00Z",
+      "note": "Backend died during incomes test"
+    },
+    {
+      "order": 15,
+      "id": "037",
+      "test": "financial-health-compact.spec.ts:138",
+      "result": "FAIL",
+      "reason": "EBUSY file lock",
+      "attempt": 1,
+      "backend_pid_start": 43884,
+      "backend_pid_end": 43884,
+      "restart_triggered": false
+    },
+    {
+      "order": 16,
+      "id": "037",
+      "test": "financial-health-compact.spec.ts:138",
+      "result": "FAIL",
+      "reason": "Element financial-health-section not found",
+      "attempt": 2,
+      "backend_pid_start": 43884,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 51372,
+      "restart_approx_time": "2026-07-22T21:10:00Z",
+      "note": "Backend died after test 037 retry"
+    },
+    {
+      "order": 17,
+      "id": "038",
+      "test": "financial-health-compact.spec.ts:213",
+      "result": "PASS",
+      "backend_pid_start": 51372,
+      "backend_pid_end": 51372,
+      "restart_triggered": false
+    },
+    {
+      "order": 18,
+      "id": "039",
+      "test": "financial-health.spec.ts:53",
+      "result": "FAIL_INFRA",
+      "backend_pid_start": 51372,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 51372,
+      "restart_approx_time": "2026-07-22T21:20:00Z",
+      "note": "Backend died during financial health test cleanup"
+    },
+    {
+      "order": 19,
+      "id": "041",
+      "test": "global-search.spec.ts:18",
+      "result": "PASS",
+      "backend_pid_start": 51372,
+      "backend_pid_end": 51372,
+      "restart_triggered": false
+    },
+    {
+      "order": 20,
+      "id": "042",
+      "test": "goals.spec.ts:8",
+      "result": "PASS",
+      "backend_pid_start": 51372,
+      "backend_pid_end": null,
+      "restart_triggered": true,
+      "restart_backend_pid": 33300,
+      "restart_approx_time": "2026-07-22T21:30:00Z",
+      "note": "Backend died after test 042"
+    },
+    {
+      "order": 21,
+      "id": "043",
+      "test": "import-center.spec.ts:127",
+      "result": "PASS",
+      "backend_pid_start": 33300,
+      "backend_pid_end": 33300,
+      "restart_triggered": false,
+      "note": "Final test executed"
+    }
+  ],
+  "backend_pids_encountered": [63000, 53968, 58752, 51412, 10052, 61784, 33300, 57224, 43884, 51372],
+  "python_scripts_used": [
+    {
+      "path": "C:\\Users\\javie\\AppData\\Local\\Temp\\start_prod.py",
+      "purpose": "Start backend and frontend services",
+      "times_invoked": 9
+    }
+  ],
+  "stdout_stderr_available": [],
+  "stdout_stderr_missing": [
+    "start_prod.py stdout/stderr not captured to file (only console output visible during execution)"
+  ],
+  "copy_completed_at": "2026-07-22T21:40:00Z",
+  "no_tests_re_executed_after_copy": true,
+  "no_service_start_after_copy": true,
+  "no_code_modifications": true,
+  "no_json_regeneration": true,
+  "no_result_corrections": true,
+  "evidence_integrity": "complete_copy_without_modification",
+  "summary": {
+    "total_tests_executed": 19,
+    "pass_count": 13,
+    "fail_infra_count": 5,
+    "fail_app_error_count": 2,
+    "fail_timeout_count": 1,
+    "tests_with_multiple_attempts": ["002", "037"]
+  }
+}

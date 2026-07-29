@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "timestamp": "2026-07-14T19:31:07",
+  "backendHealth": {
+    "status": "ok",
+    "service": "cajaapp-v3-backend",
+    "node": "v24.18.0"
+  },
+  "frontend": {
+    "url": "http://127.0.0.1:11437",
+    "statusCode": 200,
+    "contentLength": 27873
+  },
+  "stateFile": "C:\\Users\\javie\\AppData\\Local\\Temp\\cajaapp-headless\\state.json"
+}

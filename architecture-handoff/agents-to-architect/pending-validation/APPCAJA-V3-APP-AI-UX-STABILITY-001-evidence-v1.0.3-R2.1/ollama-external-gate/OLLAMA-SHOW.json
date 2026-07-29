@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-07-22T16:32:01.456Z",
+  "step": "SHOW",
+  "command": "POST http://127.0.0.1:11434/api/show",
+  "request_body": {"model": "gemma4:31b-cloud"},
+  "http_status": 200,
+  "response": {"details":{"parent_model":"gemma4:31b","format":"","family":"gemma4","families":null,"parameter_size":"32682372656","quantization_level":"BF16"},"model_info":{"gemma4.context_length":262144,"gemma4.embedding_length":5376,"general.architecture":"gemma4","general.parameter_count":32682372656},"capabilities":["completion","thinking","tools","vision"],"modified_at":"2026-04-02T09:00:00-08:00"},
+  "validation": {
+    "http_200": true,
+    "json_valid": true,
+    "no_error_field": true,
+    "metadata_not_empty": true,
+    "model_exact": "gemma4:31b-cloud"
+  }
+}

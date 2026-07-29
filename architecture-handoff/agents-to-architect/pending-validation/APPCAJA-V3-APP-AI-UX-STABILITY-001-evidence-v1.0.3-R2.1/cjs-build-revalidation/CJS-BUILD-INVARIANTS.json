@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-07-22T20:08:00.000Z",
+  "step": "INVARIANTS",
+  "file_hashes_after_build": {
+    "package.json": "5411DBA21C46E756E9A3274FF9A81FC1A0D214B7BAE175AFC698070F50B55A64",
+    "package-lock.json": "825D44D6C4E1E59D8F489B33D08F52EE56EE434C8F70003B5CFED2261B458A87",
+    "tsconfig.json": "81A041DE6414DCCDDADF6865F4F549BBCD267A0EF8456E3D854E915B949FDD42"
+  },
+  "file_hashes_before_build": {
+    "package.json": "5411DBA21C46E756E9A3274FF9A81FC1A0D214B7BAE175AFC698070F50B55A64",
+    "package-lock.json": "825D44D6C4E1E59D8F489B33D08F52EE56EE434C8F70003B5CFED2261B458A87",
+    "tsconfig.json": "81A041DE6414DCCDDADF6865F4F549BBCD267A0EF8456E3D854E915B949FDD42"
+  },
+  "hashes_match": true,
+  "no_backend_started": true,
+  "no_frontend_started": true,
+  "port_11436_free": true,
+  "port_11437_free": true,
+  "validation": {
+    "package_json_unchanged": true,
+    "package_lock_unchanged": true,
+    "tsconfig_unchanged": true,
+    "ports_free": true
+  }
+}

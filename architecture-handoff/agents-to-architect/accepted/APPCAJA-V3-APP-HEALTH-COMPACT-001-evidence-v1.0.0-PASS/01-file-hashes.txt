@@ -1,0 +1,27 @@
+# APP-HEALTH-COMPACT-001 v1.0.0 — File Hash Verification
+
+## All 4 files match expected SHA-256 hashes (v1.0.0 checklist)
+
+| # | File | Expected SHA-256 | Actual SHA-256 | Size | Status |
+|---|------|------------------|----------------|------|--------|
+| 1 | financial-health-compact-provider.tsx | 169117B3D27534674ADAA73C1F9771DC972F8B3BA4E842CA7F176B5AD6CD051B | 169117B3D27534674ADAA73C1F9771DC972F8B3BA4E842CA7F176B5AD6CD051B | 9755 | ✓ MATCH |
+| 2 | app-shell.tsx | BC75D0DA84D8C553B38981BAAB9F3E5966904A288DB04F5860D0A69CA99ACE6F | BC75D0DA84D8C553B38981BAAB9F3E5966904A288DB04F5860D0A69CA99ACE6F | 1956 | ✓ MATCH |
+| 3 | sidebar.tsx | 46B899560B252F22D6A3659F75B38102AA8059E01E901EA154CF0F9708C11739 | 46B899560B252F22D6A3659F75B38102AA8059E01E901EA154CF0F9708C11739 | 2438 | ✓ MATCH |
+| 4 | financial-health-compact.spec.ts | A40CDA6BB709B03A8D7BD91C1100FB4B1A6B5A08C4484CAED04C2CB2988B7C14 | A40CDA6BB709B03A8D7BD91C1100FB4B1A6B5A08C4484CAED04C2CB2988B7C14 | 8164 | ✓ MATCH |
+
+## Gate 5 Verification: vigente == superseded
+
+| File (current) | File (superseded) | Hash Match | Size Match |
+|----------------|-------------------|------------|------------|
+| financial-health-compact-provider.tsx | financial-health-compact-provider.implemented.tsx.txt | ✓ | ✓ |
+| app-shell.tsx | app-shell.implemented.tsx.txt | ✓ | ✓ |
+| sidebar.tsx | sidebar.implemented.tsx.txt | ✓ | ✓ |
+| financial-health-compact.spec.ts | financial-health-compact.spec.implemented.ts.txt | ✓ | ✓ |
+
+## Conclusion
+
+All 4 files match both:
+1. The expected SHA-256 hashes from the v1.0.0 checklist
+2. The corresponding `implemented` copies in the superseded inspection directory
+
+No Dropbox content hashes were used - all verification was done with local SHA-256 via `Get-FileHash -Algorithm SHA256`.

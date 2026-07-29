@@ -1,0 +1,50 @@
+I:\cajaApp-V3
+├── README.md
+├── .gitignore
+├── architecture-handoff/
+│   ├── architect-to-agents/
+│   │   ├── issued/
+│   │   │   └── .gitkeep
+│   │   └── superseded/
+│   │       └── .gitkeep
+│   └── agents-to-architect/
+│       ├── accepted/
+│       │   └── .gitkeep
+│       ├── pending-validation/
+│       │   └── .gitkeep
+│       └── rejected/
+│           └── .gitkeep
+├── contracts/
+│   ├── examples/
+│   │   └── .gitkeep
+│   ├── prompts/
+│   │   └── .gitkeep
+│   └── schemas/
+│       └── .gitkeep
+├── docs/
+│   ├── 00-context/
+│   │   └── .gitkeep
+│   ├── 01-architecture/
+│   │   └── .gitkeep
+│   ├── 02-decisions/
+│   │   └── .gitkeep
+│   ├── 03-specs/
+│   │   └── .gitkeep
+│   ├── 04-gates/
+│   │   └── .gitkeep
+│   ├── 05-evidence/
+│   │   ├── CAJAAPP-V3-INIT-001-directory-tree.txt
+│   │   └── CAJAAPP-V3-INIT-001-forbidden-patterns-check.txt
+│   ├── 06-reports/
+│   │   └── CAJAAPP-V3-INIT-001-delivery-report.md
+│   ├── 07-runbooks/
+│   │   └── .gitkeep
+│   └── 08-artifacts/
+│       └── .gitkeep
+└── workspace/
+    ├── backend/
+    │   └── .gitkeep
+    ├── frontend/
+    │   └── .gitkeep
+    └── shared/
+        └── .gitkeep

@@ -1,0 +1,12 @@
+﻿
+> cajaapp-v3-backend@1.0.0 dev
+> tsx watch src/main.ts
+
+[14:11:08.812] [32mINFO[39m (16508): [36mDatabase connected successfully[39m
+[14:11:08.914] [31mERROR[39m (16508): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }

@@ -1,0 +1,13 @@
+# 13 - Startup State — v1.0.1 Salary Receipt Focal Revalidation
+
+## Date: 2026-07-16
+
+## Status: BLOCKED
+
+```json
+{
+  "status": "BLOCKED",
+  "reason": "Backend build fails before startup can be attempted",
+  "buildError": "salary-receipts.controller.ts:57 - ZodType mismatch on listSalaryReceiptsQuerySchema"
+}
+```

@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-07-22T20:53:00.000Z",
+  "step": "SHUTDOWN",
+  "method_used": "Stop-Process (SIGTERM on Windows)",
+  "backend_pid": 42364,
+  "port_11436_after_shutdown": "free",
+  "exit_code": "unknown (process exited, exit code not captured in log file)",
+  "shutdown_logs_captured": false,
+  "worker_shutdown_log": "not present - file was captured at startup before shutdown occurred",
+  "fastify_shutdown_log": "not present",
+  "prisma_disconnect_log": "not present",
+  "note": "Stop-Process sends SIGTERM on Windows, not SIGINT. The shutdown logs were not captured because the stdout/stderr file was locked during process execution and the shutdown output was not flushed to the file before process termination. Port 11436 was freed correctly."
+}

@@ -1,0 +1,71 @@
+# APP-UX-STATE-CONSISTENCY-001 v1.0.0 — Playwright Result
+
+## Test Command
+`npx playwright test tests/state-consistency.spec.ts tests/month-close.spec.ts tests/backup-restore.spec.ts tests/import-center.spec.ts tests/reconciliation.spec.ts tests/quality-audit.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: **PASS (14/14)**
+
+```
+Running 14 tests using 1 worker
+
+✓ tests/backup-restore.spec.ts:64:5 › Respaldo crea, valida y restaura con backup previo (1.2s)
+✓ tests/backup-restore.spec.ts:212:5 › Respaldo recupera errores y mantiene acciones accesibles en mobile (3.2s)
+✓ tests/import-center.spec.ts:127:5 › Centro de importaciones unifica historial, detalle y filtros (1.4s)
+✓ tests/month-close.spec.ts:82:5 › Cierres crea un snapshot, muestra ARS/USD y reabre sólo la versión autorizada (1.2s)
+✓ tests/month-close.spec.ts:181:5 › Cierres recupera errores y conserva acciones por teclado en mobile (2.4s)
+✓ tests/quality-audit.spec.ts:24:5 › todas las secciones funcionales navegan sin promesas ficticias (2.4s)
+✓ tests/quality-audit.spec.ts:50:5 › las quince secciones están disponibles en navegación móvil (29.1s)
+✓ tests/quality-audit.spec.ts:68:5 › Cierres y Respaldo exponen controles críticos con nombres accesibles (2.1s)
+✓ tests/quality-audit.spec.ts:94:5 › header y navegación no exponen controles ficticios y aceptan teclado (1.9s)
+✓ tests/reconciliation.spec.ts:101:5 › Conciliación detecta, explica y resuelve una relación entre fuentes (3.1s)
+✓ tests/state-consistency.spec.ts:36:5 › los cinco verticales exponen el contrato compartido sin controles demo (2.4s)
+✓ tests/state-consistency.spec.ts:80:5 › Importaciones muestra loading, empty, error y reintento mediante operaciones reales (2.0s)
+✓ tests/state-consistency.spec.ts:130:5 › Conciliación conserva empty y success vinculados a datos y escaneo reales (1.8s)
+✓ tests/state-consistency.spec.ts:154:5 › Asesor IA presenta error recuperable y no deja un spinner indefinido (1.7s)
+
+14 passed (59.0s)
+```
+
+## All Tests Validated
+
+### State Consistency (4 tests) - NEW
+1. **state-consistency.spec.ts:36**: Los cinco verticales exponen el contrato compartido sin controles demo
+2. **state-consistency.spec.ts:80**: Importaciones muestra loading, empty, error y reintento mediante operaciones reales
+3. **state-consistency.spec.ts:130**: Conciliación conserva empty y success vinculados a datos y escaneo reales
+4. **state-consistency.spec.ts:154**: Asesor IA presenta error recuperable y no deja un spinner indefinido
+
+### Quality Audit (4 tests)
+5. **quality-audit.spec.ts:24**: Todas las secciones funcionales navegan sin promesas ficticias
+6. **quality-audit.spec.ts:50**: Las quince secciones están disponibles en navegación móvil
+7. **quality-audit.spec.ts:68**: Cierres y Respaldo exponen controles críticos con nombres accesibles
+8. **quality-audit.spec.ts:94**: Header y navegación no exponen controles ficticios y aceptan teclado
+
+### Month Close (2 tests)
+9. **month-close.spec.ts:82**: Cierres crea un snapshot, muestra ARS/USD y reabre sólo la versión autorizada
+10. **month-close.spec.ts:181**: Cierres recupera errores y conserva acciones por teclado en mobile
+
+### Backup Restore (2 tests)
+11. **backup-restore.spec.ts:64**: Respaldo crea, valida y restaura con backup previo
+12. **backup-restore.spec.ts:212**: Respaldo recupera errores y mantiene acciones accesibles en mobile
+
+### Import Center (1 test)
+13. **import-center.spec.ts:127**: Centro de importaciones unifica historial, detalle y filtros
+
+### Reconciliation (1 test)
+14. **reconciliation.spec.ts:101**: Conciliación detecta, explica y resuelve una relación entre fuentes
+
+## Validated Features (per checklist)
+
+- ✓ Los cinco módulos exponen `data-state-contract="real-v1"`
+- ✓ Loading, empty, error, success y retry provienen de carga/contratos/acciones reales
+- ✓ No existe control demo
+- ✓ Importaciones recupera tras error usando Actualizar
+- ✓ Conciliación informa empty y éxito del escaneo
+- ✓ Asesor IA muestra error recuperable sin spinner indefinido
+- ✓ Cierres y Respaldo preservan sus controles desktop/mobile, confirmaciones y retry
+- ✓ Errores no exponen información sensible
+- ✓ Reduced motion y roles accesibles preservados
+- ✓ Cero strict-mode violations
+
+## Test Artifacts
+- `test-results/` - Full Playwright artifacts (trace, video, screenshots)

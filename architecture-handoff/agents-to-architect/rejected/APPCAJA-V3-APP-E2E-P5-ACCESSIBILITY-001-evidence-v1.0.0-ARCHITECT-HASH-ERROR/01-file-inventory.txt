@@ -1,0 +1,23 @@
+# APP-E2E-P5-ACCESSIBILITY-001 v1.0.0 — File Inventory & Integrity Check
+
+## 5 Implemented Files - Hash Comparison
+
+| # | File | Expected SHA-256 | Actual SHA-256 | Size Expected | Size Actual | Status |
+|---|------|------------------|----------------|---------------|-------------|--------|
+| 1 | cierres-section.tsx | ba9e51067d325b40fc662ffaef0b3a10b2516c3417b2b608fdd80f4de4431186 | BA9E51067D325B40FC662FFAEF0B3A10B2516C3417B2B608FDD80F4DE4431186 | 20874 | 20874 | ✓ MATCH |
+| 2 | respaldo-section.tsx | d52a26dbc01c22ab2afb50de48c55cf22bee820e2afb623741ee2a0c3858f922 | D52A26DBC01C22AB2AFB50DE48C55CF22BEE820E2AFB623741EE2A0C3858F922 | 21129 | 21129 | ✓ MATCH |
+| 3 | month-close.spec.ts | 22a854a749a77c932c6b33749a1e115c1061fa640c24b9058ebf04f35acf2d67 | 22A854A749A77C932C6B33749A1E115C1061FA640C24B9058EBF04F35ACF2D67 | 8151 | 8151 | ✓ MATCH |
+| 4 | **backup-restore.spec.ts** | **8d5bb24a329855f143466dcceec8e276301557230576b7267024b0122a5a1c88** | **E796BDA92DCFA581F35EEB9573FD8A8D2B53953E1E3E1C23ADAA8F2DD631427F** | 10577 | 10577 | **✗ HASH MISMATCH** |
+| 5 | quality-audit.spec.ts | a5e9301efc87cfaaacf4479aa356615ac0583e89b15486f4e4206258e4447735 | A5E9301EFC87CFAAACF4479AA356615AC0583E89B15486F4E4206258E4447735 | 3527 | 3527 | ✓ MATCH |
+
+## Result: FAIL at Gate 4
+
+The `backup-restore.spec.ts` file has been modified after the architect's instruction was published.
+- Expected hash: `8d5bb24a329855f143466dcceec8e276301557230576b7267024b0122a5a1c88`
+- Actual hash: `E796BDA92DCFA581F35EEB9573FD8A8D2B53953E1E3E1C23ADAA8F2DD631427F`
+
+The file size is identical (10577 bytes) but the content has changed. This means the test file in the repository does NOT match what the architect documented and authorized for validation.
+
+Per Gate 5: "Demostrar mediante inventario/hash que ningún otro archivo cambió durante la validación."
+
+The integrity check has FAILED. The agent must stop and deliver FAIL evidence per the instruction's explicit requirement.

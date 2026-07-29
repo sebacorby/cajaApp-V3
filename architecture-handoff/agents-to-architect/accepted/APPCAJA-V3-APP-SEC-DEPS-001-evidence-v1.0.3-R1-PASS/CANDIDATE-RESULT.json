@@ -1,0 +1,14 @@
+{
+  "vertical": "APP-SEC-DEPS-001",
+  "version": "v1.0.3",
+  "remediation": "R1-FIXTURE-PATH",
+  "copy": "candidate",
+  "passed": 40,
+  "failed": 2,
+  "skipped": 0,
+  "retries": 0,
+  "failedTestNames": [
+    "tests/salary-receipts.real.spec.ts:22:5 › Recibos de sueldo importa, acepta y anula un PDF real",
+    "tests/salary-receipts.spec.ts:62:5 › Recibos de sueldo permite revisar y aceptar un borrador desde Ingresos"
+  ]
+}

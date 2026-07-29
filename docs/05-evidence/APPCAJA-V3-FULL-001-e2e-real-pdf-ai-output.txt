@@ -1,0 +1,14 @@
+﻿curl.exe :   % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+En línea: 1 Carácter: 1
++ curl.exe -X POST "http://localhost:11436/api/card-statements/import"  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ... Time   Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0
+100 437.3k 100    112 100 437.2k    356  1.35M                              0
+100 437.3k 100    112 100 437.2k    356  1.35M                              0
+100 437.3k 100    112 100 437.2k    356  1.35M                              0
+{"code":"AI_PROVIDER_ERROR","message":"AI provider error: Ollama request failed after 3 attempts: fetch failed"}

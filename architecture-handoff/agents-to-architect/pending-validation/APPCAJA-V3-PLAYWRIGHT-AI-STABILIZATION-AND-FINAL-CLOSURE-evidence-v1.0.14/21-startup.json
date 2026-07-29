@@ -1,0 +1,19 @@
+{
+  "backend": {
+    "id": 58360,
+    "node": "v24.18.0",
+    "port": 11436,
+    "status": "started"
+  },
+  "frontend": {
+    "id": 59960,
+    "node": "unknown",
+    "port": 3000,
+    "status": "started"
+  },
+  "ollama": {
+    "port": 11434,
+    "model": "kimi-k2.6:cloud",
+    "status": "running"
+  }
+}

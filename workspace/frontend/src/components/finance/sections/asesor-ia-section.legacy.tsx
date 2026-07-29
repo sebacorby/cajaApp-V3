@@ -1,0 +1,449 @@
+"use client";
+
+
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Bot,
+  Calculator,
+  Clock3,
+  Database,
+  Eraser,
+  ExternalLink,
+  History,
+  Loader2,
+  MessageSquareText,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  askAiAdvisor,
+  deleteAiAdvisorInteraction,
+  getAiAdvisorContext,
+  getAiAdvisorHistory,
+  getAiAdvisorInteraction,
+  type AiAdvisorAction,
+  type AiAdvisorContextResponse,
+  type AiAdvisorCurrency,
+  type AiAdvisorHistoryItem,
+  type AiAdvisorInteraction,
+  type AiAdvisorMode,
+  type AiAdvisorSource,
+} from "@/lib/finance/ai-advisor-api";
+import { getPeriodRange, USER_TIMEZONE, useFinanceUI } from "@/lib/finance/ui-store";
+import { cn } from "@/lib/utils";
+
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: USER_TIMEZONE,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+
+function confidenceLabel(value: string): string {
+  if (value === "high") return "Confianza alta";
+  if (value === "medium") return "Confianza media";
+  return "Confianza baja";
+}
+
+
+function CitationButton({ source, onOpen }: { source: AiAdvisorSource; onOpen: (action: AiAdvisorAction) => void }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs text-muted-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() => onOpen(source.action)}
+      title={`${source.value}${source.rule ? ` · ${source.rule}` : ""}`}
+      data-testid="ai-advisor-citation"
+      data-source-id={source.id}
+    >
+      <Database className="size-3" aria-hidden="true" />
+      {source.label}
+      <ExternalLink className="size-3" aria-hidden="true" />
+    </button>
+  );
+}
+
+
+function ResponseCard({ interaction, onOpenSource }: { interaction: AiAdvisorInteraction; onOpenSource: (action: AiAdvisorAction) => void }) {
+  const citationById = useMemo(
+    () => new Map(interaction.answer.citations.map((citation) => [citation.id, citation])),
+    [interaction.answer.citations],
+  );
+
+
+  function citations(ids: string[]) {
+    return ids.map((id) => citationById.get(id)).filter((item): item is AiAdvisorSource => Boolean(item));
+  }
+
+
+  return (
+    <Card data-testid="ai-advisor-response" data-interaction-id={interaction.id}>
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="size-5" aria-hidden="true" />
+              {interaction.answer.title}
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatDateTime(interaction.createdAt)} · {interaction.provider.name} / {interaction.provider.model}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{confidenceLabel(interaction.answer.confidence)}</Badge>
+            <Badge variant="outline">{interaction.prompt.version}</Badge>
+            <Badge variant="outline">{interaction.context.financialHealthFormulaVersion}</Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <p className="whitespace-pre-wrap text-sm leading-7" data-testid="ai-advisor-answer">{interaction.answer.answer}</p>
+
+
+        {interaction.scenario ? (
+          <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900 dark:bg-blue-950/20" data-testid="ai-advisor-simulation-result">
+            <p className="flex items-center gap-2 font-medium"><Calculator className="size-4" aria-hidden="true" />{interaction.scenario.label}</p>
+            <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <p>Base esperada: <strong>{interaction.scenario.currency} {interaction.scenario.baselineExpectedBalance}</strong></p>
+              <p>Resultado simulado: <strong>{interaction.scenario.currency} {interaction.scenario.simulatedExpectedBalance}</strong></p>
+              <p>Delta ingresos: {interaction.scenario.incomeDelta}</p>
+              <p>Delta egresos: {interaction.scenario.expenseDelta}</p>
+              <p>Delta compromisos: {interaction.scenario.commitmentDelta}</p>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">{interaction.scenario.disclaimer}</p>
+          </div>
+        ) : null}
+
+
+        <section aria-labelledby="ai-advisor-claims-title">
+          <h3 id="ai-advisor-claims-title" className="font-semibold">Afirmaciones trazables</h3>
+          <div className="mt-3 space-y-3">
+            {interaction.answer.claims.map((claim) => (
+              <article key={claim.id} className="rounded-xl border p-4" data-testid="ai-advisor-claim">
+                <div className="flex items-start gap-2">
+                  <Badge variant="secondary">{claim.kind === "fact" ? "Dato" : claim.kind === "inference" ? "Inferencia" : "Simulación"}</Badge>
+                  <p className="text-sm leading-6">{claim.text}</p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {citations(claim.sourceIds).map((source) => <CitationButton key={source.id} source={source} onOpen={onOpenSource} />)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+
+        {interaction.answer.risks.length > 0 ? (
+          <section>
+            <h3 className="font-semibold">Puntos de atención</h3>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {interaction.answer.risks.map((risk) => (
+                <article key={`${risk.title}-${risk.explanation}`} className={cn("rounded-xl border p-4", risk.severity === "attention" && "border-amber-200 dark:border-amber-900")}>
+                  <p className="font-medium">{risk.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{risk.explanation}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {citations(risk.sourceIds).map((source) => <CitationButton key={source.id} source={source} onOpen={onOpenSource} />)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+
+        {interaction.answer.alternatives.length > 0 ? (
+          <section>
+            <h3 className="font-semibold">Alternativas para simular</h3>
+            <div className="mt-3 space-y-3">
+              {interaction.answer.alternatives.map((alternative) => (
+                <article key={`${alternative.title}-${alternative.description}`} className="rounded-xl border border-dashed p-4">
+                  <p className="font-medium">{alternative.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{alternative.description}</p>
+                  {alternative.assumptions.length > 0 ? <ul className="mt-2 space-y-1 text-xs text-muted-foreground">{alternative.assumptions.map((item) => <li key={item}>• {item}</li>)}</ul> : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {citations(alternative.sourceIds).map((source) => <CitationButton key={source.id} source={source} onOpen={onOpenSource} />)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+
+        {interaction.answer.limitations.length > 0 ? (
+          <Alert>
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            <AlertDescription>
+              <strong>Límites del análisis:</strong>
+              <ul className="mt-2 space-y-1">{interaction.answer.limitations.map((item) => <li key={item}>• {item}</li>)}</ul>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+
+        <p className="text-xs leading-relaxed text-muted-foreground">{interaction.disclaimer}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+export function AsesorIaSection() {
+  const period = useFinanceUI((state) => state.period);
+  const setSection = useFinanceUI((state) => state.setSection);
+  const openMovementDrilldown = useFinanceUI((state) => state.openMovementDrilldown);
+  const range = useMemo(() => getPeriodRange(period), [period]);
+  const [contextResponse, setContextResponse] = useState<AiAdvisorContextResponse | null>(null);
+  const [history, setHistory] = useState<AiAdvisorHistoryItem[]>([]);
+  const [interaction, setInteraction] = useState<AiAdvisorInteraction | null>(null);
+  const [question, setQuestion] = useState("");
+  const [mode, setMode] = useState<AiAdvisorMode>("analysis");
+  const [currency, setCurrency] = useState<AiAdvisorCurrency>("ARS");
+  const [scenarioLabel, setScenarioLabel] = useState("Escenario manual");
+  const [incomeDelta, setIncomeDelta] = useState("0");
+  const [expenseDelta, setExpenseDelta] = useState("0");
+  const [commitmentDelta, setCommitmentDelta] = useState("0");
+  const [assumptions, setAssumptions] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setSubmitError(null);
+    try {
+      const context = await getAiAdvisorContext(range.from, range.to);
+      setContextResponse(context);
+      try {
+        setHistory(await getAiAdvisorHistory(12));
+      } catch {
+        setHistory([]);
+        setError("El contexto está disponible, pero no se pudo cargar el historial local.");
+      }
+    } catch (caught) {
+      setContextResponse(null);
+      setError(caught instanceof Error ? caught.message : "No se pudo cargar el asesor IA.");
+    } finally {
+      setLoading(false);
+    }
+  }, [range.from, range.to]);
+
+
+  useEffect(() => { void load(); }, [load]);
+
+
+  const handleSource = useCallback((action: AiAdvisorAction) => {
+    if (action.section === "movimientos" && action.drilldown) {
+      openMovementDrilldown(action.drilldown);
+      return;
+    }
+    setSection(action.section);
+  }, [openMovementDrilldown, setSection]);
+
+
+  async function runAdvisorRequest() {
+    if (!question.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    setSubmitError(null);
+    setInteraction(null);
+    try {
+      const created = await askAiAdvisor({
+        from: range.from,
+        to: range.to,
+        question: question.trim(),
+        mode,
+        currency,
+        ...(mode === "simulation" ? {
+          scenario: {
+            label: scenarioLabel.trim() || "Escenario manual",
+            currency,
+            incomeDelta,
+            expenseDelta,
+            commitmentDelta,
+            assumptions: assumptions.split("\n").map((item) => item.trim()).filter(Boolean).slice(0, 6),
+          },
+        } : {}),
+      });
+      setInteraction(created);
+      try {
+        setHistory(await getAiAdvisorHistory(12));
+      } catch {
+        setError("La respuesta se generó correctamente, pero no se pudo actualizar el historial local.");
+      }
+    } catch {
+      setSubmitError("No se pudo generar una respuesta financiera confiable.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    await runAdvisorRequest();
+  }
+
+
+  async function openHistory(item: AiAdvisorHistoryItem) {
+    setError(null);
+    setSubmitError(null);
+    try { setInteraction(await getAiAdvisorInteraction(item.id)); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "No se pudo abrir la interacción."); }
+  }
+
+
+  async function removeHistory(item: AiAdvisorHistoryItem) {
+    setError(null);
+    setSubmitError(null);
+    try {
+      await deleteAiAdvisorInteraction(item.id);
+      setHistory((current) => current.filter((candidate) => candidate.id !== item.id));
+      if (interaction?.id === item.id) setInteraction(null);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo eliminar la interacción.");
+    }
+  }
+
+
+  if (loading) return <div className="grid min-h-72 place-items-center" data-testid="ai-advisor-section" data-context-version="loading"><div className="text-center text-sm text-muted-foreground" data-testid="ai-advisor-loading"><Loader2 className="mx-auto mb-3 size-6 animate-spin" aria-hidden="true" />Preparando contexto estructurado…</div></div>;
+
+
+  if (!contextResponse) return <div data-testid="ai-advisor-section" data-context-version="unavailable"><Card className="border-rose-200" data-testid="ai-advisor-initialization-error"><CardContent className="py-10 text-center"><AlertCircle className="mx-auto size-7 text-rose-600" /><p className="mt-3 font-medium">No se pudo preparar el asesor IA</p><p className="mt-1 text-sm text-muted-foreground">{error || "No se pudo cargar el contexto financiero."}</p><Button variant="outline" className="mt-4" onClick={() => void load()}>Reintentar</Button></CardContent></Card></div>;
+
+
+  const context = contextResponse.context;
+
+
+  return (
+    <div className="flex flex-col gap-5" data-testid="ai-advisor-section" data-context-version={context.schemaVersion}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-semibold"><Bot className="size-6" aria-hidden="true" />Asesor IA</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{range.label} · explica cálculos existentes y cita siempre el dato de origen</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void load()}><RefreshCw className="mr-2 size-4" />Actualizar contexto</Button>
+      </div>
+
+
+      <Alert>
+        <ShieldCheck className="size-4" aria-hidden="true" />
+        <AlertDescription>
+          La IA recibe datos normalizados, no documentos originales. No calcula saldos autoritativos, no modifica registros y no ejecuta decisiones. {contextResponse.disclaimer}
+        </AlertDescription>
+      </Alert>
+
+
+      {error ? <Alert variant="destructive" data-testid="ai-advisor-operation-error" role="alert"><AlertCircle className="size-4" /><AlertDescription>{error}</AlertDescription></Alert> : null}
+
+
+      {submitError ? (
+        <Alert variant="destructive" data-testid="ai-advisor-error" role="alert">
+          <AlertCircle className="size-4" aria-hidden="true" />
+          <AlertDescription>
+            <p className="font-medium">{submitError}</p>
+            <p className="mt-1 text-sm">La respuesta fue descartada para evitar mostrar datos inconsistentes o sin respaldo.</p>
+            <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void runAdvisorRequest()} disabled={submitting} data-testid="ai-advisor-retry">
+              {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCw className="mr-2 size-4" />}
+              Reintentar análisis
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="ai-advisor-context-summary">
+        {(["ARS", "USD"] as const).map((item) => (
+          <Card key={item}>
+            <CardContent className="p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item}</p>
+              <p className="mt-2 text-2xl font-semibold">{context.summary.currencies[item].score ?? "N/C"}<span className="text-sm text-muted-foreground">{context.summary.currencies[item].score === null ? "" : "/100"}</span></p>
+              <p className="mt-1 text-xs text-muted-foreground">{context.summary.currencies[item].bandLabel} · {context.summary.currencies[item].confidence}</p>
+            </CardContent>
+          </Card>
+        ))}
+        <Card><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Alertas</p><p className="mt-2 text-2xl font-semibold">{context.summary.alerts}</p><p className="mt-1 text-xs text-muted-foreground">{context.summary.criticalAlerts} críticas</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fuentes</p><p className="mt-2 text-2xl font-semibold">{context.sourceCount}</p><p className="mt-1 text-xs text-muted-foreground">{context.summary.unclassifiedRecords} movimientos sin clasificar</p></CardContent></Card>
+      </div>
+
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base"><MessageSquareText className="size-5" />Consulta trazable</CardTitle>
+          <p className="text-sm text-muted-foreground">La pregunta se trata como texto no confiable y no puede cambiar los límites del sistema.</p>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={submit}>
+            <div className="flex flex-wrap gap-2">
+              {context.suggestedQuestions.map((suggestion) => <Button key={suggestion} type="button" variant="outline" size="sm" onClick={() => setQuestion(suggestion)}>{suggestion}</Button>)}
+            </div>
+            <label className="block text-sm font-medium" htmlFor="ai-advisor-question">Pregunta</label>
+            <textarea id="ai-advisor-question" value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={contextResponse.limits.maxQuestionCharacters} rows={4} className="w-full rounded-xl border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Preguntá sobre tendencias, riesgos ya calculados, compromisos o calidad del dato" data-testid="ai-advisor-question" />
+            <p className="text-right text-xs text-muted-foreground">{question.length}/{contextResponse.limits.maxQuestionCharacters}</p>
+
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant={mode === "analysis" ? "default" : "outline"} onClick={() => setMode("analysis")}>Explicación</Button>
+              <Button type="button" variant={mode === "simulation" ? "default" : "outline"} onClick={() => setMode("simulation")}><Calculator className="mr-2 size-4" />Simulación</Button>
+              <select value={currency} onChange={(event) => setCurrency(event.target.value as AiAdvisorCurrency)} className="rounded-lg border bg-background px-3 py-2 text-sm" aria-label="Moneda del análisis"><option value="ARS">ARS</option><option value="USD">USD</option></select>
+            </div>
+
+
+            {mode === "simulation" ? (
+              <div className="grid gap-3 rounded-xl border border-dashed p-4 sm:grid-cols-2" data-testid="ai-advisor-simulation-form">
+                <label className="text-sm">Nombre del escenario<input className="mt-1 w-full rounded-lg border bg-background px-3 py-2" value={scenarioLabel} onChange={(event) => setScenarioLabel(event.target.value)} /></label>
+                <label className="text-sm">Delta de ingresos<input className="mt-1 w-full rounded-lg border bg-background px-3 py-2" value={incomeDelta} onChange={(event) => setIncomeDelta(event.target.value)} inputMode="decimal" /></label>
+                <label className="text-sm">Delta de egresos<input className="mt-1 w-full rounded-lg border bg-background px-3 py-2" value={expenseDelta} onChange={(event) => setExpenseDelta(event.target.value)} inputMode="decimal" /></label>
+                <label className="text-sm">Delta de compromisos<input className="mt-1 w-full rounded-lg border bg-background px-3 py-2" value={commitmentDelta} onChange={(event) => setCommitmentDelta(event.target.value)} inputMode="decimal" /></label>
+                <label className="text-sm sm:col-span-2">Supuestos, uno por línea<textarea className="mt-1 w-full rounded-lg border bg-background px-3 py-2" rows={3} value={assumptions} onChange={(event) => setAssumptions(event.target.value)} /></label>
+              </div>
+            ) : null}
+
+
+            <Button type="submit" disabled={submitting || !question.trim()} data-testid="ai-advisor-submit">
+              {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
+              {submitting ? "Consultando proveedor…" : "Consultar con evidencia"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+
+      {interaction ? <ResponseCard interaction={interaction} onOpenSource={handleSource} /> : null}
+
+
+      <Card data-testid="ai-advisor-history">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-5" />Historial local</CardTitle><p className="text-sm text-muted-foreground">Guarda pregunta, contexto estructurado, versión del prompt, modelo y respuesta validada. Nunca guarda documentos originales.</p></CardHeader>
+        <CardContent>
+          {history.length === 0 ? <div className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">Todavía no hay consultas guardadas.</div> : <div className="space-y-3">{history.map((item) => (
+            <article key={item.id} className="rounded-xl border p-4" data-testid="ai-advisor-history-item">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div><p className="font-medium">{item.title}</p><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.question}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><Clock3 className="size-3" />{formatDateTime(item.createdAt)} · {item.provider}/{item.model}</p></div>
+                <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => void openHistory(item)}>Abrir<ArrowRight className="ml-1 size-4" /></Button><Button size="icon" variant="ghost" aria-label="Eliminar consulta del asesor" onClick={() => void removeHistory(item)}><Eraser className="size-4" /></Button></div>
+              </div>
+            </article>
+          ))}</div>}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

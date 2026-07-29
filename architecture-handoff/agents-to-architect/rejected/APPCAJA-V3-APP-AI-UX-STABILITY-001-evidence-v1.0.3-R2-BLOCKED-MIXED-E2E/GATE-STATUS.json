@@ -1,0 +1,56 @@
+{
+  "validation": "APP-AI-UX-STABILITY-001 v1.0.3-R2",
+  "generated": "2026-07-21T02:00:00Z",
+  "candidate": {
+    "backend": {
+      "focal": { "passed": 32, "total": 32, "suites": "4/4", "status": "PASS" },
+      "full": { "passed": 175, "total": 175, "suites": "78/78", "status": "PASS" },
+      "frontendRuntimeContract": { "passed": 3, "total": 3, "status": "PASS" },
+      "typescript": { "status": "PASS", "errors": 0 }
+    },
+    "e2e": {
+      "focal": { "passed": 1, "total": 2, "tests": ["ai-advisor-spec-1-PASS", "ai-advisor-spec-2-FAIL-browser-cleanup"] },
+      "orderContamination": { "passed": 3, "total": 4, "status": "PARTIAL" },
+      "full": { "passed": 36, "total": 45, "failed": 9, "status": "PARTIAL" }
+    }
+  },
+  "baseline": {
+    "note": "No fresh baseline run in this session. R1 baseline from 2026-07-11 available but not comparable (different DB state, different environment)."
+  },
+  "gates": {
+    "backend_focal_ai_advisor": { "required": "32/32", "actual": "32/32", "status": "PASS" },
+    "backend_full": { "required": "175/175", "actual": "175/175", "status": "PASS" },
+    "frontend_runtime_contract": { "required": "3/3", "actual": "3/3", "status": "PASS" },
+    "typescript_build": { "required": "0 errors", "actual": "0 errors", "status": "PASS" },
+    "e2e_focal_run_1": { "required": "2/2", "actual": "1/2", "status": "FAIL", "reason": "browser cleanup infrastructure issue" },
+    "e2e_focal_run_2": { "required": "2/2", "actual": "1/2", "status": "FAIL", "reason": "same infrastructure issue" },
+    "e2e_order_contamination": { "required": "4/4", "actual": "3/4", "status": "FAIL", "reason": "mobile test cleanup issue" },
+    "e2e_full_suite": { "required": "45/45", "actual": "36/45", "status": "FAIL" },
+    "api_real_5of5": { "note": "Not re-run in this session (was 5/5 in prior session)" },
+    "ipv4_connectivity": { "status": "PASS", "allListenersOn127": true }
+  },
+  "candidateNewFailures": "unknown (no fresh baseline)",
+  "baselinePassedCandidateFailed": "unknown (no fresh baseline)",
+  "failureClassification": {
+    "infrastructure": {
+      "count": 4,
+      "tests": [
+        "ai-advisor.spec.ts:60 (mobile viewport browser cleanup)",
+        "card-statement-import.spec.ts (Python venv missing)",
+        "salary-receipts.real.spec.ts (Python venv missing)",
+        "salary-receipts.spec.ts (Python venv missing)"
+      ]
+    },
+    "application": {
+      "count": 5,
+      "tests": [
+        "categories.spec.ts",
+        "financial-health.spec.ts",
+        "movements.spec.ts",
+        "privacy-mode.spec.ts"
+      ],
+      "note": "These failures require investigation - may be pre-existing or environment-specific"
+    }
+  },
+  "recommendation": "GATES BLOCKED: Backend PASS, E2E FAIL. The backend validation confirms R1/R2 AI_ADVISOR_UNGROUNDED_NUMBER retry contract (max 3 attempts, structured 422) works correctly. E2E failures require: (1) Python venv setup in candidate, (2) investigation of 4-5 application failures, (3) resolution of browser cleanup issue in mobile viewport tests."
+}

@@ -1,0 +1,30 @@
+# APP-SEC-DEPS-001 v1.0.0 — Rollback Verification
+
+## Per FAIL Policy
+> "Ante cualquier fallo de materialización, hash, audit, npm ci, typecheck, lint, build, health, Playwright o cleanup:
+> 1. restaurar `package.json` y `package-lock.json` desde los backups locales;
+> 2. comprobar los hashes iniciales;"
+
+## Restoration Verification
+
+### package.json
+- Before materializer: `7A32F731CCBD0117D5B5598998C5237CE0230D8E708F49F1388AE5DE79E3EC6B` (expected)
+- After rollback: `7A32F731CCBD0117D5B5598998C5237CE0230D8E708F49F1388AE5DE79E3EC6B` ✓ MATCH
+
+### package-lock.json
+- Before materializer: `DB0ECE39A9A66B3FB10A4BD6644B2A4616D82AD42476BA9F513964EC6793E6ED` (expected)
+- After rollback: `DB0ECE39A9A66B3FB10A4BD6644B2A4616D82AD42476BA9F513964EC6793E6ED` ✓ MATCH
+
+### SQLite
+- Initial hash: `E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C`
+- After restoration: `E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C` ✓ MATCH
+
+## Cleanup Status
+- ✓ No other files modified
+- ✓ No temporaries left
+- ✓ Ports not used (servers never started)
+- ✓ No processes to kill (servers never started)
+
+## Conclusion
+
+All authorized files restored to baseline state. SQLite hash identical to initial. FAIL policy correctly applied.

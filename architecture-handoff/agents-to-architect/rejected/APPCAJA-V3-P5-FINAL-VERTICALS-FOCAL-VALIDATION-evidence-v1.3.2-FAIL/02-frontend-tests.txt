@@ -1,0 +1,49 @@
+# P5 v1.3.2 — Frontend Evidence
+## Timestamp: 2026-07-17T21:00:00Z
+
+## Frontend Gate
+
+### Typecheck: PASS ✓
+```
+cd workspace\frontend; npm run typecheck
+> nextjs_tailwind_shadcn_ts@0.2.0 typecheck
+> tsc --noEmit
+(No errors)
+```
+
+### Lint: PASS (3 warnings) ✓
+```
+cd workspace\frontend; npm run lint
+> nextjs_tailwind_shadcn_ts@0.2.0 lint
+> eslint .
+✗ 3 problems (0 errors, 3 warnings)
+Warnings:
+- alert-center.tsx:82 - @typescript-eslint/no-unused-expressions
+- sidebar-data-quality.tsx:56 - @typescript-eslint/no-unused-expressions
+- salud-financiera-section.tsx:276 - @typescript-eslint/no-unused-expressions
+```
+
+### Build: PASS ✓
+```
+cd workspace\frontend; npm run build
+- TypeScript: PASS
+- Next.js build: PASS (using Turbopack)
+- Static pages generated: 3/3
+```
+
+### Playwright E2E: 3/3 PASS ✓
+```
+cd workspace\frontend; PLAYWRIGHT_BASE_URL=http://127.0.0.1:11437 npx playwright test tests/reconciliation.spec.ts tests/month-close.spec.ts tests/backup-restore.spec.ts --project=chromium --workers=1 --retries=0 --reporter=list
+
+Running 3 tests using 1 worker
+  ok 1 [chromium] › tests\backup-restore.spec.ts:35:5 › Respaldo crea, valida y restaura con backup previo (944ms)
+  ok 2 [chromium] › tests\month-close.spec.ts:61:5 › Cierres crea un snapshot, muestra ARS/USD y reabre sólo la versión autorizada (713ms)
+  ok 3 [chromium] › tests\reconciliation.spec.ts:101:5 › Conciliación detecta, explica y resuelve una relación entre fuentes (1.0s)
+
+3 passed (4.5s)
+```
+
+### Test Details
+1. **Reconciliation**: Tests scan, filter, search, resolve, reopen functionality
+2. **Month Close**: Tests create snapshot, ARS/USD display, reopen functionality
+3. **Backup/Restore**: Tests create, validate, restore with pre-restore backup

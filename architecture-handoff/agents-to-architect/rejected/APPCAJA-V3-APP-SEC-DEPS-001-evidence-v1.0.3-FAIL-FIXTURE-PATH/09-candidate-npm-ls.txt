@@ -1,0 +1,24 @@
+﻿nextjs_tailwind_shadcn_ts@0.2.0 C:\Users\javie\AppData\Local\CajaApp\validation\APP-SEC-DEPS-001-v1.0.3\candidate\frontend
++-- @mdxeditor/editor@3.55.0
+| +-- @lexical/markdown@0.35.0
+| | `-- @lexical/code@0.35.0
+| |   `-- prismjs@1.30.0 deduped
+| `-- js-yaml@4.2.0 overridden
++-- @tailwindcss/postcss@4.3.2
+| `-- postcss@8.5.16 overridden
++-- eslint@9.39.4
+| `-- @eslint/eslintrc@3.3.5
+|   `-- js-yaml@4.2.0 deduped
++-- next-auth@4.24.14
+| +-- next@16.2.10 deduped
+| `-- uuid@11.1.1 deduped
++-- next-intl@4.13.1
+| `-- next@16.2.10 deduped
++-- next@16.2.10
+| `-- postcss@8.5.16 deduped
++-- react-syntax-highlighter@15.6.6
+| +-- prismjs@1.30.0 overridden
+| `-- refractor@3.6.0
+|   `-- prismjs@1.30.0 deduped
+`-- uuid@11.1.1
+

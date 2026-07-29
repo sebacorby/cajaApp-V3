@@ -1,0 +1,10 @@
+{
+  "summary": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0,
+    "duration_seconds": 0.23,
+    "all_passed": true
+  },
+  "health_gate": "PASS"
+}

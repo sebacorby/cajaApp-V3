@@ -1,0 +1,44 @@
+# APP-AI-UX-STABILITY-001 v1.0.1 — Preflight Evidence
+## Timestamp: 2026-07-19T02:33:00Z
+
+## Node.js & NPM
+- Node: v24.18.0
+- NPM: 11.16.0
+- Node Path: I:\Tools\node-v24.18.0-win-x64\node.exe
+- NPM Path: I:\Tools\node-v24.18.0-win-x64\npm.ps1
+
+## Root Verification
+- Root: C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+- Verified: YES
+
+## Baseline (APP-SEC-DEPS-001 v1.0.3-R1) Verified
+- package.json: 5F46BAFE79C08DB4F6D59074602EB8AE59522B1B2C5FDA68488F38DFBD049B61 ✓ MATCH
+- package-lock.json: 5AD527E78C65A005054D6078A90EB6A2BF19C0712BA0B846937BA0F6DAEE8D8B ✓ MATCH
+
+## SQLite Database Initial State
+- Path: workspace\backend\prisma\dev.db
+- Size: 5627904 bytes
+- SHA-256: E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C
+- Backup created: PRE-v1.0.1-dev.db
+
+## Authorized Files SHA-256 (before any modification)
+
+| File | SHA-256 | Size |
+|------|---------|------|
+| asesor-ia-section.tsx | E612CFC47B7A8731009533B7861C0189818DF678BF4D97A8575335701DB7FB56 | 371 |
+| asesor-ia-section.legacy.tsx | A87B788436C00FB92B085A546C765444CE5294FB596EF42183FA7F1615B82232 | 21520 |
+| tests\ai-advisor.spec.ts | BA0F1CF4022A3CC9BDA999AC4311BE8BB5A3544A52CB8535A5D8E4249390F2F5 | 5831 |
+| ai-advisor.service.ts | AD7F34B0A72CAFCC5447633E699639708125BD37F3D77637C6ABF36B24FB692C | 45715 |
+| ai-advisor.controller.ts | 1B23854E89E97F9C4B9DD70874FBC2DD17A9BD78B831DBC79B8342AD5CE32685 | 1943 |
+| ollama.client.ts | D4D6A742189277F62AC3AAC694D29758D4370D84F5AEA47DB6A2737E389D3CB1 | 15485 |
+| ollama-native.client.ts | 4E7A9ED3168EA203FCA2007D0CAD99567118B200D9ADB5E9F2F293F2800992AD | 21304 |
+| movements.service.ts | 89DA037397DAA3CBF6652E07107F38AAE1424530448A6C4374C4BCDBD1F82F01 | 24974 |
+| categories.service.ts | 00E3ED2DB1ACED3315FBBF0A5A964FE103B3DEEBE14C47AFA4D372BA6362EC29 | 15740 |
+
+## Ports
+- Backend: 11436 (FREE before validation)
+- Frontend: 11437 (FREE before validation)
+
+## Evidence Folder
+- Created: architecture-handoff/agents-to-architect/pending-validation/APPCAJA-V3-APP-AI-UX-STABILITY-001-evidence-v1.0.1
+- Evidence v1.0.0 NOT reused (per instruction)

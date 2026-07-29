@@ -1,0 +1,12 @@
+{
+  "id": "002",
+  "test": "ai-advisor.spec.ts:60",
+  "name": "Asesor IA responde en UI desktop y conserva acceso mobile",
+  "status": "FAIL_INFRA",
+  "reason": "Backend died again (ECONNREFUSED 127.0.0.1:11436) during cleanup. Consistent failure - backend unstable during AI advisor test execution.",
+  "attempt": 2,
+  "evidence_dir": "002-ai-advisor-infra-fail2",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T19:55:00Z",
+  "note": "Backend crashes consistently during AI advisor cleanup. Test reaches line 99 but cannot complete DELETE operations."
+}

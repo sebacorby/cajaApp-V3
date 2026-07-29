@@ -1,0 +1,180 @@
+import { prisma } from "../../db/prisma.js";
+
+export interface LegacyProjectionRepairStats {
+  groupsInspected: number;
+  groupsRepaired: number;
+  projectionsRepaired: number;
+  groupsUnresolved: number;
+}
+
+type ProjectionCandidate = {
+  id: string;
+  statementId: string;
+  rowId: string;
+  installmentCurrent: number | null;
+  installmentTotal: number | null;
+  amountPesosRaw: string | null;
+  amountDollarsRaw: string | null;
+  currencyOriginal: string | null;
+};
+
+type StatementRowCandidate = {
+  id: string;
+  statementId: string;
+  installmentRaw: string | null;
+  amountPesosRaw: string | null;
+  amountDollarsRaw: string | null;
+  currencyOriginal: string | null;
+};
+
+function normalized(value: string | null | undefined): string | null {
+  const result = value?.trim();
+  return result ? result : null;
+}
+
+function uniqueNonNull(values: Array<string | null | undefined>): string[] {
+  return Array.from(new Set(values.map(normalized).filter((value): value is string => Boolean(value))));
+}
+
+function uniqueNumbers(values: Array<number | null>): number[] {
+  return Array.from(new Set(values.filter((value): value is number => value !== null)));
+}
+
+export function parseInstallmentRaw(value: string | null): { current: number; total: number } | null {
+  if (!value) return null;
+  const match = value.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!match) return null;
+  const current = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || total < 1 || current > total) {
+    return null;
+  }
+  return { current, total };
+}
+
+export function matchesLegacyProjectionGroup(
+  projections: ProjectionCandidate[],
+  row: StatementRowCandidate,
+): boolean {
+  if (projections.length === 0) return false;
+  if (projections.some((projection) => projection.statementId !== row.statementId)) return false;
+
+  const totals = uniqueNumbers(projections.map((projection) => projection.installmentTotal));
+  const currents = uniqueNumbers(projections.map((projection) => projection.installmentCurrent));
+  if (totals.length !== 1 || currents.length === 0) return false;
+
+  const sourceInstallment = parseInstallmentRaw(row.installmentRaw);
+  if (!sourceInstallment) return false;
+
+  const firstFutureInstallment = Math.min(...currents);
+  if (sourceInstallment.total !== totals[0] || sourceInstallment.current !== firstFutureInstallment - 1) {
+    return false;
+  }
+
+  const currencies = uniqueNonNull(projections.map((projection) => projection.currencyOriginal)).map((value) => value.toUpperCase());
+  if (currencies.length !== 1) return false;
+  if (normalized(row.currencyOriginal)?.toUpperCase() !== currencies[0]) return false;
+
+  const arsAmounts = uniqueNonNull(projections.map((projection) => projection.amountPesosRaw));
+  const usdAmounts = uniqueNonNull(projections.map((projection) => projection.amountDollarsRaw));
+  if (arsAmounts.length > 1 || usdAmounts.length > 1) return false;
+
+  // A repair without an amount anchor is too weak and must remain unresolved.
+  if (arsAmounts.length === 0 && usdAmounts.length === 0) return false;
+  if (arsAmounts.length === 1 && normalized(row.amountPesosRaw) !== arsAmounts[0]) return false;
+  if (usdAmounts.length === 1 && normalized(row.amountDollarsRaw) !== usdAmounts[0]) return false;
+
+  return true;
+}
+
+export async function repairLegacyProjectionRowIds(): Promise<LegacyProjectionRepairStats> {
+  const [projections, rows] = await Promise.all([
+    prisma.cardInstallmentProjection.findMany({
+      where: { isManual: false },
+      select: {
+        id: true,
+        statementId: true,
+        rowId: true,
+        installmentCurrent: true,
+        installmentTotal: true,
+        amountPesosRaw: true,
+        amountDollarsRaw: true,
+        currencyOriginal: true,
+      },
+      orderBy: [{ statementId: "asc" }, { rowId: "asc" }, { monthKey: "asc" }, { id: "asc" }],
+    }),
+    prisma.cardStatementRow.findMany({
+      select: {
+        id: true,
+        statementId: true,
+        installmentRaw: true,
+        amountPesosRaw: true,
+        amountDollarsRaw: true,
+        currencyOriginal: true,
+      },
+      orderBy: [{ statementId: "asc" }, { id: "asc" }],
+    }),
+  ]);
+
+  const rowIds = new Set(rows.map((row) => row.id));
+  const rowsByStatement = new Map<string, StatementRowCandidate[]>();
+  for (const row of rows) {
+    const bucket = rowsByStatement.get(row.statementId) ?? [];
+    bucket.push(row);
+    rowsByStatement.set(row.statementId, bucket);
+  }
+
+  const legacyGroups = new Map<string, ProjectionCandidate[]>();
+  for (const projection of projections) {
+    if (rowIds.has(projection.rowId)) continue;
+    const key = `${projection.statementId}\u0000${projection.rowId}`;
+    const bucket = legacyGroups.get(key) ?? [];
+    bucket.push(projection);
+    legacyGroups.set(key, bucket);
+  }
+
+  let groupsRepaired = 0;
+  let projectionsRepaired = 0;
+  let groupsUnresolved = 0;
+  const updates: Array<ReturnType<typeof prisma.cardInstallmentProjection.updateMany>> = [];
+
+  for (const group of legacyGroups.values()) {
+    const statementId = group[0]?.statementId;
+    const legacyRowId = group[0]?.rowId;
+    if (!statementId || !legacyRowId) {
+      groupsUnresolved += 1;
+      continue;
+    }
+
+    const candidates = (rowsByStatement.get(statementId) ?? []).filter((row) =>
+      matchesLegacyProjectionGroup(group, row),
+    );
+
+    // Never guess. Ambiguous or missing matches remain visible as pendientes.
+    if (candidates.length !== 1) {
+      groupsUnresolved += 1;
+      continue;
+    }
+
+    const targetRowId = candidates[0].id;
+    updates.push(
+      prisma.cardInstallmentProjection.updateMany({
+        where: { statementId, rowId: legacyRowId, isManual: false },
+        data: { rowId: targetRowId },
+      }),
+    );
+    groupsRepaired += 1;
+    projectionsRepaired += group.length;
+  }
+
+  if (updates.length > 0) {
+    await prisma.$transaction(updates);
+  }
+
+  return {
+    groupsInspected: legacyGroups.size,
+    groupsRepaired,
+    projectionsRepaired,
+    groupsUnresolved,
+  };
+}

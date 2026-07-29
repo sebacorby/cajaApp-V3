@@ -1,0 +1,791 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model UploadedDocument {
+  id            String   @id @default(uuid())
+  fileName      String
+  mimeType      String
+  sizeBytes     Int
+  sha256        String
+  storagePath   String
+  pageCount     Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  aiExtractionRuns     AiExtractionRun[]
+  drafts               CardStatementDraft[]
+  statements           CardStatement[]
+  salaryReceiptDrafts  SalaryReceiptDraft[]
+  salaryReceipts       SalaryReceipt[]
+}
+
+model AiExtractionRun {
+  id              String   @id @default(uuid())
+  documentId      String
+  document        UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  promptFilePath  String
+  promptHash      String
+  promptVersion   String?
+
+  modelProvider   String
+  modelBaseUrl    String
+  modelName       String
+
+  rawResponsePath String?
+  rawResponseHash String?
+  jsonOutput      String?
+
+  validationErrors String?
+  retries          Int      @default(0)
+
+  status          String   @default("started")
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  draft               CardStatementDraft? @relation("CardStatementAiRun")
+  salaryReceiptDraft SalaryReceiptDraft?  @relation("SalaryReceiptAiRun")
+}
+
+model CardStatementDraft {
+  id            String   @id @default(uuid())
+  documentId    String
+  document      UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  aiRunId       String?  @unique
+  aiRun         AiExtractionRun? @relation("CardStatementAiRun", fields: [aiRunId], references: [id])
+
+  status        String   @default("imported")
+
+  previewJson   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sections      CardStatementDraftSection[]
+  groups        CardStatementDraftGroup[]
+  rows          CardStatementDraftRow[]
+
+  acceptedStatement CardStatement?
+}
+
+model CardStatementDraftSection {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  label         String
+  displayOrder  Int
+
+  @@unique([draftId, sectionKey])
+  @@index([draftId])
+}
+
+model CardStatementDraftGroup {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  groupKey      String
+  sectionKey    String
+  label         String
+  displayOrder  Int
+  cardLast4     String?
+  holderName    String?
+
+  @@unique([draftId, groupKey])
+  @@index([draftId])
+}
+
+model CardStatementDraftRow {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  groupKey      String?
+
+  displayOrder  Int
+  sourcePage    Int?
+
+  rowType       String
+  editable      Boolean  @default(false)
+
+  dateRaw       String?
+  dateIso       String?
+  markerRaw     String?
+  referenceRaw  String?
+  installmentRaw String?
+  receiptRaw    String?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  originalText  String
+  confidence    Float?
+
+  @@index([draftId])
+  @@index([draftId, sectionKey])
+  @@index([draftId, groupKey])
+}
+
+model CardStatement {
+  id            String   @id @default(uuid())
+  documentId    String
+  document      UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  draftId       String?  @unique
+  draft         CardStatementDraft? @relation(fields: [draftId], references: [id])
+
+  status        String   @default("accepted")
+  periodKey     String?
+  historyKey    String?
+  version       Int      @default(1)
+  isActiveForPeriod Boolean @default(true)
+  archivedAt    DateTime?
+  archivedReason String?
+
+  bankName      String?
+  brand         String?
+  statementNumber String?
+  accountNumber String?
+  holderName    String?
+  periodLabel   String?
+
+  totalPesosRaw String?
+  totalDollarsRaw String?
+  minimumPaymentPesosRaw String?
+
+  currentDueDate String?
+  nextClosingDate String?
+  nextDueDate    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sections      CardStatementSection[]
+  groups        CardStatementGroup[]
+  rows          CardStatementRow[]
+  projections   CardInstallmentProjection[]
+  manualPurchases ManualCardPurchase[]
+
+  @@unique([historyKey, version])
+  @@index([historyKey, isActiveForPeriod])
+  @@index([periodKey])
+  @@index([status, archivedAt])
+}
+
+model CardStatementSection {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  label         String
+  displayOrder  Int
+
+  @@index([statementId])
+}
+
+model CardStatementGroup {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  groupKey      String
+  sectionKey    String
+  label         String
+  displayOrder  Int
+  cardLast4     String?
+  holderName    String?
+
+  totalPesosRaw   String?
+  totalDollarsRaw String?
+
+  @@index([statementId])
+}
+
+model CardStatementRow {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  groupKey      String?
+
+  displayOrder  Int
+  sourcePage    Int?
+
+  rowType       String
+  editable      Boolean
+
+  dateRaw       String?
+  dateIso       String?
+  markerRaw     String?
+  referenceRaw  String?
+  installmentRaw String?
+  receiptRaw    String?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  originalText  String
+  confidence    Float?
+
+  @@index([statementId])
+  @@index([statementId, sectionKey])
+  @@index([statementId, groupKey])
+}
+
+model CardInstallmentProjection {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  rowId         String
+  monthKey      String
+  label         String
+
+  installmentCurrent Int?
+  installmentTotal  Int?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  isManual      Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+
+  @@index([statementId])
+  @@index([statementId, monthKey])
+}
+
+model ManualCardPurchase {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  cardLast4     String
+  holderName    String
+  purchaseDate  String
+  description   String
+  currency      String
+  amountRaw     String
+  installments  Int
+  notes         String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([statementId])
+}
+
+model IncomeSource {
+  id                    String   @id @default(uuid())
+  name                  String
+  employer              String?
+  kind                  String
+  currency              String   @default("ARS")
+  baseAmountRaw         String
+  startMonthKey         String
+  paymentDay            Int?
+  increaseEveryMonths   Int      @default(3)
+  increasePercentRaw    String   @default("0")
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  events                IncomeEvent[]
+  salaryReceipts        SalaryReceipt[]
+
+  @@index([startMonthKey])
+  @@index([active])
+}
+
+model IncomeEvent {
+  id          String   @id @default(uuid())
+  sourceId    String?
+  dedupeKey   String?  @unique
+  source      IncomeSource? @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  monthKey    String
+  kind        String
+  currency    String   @default("ARS")
+  amountRaw   String
+  label       String
+  status      String   @default("projected")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salaryReceiptActual     SalaryReceipt? @relation("SalaryReceiptActualEvent")
+  salaryReceiptProjection SalaryReceipt? @relation("SalaryReceiptProjectionEvent")
+
+  @@index([monthKey])
+  @@index([sourceId, monthKey])
+}
+
+model SalaryReceiptDraft {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  aiRunId     String?  @unique
+  aiRun       AiExtractionRun? @relation("SalaryReceiptAiRun", fields: [aiRunId], references: [id])
+  status      String   @default("processing")
+  previewJson String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items           SalaryReceiptDraftItem[]
+  acceptedReceipt SalaryReceipt?
+
+  @@index([status, createdAt])
+  @@index([documentId])
+}
+
+model SalaryReceiptDraftItem {
+  id           String   @id @default(uuid())
+  draftId      String
+  draft        SalaryReceiptDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  displayOrder Int
+  kind         String
+  code         String?
+  label        String
+  amountRaw    String
+  sourcePage   Int?
+  originalText String
+  confidence   Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([draftId, displayOrder])
+}
+
+model SalaryReceipt {
+  id                      String   @id @default(uuid())
+  documentId              String
+  document                UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  draftId                 String?  @unique
+  draft                   SalaryReceiptDraft? @relation(fields: [draftId], references: [id])
+  historyKey               String
+  version                  Int      @default(1)
+  isActiveForPeriod        Boolean  @default(true)
+  status                   String   @default("accepted")
+  employerName             String
+  employerTaxId            String?
+  employeeName             String
+  employeeTaxId            String?
+  periodMonthKey           String
+  payDate                  String?
+  currency                 String   @default("ARS")
+  grossAmountRaw           String
+  deductionsAmountRaw      String
+  netAmountRaw             String
+  sourceId                 String?
+  source                   IncomeSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  actualIncomeEventId      String?  @unique
+  actualIncomeEvent        IncomeEvent? @relation("SalaryReceiptActualEvent", fields: [actualIncomeEventId], references: [id], onDelete: SetNull)
+  projectionIncomeEventId  String?  @unique
+  projectionIncomeEvent    IncomeEvent? @relation("SalaryReceiptProjectionEvent", fields: [projectionIncomeEventId], references: [id], onDelete: SetNull)
+  acceptedAt               DateTime @default(now())
+  reversedAt               DateTime?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  items SalaryReceiptItem[]
+
+  @@unique([historyKey, version])
+  @@index([periodMonthKey, status])
+  @@index([historyKey, isActiveForPeriod])
+  @@index([sourceId])
+}
+
+model SalaryReceiptItem {
+  id           String   @id @default(uuid())
+  receiptId    String
+  receipt      SalaryReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  displayOrder Int
+  kind         String
+  code         String?
+  label        String
+  amountRaw    String
+  sourcePage   Int?
+  originalText String
+  confidence   Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([receiptId, displayOrder])
+}
+
+model MovementCategory {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  color           String   @default("#64748b")
+  icon            String   @default("circle")
+  active          Boolean  @default(true)
+  isSystem        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  manualMovements ManualMovement[]
+  debitCsvRows   DebitCsvRow[]
+  rules           MovementCategoryRule[]
+  budgets         CategoryBudget[]
+
+  @@index([active])
+}
+
+model MovementCategoryRule {
+  id                String   @id @default(uuid())
+  categoryId        String
+  category          MovementCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  keyword           String
+  normalizedKeyword String
+  priority          Int      @default(100)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([categoryId, normalizedKeyword])
+  @@index([active, priority])
+  @@index([normalizedKeyword])
+}
+
+model ManualMovement {
+  id                String   @id @default(uuid())
+  occurredOn        String
+  effectiveMonthKey String
+  type              String
+  sourceType        String
+  description       String
+  categoryId        String?
+  category          MovementCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  currency          String   @default("ARS")
+  amountRaw         String
+  status            String   @default("actual")
+  notes             String?
+  dedupeKey         String?  @unique
+  voidedAt          DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([occurredOn])
+  @@index([effectiveMonthKey])
+  @@index([type, currency])
+  @@index([sourceType])
+  @@index([categoryId])
+  @@index([voidedAt])
+}
+
+model DebitCsvImport {
+  id            String   @id @default(uuid())
+  fileName      String
+  sha256        String   @unique
+  bankName      String?
+  status        String   @default("draft")
+  delimiter     String
+  encoding      String
+  headerRow     Int
+  headersJson   String
+  mappingJson   String
+  rowCount      Int      @default(0)
+  acceptedCount Int      @default(0)
+  omittedCount  Int      @default(0)
+  rejectedCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  acceptedAt    DateTime?
+  reversedAt    DateTime?
+
+  rows          DebitCsvRow[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DebitCsvRow {
+  id               String   @id @default(uuid())
+  importId         String
+  import           DebitCsvImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  rowNumber        Int
+  occurredOn       String?
+  description      String
+  reference        String?
+  movementType     String
+  currency         String   @default("ARS")
+  amountRaw        String
+  categoryId       String?
+  category         MovementCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  fingerprint      String
+  duplicateOrdinal Int      @default(1)
+  dedupeKey        String?  @unique
+  included         Boolean  @default(true)
+  status           String   @default("draft")
+  validationError  String?
+  originalJson     String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  acceptedAt       DateTime?
+
+  @@unique([importId, rowNumber])
+  @@index([importId, status])
+  @@index([occurredOn])
+  @@index([categoryId])
+  @@index([fingerprint])
+}
+
+model CurrencyExchangeRate {
+  id            String   @id @default(uuid())
+  pair          String   @unique
+  rateRaw       String
+  effectiveDate String
+  source        String   @default("manual")
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([effectiveDate])
+}
+
+model LocalAppSettings {
+  id              String   @id @default("local")
+  displayName     String   @default("Javi")
+  locale          String   @default("es-AR")
+  timezone        String   @default("America/Argentina/Tucuman")
+  defaultCurrency String   @default("ARS")
+  theme           String   @default("system")
+  hideAmounts     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SavingsGoal {
+  id              String   @id @default(uuid())
+  name            String
+  targetAmountRaw String
+  currency        String   @default("ARS")
+  targetDate      String?
+  status          String   @default("active")
+  notes           String?
+  completedAt     DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contributions   GoalContribution[]
+  activities      GoalActivity[]
+
+  @@index([status])
+  @@index([targetDate])
+  @@index([currency])
+}
+
+model GoalContribution {
+  id              String   @id @default(uuid())
+  goalId          String
+  goal            SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  contributedOn   String
+  amountRaw       String
+  notes           String?
+  referenceType   String?
+  referenceId     String?
+  referenceLabel  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([goalId, contributedOn])
+  @@index([referenceType, referenceId])
+}
+
+model GoalActivity {
+  id          String   @id @default(uuid())
+  goalId      String
+  goal        SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  kind        String
+  detailJson  String?
+  createdAt   DateTime @default(now())
+
+  @@index([goalId, createdAt])
+}
+
+model CategoryBudget {
+  id              String   @id @default(uuid())
+  categoryId      String
+  category        MovementCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  currency        String   @default("ARS")
+  periodStart     String
+  periodEnd       String
+  limitAmountRaw  String
+  rolloverEnabled Boolean  @default(false)
+  status          String   @default("active")
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([periodStart, periodEnd])
+  @@index([categoryId, currency])
+}
+
+model FinancialHealthSnapshot {
+  id                String   @id @default(uuid())
+  periodFrom        String
+  periodTo          String
+  formulaVersion    String
+  sourceFingerprint String
+  resultJson        String
+  createdAt         DateTime @default(now())
+
+  @@unique([periodFrom, periodTo, formulaVersion, sourceFingerprint])
+  @@index([formulaVersion, createdAt])
+  @@index([periodFrom, periodTo])
+}
+
+model AiAdvisorInteraction {
+  id                            String   @id @default(uuid())
+  periodFrom                    String
+  periodTo                      String
+  mode                          String
+  question                      String
+  currency                      String?
+  contextFingerprint            String
+  financialHealthFormulaVersion String
+  promptVersion                 String
+  promptSha256                  String
+  provider                      String
+  model                         String
+  providerRequestId             String
+  requestJson                   String
+  contextJson                   String
+  responseJson                  String
+  durationMs                    Int
+  createdAt                     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([periodFrom, periodTo])
+  @@index([contextFingerprint])
+  @@index([promptVersion])
+}
+
+model ReconciliationCase {
+  id                  String   @id @default(uuid())
+  fingerprint         String   @unique
+  relationType        String
+  status              String   @default("open")
+  resolution          String?
+  confidence          Int
+  title               String
+  rationaleJson       String
+  suggestedResolution String
+  currency            String?
+  amountRaw           String?
+  occurredOn          String?
+  excludedMovementId  String?
+  isCurrent           Boolean  @default(true)
+  lastDetectedAt      DateTime @default(now())
+  resolvedAt          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  participants ReconciliationParticipant[]
+
+  @@index([status, relationType])
+  @@index([isCurrent, status])
+  @@index([excludedMovementId])
+  @@index([lastDetectedAt])
+}
+
+model ReconciliationParticipant {
+  id           String   @id @default(uuid())
+  caseId       String
+  case         ReconciliationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  role         String
+  entityKey    String
+  entityType   String
+  sourceType   String
+  sourceId     String
+  movementId   String?
+  description  String
+  occurredOn   String?
+  currency     String?
+  amountRaw    String?
+  metadataJson String
+  createdAt    DateTime @default(now())
+
+  @@unique([caseId, entityKey])
+  @@index([caseId, role])
+  @@index([movementId])
+  @@index([entityType, sourceId])
+}
+
+model MonthClose {
+  id                String   @id @default(uuid())
+  monthKey          String
+  version           Int      @default(1)
+  activeKey         String?  @unique
+  status            String   @default("closed")
+  summaryJson       String
+  snapshotJson      String
+  sourceFingerprint String
+  closedAt          DateTime @default(now())
+  reopenedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  activities MonthCloseActivity[]
+
+  @@unique([monthKey, version])
+  @@index([monthKey, status])
+  @@index([status, closedAt])
+}
+
+model MonthCloseActivity {
+  id         String   @id @default(uuid())
+  closeId    String
+  close      MonthClose @relation(fields: [closeId], references: [id], onDelete: Cascade)
+  kind       String
+  detailJson String?
+  createdAt  DateTime @default(now())
+
+  @@index([closeId, createdAt])
+}
+
+model BackupArchive {
+  id           String   @id @default(uuid())
+  fileName     String   @unique
+  storagePath  String
+  kind         String   @default("manual")
+  status       String   @default("created")
+  sizeBytes    Int
+  sha256       String
+  manifestJson String
+  createdAt    DateTime @default(now())
+  validatedAt  DateTime?
+  restoredAt   DateTime?
+
+  activities BackupRestoreActivity[]
+
+  @@index([kind, createdAt])
+  @@index([status, createdAt])
+}
+
+model BackupRestoreActivity {
+  id         String   @id @default(uuid())
+  backupId   String?
+  backup     BackupArchive? @relation(fields: [backupId], references: [id], onDelete: SetNull)
+  action     String
+  status     String
+  detailJson String?
+  createdAt  DateTime @default(now())
+
+  @@index([backupId, createdAt])
+  @@index([action, status])
+}

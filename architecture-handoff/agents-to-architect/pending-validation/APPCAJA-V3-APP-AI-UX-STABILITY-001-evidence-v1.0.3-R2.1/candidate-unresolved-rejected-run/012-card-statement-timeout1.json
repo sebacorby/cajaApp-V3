@@ -1,0 +1,11 @@
+{
+  "id": "012",
+  "test": "card-statement-import.spec.ts:309",
+  "name": "card statement import › stops polling and offers retry when extraction fails",
+  "status": "FAIL_TIMEOUT",
+  "reason": "Test timed out after 300s. Backend died during execution (ECONNREFUSED).",
+  "evidence_dir": null,
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:10:00Z",
+  "note": "No evidence collected - test timed out before completion."
+}

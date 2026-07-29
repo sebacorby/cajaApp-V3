@@ -1,0 +1,27 @@
+# APP-SEC-DEPS-001 v1.0.3 — CHECKLIST
+
+- [ ] Root Dropbox canónico y Node v24.18.0 verificados.
+- [ ] `package.json` y `package-lock.json` canónicos siguen en hashes baseline.
+- [ ] SQLite respaldada y SHA-256 inicial registrado.
+- [ ] Script `STAGE-v1.0.3.ps1` ejecutado sin referencias v1.0.1/v1.0.2.
+- [ ] Staging `baseline/frontend` y `candidate/frontend` creados fuera de Dropbox.
+- [ ] Candidate difiere de baseline sólo en `package.json` y `package-lock.json`.
+- [ ] Fixture Visa Galicia copiado, con tamaño y SHA-256.
+- [ ] Fixture recibo de sueldo copiado, con tamaño y SHA-256.
+- [ ] `npm ci` PASS en baseline y candidate, sin EBUSY.
+- [ ] Candidate `npm audit` total 0.
+- [ ] Candidate `npm ls` confirma versiones seguras.
+- [ ] No existen copias vulnerables anidadas.
+- [ ] Typecheck, lint y build PASS en baseline y candidate.
+- [ ] Backend real HTTP 200 en 11436.
+- [ ] Frontend baseline HTTP 200 en 11437 y luego detenido.
+- [ ] Frontend candidate HTTP 200 en 11437 y luego detenido.
+- [ ] Playwright completo excepto `ai-advisor.spec.ts`, Chromium, workers=1, retries=0.
+- [ ] `BASELINE-RESULT.json` y `CANDIDATE-RESULT.json` incluyen nombres exactos.
+- [ ] `COMPARISON.json` demuestra cero fallos nuevos y cero degradación.
+- [ ] Cero ENOENT de fixtures, skips y retries.
+- [ ] SQLite restaurada; procesos y puertos liberados.
+- [ ] `GATES-PASS.json` v1.0.3 creado sólo con todos los requisitos cumplidos.
+- [ ] Promoción atómica ejecutada únicamente después del PASS.
+- [ ] Archivos canónicos coinciden con hashes candidato.
+- [ ] Evidencia completa y `00-verdict.md` entregados.

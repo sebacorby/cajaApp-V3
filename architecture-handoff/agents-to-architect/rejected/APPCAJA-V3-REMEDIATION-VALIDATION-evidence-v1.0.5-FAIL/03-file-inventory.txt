@@ -1,0 +1,18 @@
+Canonical files recovered:
+- I:\cajaApp-V3\workspace\backend\src\modules\movements\categories.service.ts
+- I:\cajaApp-V3\workspace\backend\src\modules\global-search\global-search.service.ts
+- I:\cajaApp-V3\workspace\backend\src\modules\global-search\global-search.routes.ts
+- I:\cajaApp-V3\workspace\backend\src\modules\global-search\global-search.controller.ts
+- I:\cajaApp-V3\workspace\backend\src\modules\global-search\global-search.schemas.ts
+- I:\cajaApp-V3\workspace\frontend\src\components\finance\search\global-search-dialog.tsx
+- I:\cajaApp-V3\workspace\frontend\src\components\finance\search\search-target-banner.tsx
+- I:\cajaApp-V3\workspace\backend\prisma\migrations\20260711234500_add_category_rules\migration.sql
+
+Duplicate files removed:
+- none
+
+Build artifacts removed:
+- I:\cajaApp-V3\workspace\backend\dist
+
+Suffixed files remaining in workspace (excluding node_modules, .next, dist, coverage, playwright-report, test-results):
+- none

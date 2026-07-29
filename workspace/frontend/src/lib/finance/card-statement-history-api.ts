@@ -1,0 +1,70 @@
+import type { AcceptedCardStatement } from "./card-statements-api";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:11436";
+
+export interface CardStatementHistoryItem {
+  id: string;
+  status: string;
+  periodKey: string | null;
+  version: number;
+  isActiveForPeriod: boolean;
+  bankName: string | null;
+  brand: string | null;
+  statementNumber: string | null;
+  totalPesosRaw: string | null;
+  totalDollarsRaw: string | null;
+  currentDueDate: string | null;
+  createdAt: string;
+  document: {
+    id: string;
+    fileName: string;
+    pageCount: number | null;
+    sha256: string;
+  };
+  groups: Array<{
+    cardLast4: string | null;
+    holderName: string | null;
+  }>;
+}
+
+async function parseError(response: Response): Promise<Error> {
+  try {
+    const body = (await response.json()) as { message?: string; error?: string };
+    return new Error(body.message || body.error || `HTTP ${response.status}`);
+  } catch {
+    return new Error((await response.text()) || `HTTP ${response.status}`);
+  }
+}
+
+export async function fetchCardStatementHistory(
+  signal?: AbortSignal,
+): Promise<CardStatementHistoryItem[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/card-statements/statements?limit=100&includeArchived=true`,
+    { cache: "no-store", signal },
+  );
+  if (!response.ok) throw await parseError(response);
+  const body = (await response.json()) as { statements?: CardStatementHistoryItem[] };
+  return Array.isArray(body.statements) ? body.statements : [];
+}
+
+export async function fetchAcceptedCardStatement(
+  statementId: string,
+  signal?: AbortSignal,
+): Promise<AcceptedCardStatement> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/card-statements/statements/${encodeURIComponent(statementId)}`,
+    { cache: "no-store", signal },
+  );
+  if (!response.ok) throw await parseError(response);
+  return response.json() as Promise<AcceptedCardStatement>;
+}
+
+export async function deleteAcceptedCardStatement(statementId: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/card-statements/statements/${encodeURIComponent(statementId)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) throw await parseError(response);
+}

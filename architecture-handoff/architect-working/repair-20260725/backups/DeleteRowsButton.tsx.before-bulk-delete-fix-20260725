@@ -1,0 +1,76 @@
+"use client";
+
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  deleteFutureDebtRow,
+  FutureDebtApiError,
+} from "@/lib/finance/future-debt-api";
+
+type ConfirmState = "idle" | "confirming";
+
+interface DeleteRowsButtonProps {
+  selectedIds: Set<string>;
+  onDeleted: () => void;
+  onError?: (message: string) => void;
+}
+
+export function DeleteRowsButton({
+  selectedIds,
+  onDeleted,
+  onError,
+}: DeleteRowsButtonProps) {
+  const [confirmState, setConfirmState] = useState<ConfirmState>("idle");
+
+  if (selectedIds.size === 0) return null;
+
+  const count = selectedIds.size;
+  const label = `Eliminar ${count} ${count === 1 ? "fila" : "filas"}`;
+
+  const handleConfirm = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await Promise.all(ids.map((id) => deleteFutureDebtRow(id)));
+      setConfirmState("idle");
+      onDeleted();
+    } catch (err) {
+      setConfirmState("idle");
+      // If 404, treat as success (row already gone)
+      if (err instanceof FutureDebtApiError && err.status === 404) {
+        onDeleted();
+        return;
+      }
+      onError?.(err instanceof Error ? err.message : "Error al eliminar");
+    }
+  };
+
+  if (confirmState === "idle") {
+    return (
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => setConfirmState("confirming")}
+      >
+        <Trash2 className="size-4" />
+        {label}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm">¿{label}?</span>
+      <Button variant="destructive" size="sm" onClick={handleConfirm}>
+        Confirmar
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setConfirmState("idle")}
+      >
+        Cancelar
+      </Button>
+    </div>
+  );
+}

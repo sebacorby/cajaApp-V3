@@ -1,0 +1,24 @@
+﻿
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"status":"ok","service":"cajaapp-v3-backend","node":"v22.14.0"}
+RawContent        : HTTP/1.1 200 OK
+                    vary: Origin
+                    access-control-allow-credentials: true
+                    Connection: keep-alive
+                    Keep-Alive: timeout=72
+                    Content-Length: 64
+                    Content-Type: application/json; charset=utf-8
+                    Date: Thu, 09 ...
+Forms             : 
+Headers           : {[vary, Origin], [access-control-allow-credentials, true], [Connection, keep-alive], [Keep-Alive, 
+                    timeout=72]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : 
+RawContentLength  : 64
+
+
+

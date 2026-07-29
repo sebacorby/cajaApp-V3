@@ -1,0 +1,416 @@
+import { prisma } from "../../db/prisma.js";
+import { NotFoundError } from "../../shared/errors.js";
+import type { CardStatementPreview, AcceptResult, MonthlyProjection } from "./cards.types.js";
+import { logger } from "../../shared/logger.js";
+import { installmentProjectionService } from "../projections/installment-projection.service.js";
+import { parseArgentinePesos, parseDollars } from "../../shared/money.js";
+
+export class CardsService {
+  async getDraft(draftId: string) {
+    const draft = await prisma.cardStatementDraft.findUnique({
+      where: { id: draftId },
+      include: {
+        document: true,
+        aiRun: true,
+        sections: {
+          orderBy: { displayOrder: "asc" },
+        },
+        groups: {
+          orderBy: { displayOrder: "asc" },
+        },
+        rows: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
+    if (!draft) {
+      throw new NotFoundError("Draft");
+    }
+
+    return draft;
+  }
+
+  async getStatement(statementId: string) {
+    const statement = await prisma.cardStatement.findUnique({
+      where: { id: statementId },
+      include: {
+        sections: { orderBy: { displayOrder: "asc" } },
+        groups: { orderBy: { displayOrder: "asc" } },
+        rows: { orderBy: { displayOrder: "asc" } },
+        projections: { orderBy: { monthKey: "asc" } },
+        manualPurchases: true,
+      },
+    });
+
+    if (!statement) {
+      throw new NotFoundError("Statement");
+    }
+
+    return statement;
+  }
+
+  async updateDraft(draftId: string, preview: CardStatementPreview): Promise<{ success: boolean; warnings: string[] }> {
+    const draft = await this.getDraft(draftId);
+
+    if (draft.status !== "preview_ready") {
+      throw new Error(`Cannot update draft in status: ${draft.status}`);
+    }
+
+    const warnings: string[] = [];
+
+    const displayOrders = preview.rows.map(r => r.displayOrder);
+    const uniqueOrders = new Set(displayOrders);
+    if (uniqueOrders.size !== displayOrders.length) {
+      throw new Error("Duplicate displayOrder found in preview");
+    }
+
+    for (const row of preview.rows) {
+      if (!row.originalText || row.originalText.trim() === "") {
+        throw new Error(`Row ${row.id} is missing originalText`);
+      }
+    }
+
+    const sectionKeys = new Set(preview.sections.map(s => s.id));
+    const groupKeys = new Set(preview.groups.map(g => g.id));
+
+    for (const row of preview.rows) {
+      if (row.sectionId && !sectionKeys.has(row.sectionId)) {
+        throw new Error(`Row references unknown sectionId: ${row.sectionId}`);
+      }
+      if (row.groupId && !groupKeys.has(row.groupId)) {
+        throw new Error(`Row references unknown groupId: ${row.groupId}`);
+      }
+    }
+
+    const groupSectionMap = new Map<string, string>();
+    for (const row of preview.rows) {
+      if (row.groupId && row.sectionId && !groupSectionMap.has(row.groupId)) {
+        groupSectionMap.set(row.groupId, row.sectionId);
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.cardStatementDraftSection.deleteMany({ where: { draftId } });
+      await tx.cardStatementDraftGroup.deleteMany({ where: { draftId } });
+      await tx.cardStatementDraftRow.deleteMany({ where: { draftId } });
+
+      await tx.cardStatementDraftSection.createMany({
+        data: preview.sections.map(s => ({
+          draftId,
+          sectionKey: s.id,
+          label: s.label,
+          displayOrder: s.displayOrder,
+        })),
+      });
+
+      await tx.cardStatementDraftGroup.createMany({
+        data: preview.groups.map(g => ({
+          draftId,
+          groupKey: g.id,
+          sectionKey: groupSectionMap.get(g.id) || preview.sections[0]?.id || "",
+          label: g.label,
+          displayOrder: g.displayOrder,
+          cardLast4: g.cardLast4,
+          holderName: g.holderName,
+        })),
+      });
+
+      await tx.cardStatementDraftRow.createMany({
+        data: preview.rows.map(r => ({
+          draftId,
+          sectionKey: r.sectionId,
+          groupKey: r.groupId,
+          displayOrder: r.displayOrder,
+          sourcePage: r.sourcePage,
+          rowType: r.rowType,
+          editable: r.editable,
+          dateRaw: r.dateRaw,
+          dateIso: r.dateIso,
+          markerRaw: r.markerRaw,
+          referenceRaw: r.referenceRaw,
+          installmentRaw: r.installmentRaw,
+          receiptRaw: r.receiptRaw,
+          amountPesosRaw: r.amountPesos,
+          amountDollarsRaw: r.amountDollars,
+          currencyOriginal: r.currencyOriginal,
+          originalText: r.originalText,
+          confidence: r.confidence,
+        })),
+      });
+
+      await tx.cardStatementDraft.update({
+        where: { id: draftId },
+        data: {
+          previewJson: JSON.stringify(preview),
+        },
+      });
+    });
+
+    logger.info({ draftId }, "Draft updated");
+
+    return { success: true, warnings };
+  }
+
+  async acceptDraft(draftId: string, preview: CardStatementPreview): Promise<AcceptResult> {
+    const draft = await this.getDraft(draftId);
+
+    if (draft.status !== "preview_ready") {
+      throw new Error(`Cannot accept draft in status: ${draft.status}`);
+    }
+
+    const groupSectionMap = new Map<string, string>();
+    for (const row of preview.rows) {
+      if (row.groupId && row.sectionId && !groupSectionMap.has(row.groupId)) {
+        groupSectionMap.set(row.groupId, row.sectionId);
+      }
+    }
+
+    const statementMonthKey = preview.summary.currentDueDate
+      ? preview.summary.currentDueDate.slice(0, 7)
+      : installmentProjectionService.getStatementMonthKey(preview.rows);
+
+    const projectionRows = preview.rows.map(r => ({
+      id: r.id,
+      rowType: r.rowType as import("../cards/cards.types.js").CardStatementRowType,
+      installmentRaw: r.installmentRaw,
+      installmentCurrent: r.installmentCurrent,
+      installmentTotal: r.installmentTotal,
+      amountPesos: r.amountPesos,
+      amountDollars: r.amountDollars,
+      currencyOriginal: r.currencyOriginal as import("../cards/cards.types.js").CurrencyOriginal,
+      dateIso: r.dateIso,
+    }));
+
+    const projections = installmentProjectionService.calculateProjections(
+      projectionRows as any,
+      statementMonthKey
+    );
+
+    const result = await prisma.$transaction(async (tx) => {
+      const statement = await tx.cardStatement.create({
+        data: {
+          documentId: draft.documentId,
+          draftId: draft.id,
+          bankName: preview.source.bankName,
+          brand: preview.source.brand,
+          statementNumber: preview.source.statementNumber,
+          periodLabel: preview.summary.currentDueDate || null,
+          totalPesosRaw: preview.summary.totalPesos,
+          totalDollarsRaw: preview.summary.totalDollars,
+          minimumPaymentPesosRaw: preview.summary.minimumPaymentPesos,
+          currentDueDate: preview.summary.currentDueDate,
+          nextClosingDate: preview.summary.nextClosingDate,
+          nextDueDate: preview.summary.nextDueDate,
+          status: "accepted",
+          sections: {
+            create: preview.sections.map(s => ({
+              sectionKey: s.id,
+              label: s.label,
+              displayOrder: s.displayOrder,
+            })),
+          },
+          groups: {
+            create: preview.groups.map(g => ({
+              groupKey: g.id,
+              sectionKey: groupSectionMap.get(g.id) || preview.sections[0]?.id || "",
+              label: g.label,
+              displayOrder: g.displayOrder,
+              cardLast4: g.cardLast4,
+              holderName: g.holderName,
+            })),
+          },
+          rows: {
+            create: preview.rows.map(r => ({
+              sectionKey: r.sectionId,
+              groupKey: r.groupId,
+              displayOrder: r.displayOrder,
+              sourcePage: r.sourcePage,
+              rowType: r.rowType,
+              editable: r.editable,
+              dateRaw: r.dateRaw,
+              dateIso: r.dateIso,
+              markerRaw: r.markerRaw,
+              referenceRaw: r.referenceRaw,
+              installmentRaw: r.installmentRaw,
+              receiptRaw: r.receiptRaw,
+              amountPesosRaw: r.amountPesos,
+              amountDollarsRaw: r.amountDollars,
+              currencyOriginal: r.currencyOriginal,
+              originalText: r.originalText,
+              confidence: r.confidence,
+            })),
+          },
+        },
+      });
+
+      if (projections.length > 0) {
+        await tx.cardInstallmentProjection.createMany({
+          data: projections.map(p => ({
+            statementId: statement.id,
+            rowId: p.rowId,
+            monthKey: p.monthKey,
+            label: p.label,
+            installmentCurrent: p.installmentCurrent,
+            installmentTotal: p.installmentTotal,
+            amountPesosRaw: p.amountPesos,
+            amountDollarsRaw: p.amountDollars,
+            currencyOriginal: p.currencyOriginal,
+            isManual: false,
+          })),
+        });
+      }
+
+      await tx.cardStatementDraft.update({
+        where: { id: draftId },
+        data: { status: "accepted" },
+      });
+
+      const persistedProjections = await tx.cardInstallmentProjection.findMany({
+        where: { statementId: statement.id },
+        orderBy: { monthKey: "asc" },
+      });
+
+      const monthMap = new Map<string, MonthlyProjection>();
+
+      for (const projection of persistedProjections) {
+        if (!monthMap.has(projection.monthKey)) {
+          monthMap.set(projection.monthKey, {
+            monthKey: projection.monthKey,
+            label: projection.label,
+            totalPesos: "0.00",
+            totalDollars: "0.00",
+          });
+        }
+        const existing = monthMap.get(projection.monthKey)!;
+
+        if (projection.currencyOriginal === "ARS" || projection.currencyOriginal === "MIXED") {
+          if (projection.amountPesosRaw) {
+            try {
+              const existingCents = parseArgentinePesos(existing.totalPesos);
+              const addCents = parseArgentinePesos(projection.amountPesosRaw);
+              const newTotal = existingCents + addCents;
+              existing.totalPesos = (Number(newTotal) / 100).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+            } catch {
+              // skip invalid amounts
+            }
+          }
+        }
+
+        if (projection.currencyOriginal === "USD" || projection.currencyOriginal === "MIXED") {
+          if (projection.amountDollarsRaw) {
+            try {
+              const existingCents = parseDollars(existing.totalDollars);
+              const addCents = parseDollars(projection.amountDollarsRaw);
+              const newTotal = existingCents + addCents;
+              existing.totalDollars = (Number(newTotal) / 100).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+            } catch {
+              // skip invalid amounts
+            }
+          }
+        }
+      }
+
+      const months = Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+      const acceptedRows = await tx.cardStatementRow.findMany({
+        where: { statementId: statement.id },
+        orderBy: { displayOrder: "asc" },
+      });
+
+      return {
+        statementId: statement.id,
+        status: "accepted" as const,
+        updatedValues: {
+          months,
+          rows: acceptedRows,
+        },
+        warnings: [] as string[],
+      };
+    });
+
+    return result;
+  }
+
+  async getUpdatedValues(fromMonth: string, toMonth: string): Promise<{ months: MonthlyProjection[] }> {
+    const statements = await prisma.cardStatement.findMany({
+      where: {
+        status: "accepted",
+      },
+      include: {
+        projections: {
+          where: {
+            monthKey: {
+              gte: fromMonth,
+              lte: toMonth,
+            },
+          },
+          orderBy: { monthKey: "asc" },
+        },
+        manualPurchases: true,
+      },
+    });
+
+    const monthMap = new Map<string, MonthlyProjection>();
+
+    for (const stmt of statements) {
+      for (const projection of stmt.projections) {
+        if (!monthMap.has(projection.monthKey)) {
+          monthMap.set(projection.monthKey, {
+            monthKey: projection.monthKey,
+            label: projection.label,
+            totalPesos: "0.00",
+            totalDollars: "0.00",
+          });
+        }
+        const existing = monthMap.get(projection.monthKey)!;
+
+        if (projection.currencyOriginal === "ARS" || projection.currencyOriginal === "MIXED") {
+          if (projection.amountPesosRaw) {
+            try {
+              const existingCents = parseArgentinePesos(existing.totalPesos);
+              const addCents = parseArgentinePesos(projection.amountPesosRaw);
+              const newTotal = existingCents + addCents;
+              existing.totalPesos = (Number(newTotal) / 100).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+            } catch {
+              // skip invalid amounts
+            }
+          }
+        }
+
+        if (projection.currencyOriginal === "USD" || projection.currencyOriginal === "MIXED") {
+          if (projection.amountDollarsRaw) {
+            try {
+              const existingCents = parseDollars(existing.totalDollars);
+              const addCents = parseDollars(projection.amountDollarsRaw);
+              const newTotal = existingCents + addCents;
+              existing.totalDollars = (Number(newTotal) / 100).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+            } catch {
+              // skip invalid amounts
+            }
+          }
+        }
+      }
+    }
+
+    const months = Array.from(monthMap.values()).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+    logger.info({ fromMonth, toMonth, monthsCount: months.length }, "Updated values retrieved");
+
+    return { months };
+  }
+}
+
+export const cardsService = new CardsService();

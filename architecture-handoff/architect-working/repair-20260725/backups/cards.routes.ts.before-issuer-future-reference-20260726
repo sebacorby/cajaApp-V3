@@ -1,0 +1,53 @@
+import { FastifyPluginAsync, FastifyRequest } from "fastify";
+import { cardsController } from "./cards.controller.js";
+import { prisma } from "../../db/prisma.js";
+import { logger } from "../../shared/logger.js";
+import { releaseCardImportDocument } from "../imports/card-import-lifecycle.js";
+
+const deletedStatementDocumentByRequest = new WeakMap<FastifyRequest, string>();
+
+export const cardsRoutes: FastifyPluginAsync = async (app) => {
+  app.addHook("preHandler", async (request) => {
+    if (request.method !== "DELETE") return;
+
+    const params = (request.params ?? {}) as { statementId?: string };
+    if (!params.statementId) return;
+
+    const statement = await prisma.cardStatement.findUnique({
+      where: { id: params.statementId },
+      select: { documentId: true },
+    });
+
+    if (statement) {
+      deletedStatementDocumentByRequest.set(request, statement.documentId);
+    }
+  });
+
+  app.addHook("onSend", async (request, reply, payload) => {
+    const documentId = deletedStatementDocumentByRequest.get(request);
+    if (!documentId) return payload;
+
+    deletedStatementDocumentByRequest.delete(request);
+
+    if (reply.statusCode >= 200 && reply.statusCode < 300) {
+      const released = await releaseCardImportDocument(
+        documentId,
+        "accepted_statement_deleted",
+      );
+
+      logger.info(
+        {
+          event: "card-statement.delete.import-release",
+          documentId,
+          released,
+          statusCode: reply.statusCode,
+        },
+        "Completed card statement delete import lifecycle cleanup",
+      );
+    }
+
+    return payload;
+  });
+
+  app.register(cardsController, { prefix: "/api/card-statements" });
+};

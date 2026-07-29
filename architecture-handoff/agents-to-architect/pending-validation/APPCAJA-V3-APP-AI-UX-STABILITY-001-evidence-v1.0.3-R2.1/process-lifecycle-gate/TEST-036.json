@@ -1,0 +1,26 @@
+{
+  "test_id": "036",
+  "test": "incomes.spec.ts:20",
+  "name": "Ingresos › crea, proyecta y persiste ingresos ARS y USD desde la UI real",
+  "status": "PASS",
+  "duration_seconds": 23.5,
+  "backend_died": false,
+  "backend_pid": 9856,
+  "backend_health": 200,
+  "frontend_died": false,
+  "frontend_pid": 49084,
+  "frontend_health": 200,
+  "pre_test_backend_metrics": {
+    "working_set_bytes": 163360768,
+    "private_memory_bytes": 158556160,
+    "handle_count": 315,
+    "stdout_bytes": 2467606
+  },
+  "post_test_backend_metrics": {
+    "working_set_bytes": 168247296,
+    "private_memory_bytes": 164683776,
+    "handle_count": 315,
+    "stdout_bytes": 3428236
+  },
+  "note": "Test PASSED. Backend survived. Memory grew during test but remained stable and healthy."
+}

@@ -1,0 +1,35 @@
+{
+  "run": "CANDIDATE-FULL-SUITE",
+  "timestamp": "2026-07-19T15:30:00Z",
+  "note": "Candidate service code is IDENTICAL to baseline. Only test file differs (+3 v1.0.3 tests). Playwright partial run (38/45 tests) shows identical results to baseline. Full suite completion timed out at card-statement-import test (~12min).",
+  "backendUnitTests": {
+    "files": 30,
+    "tests": 178,
+    "passed": 178,
+    "failed": 0
+  },
+  "baselineBackendUnitTests": {
+    "files": 30,
+    "tests": 175,
+    "passed": 175,
+    "failed": 0
+  },
+  "playwright": {
+    "note": "Partial run — timed out after 38/45 tests. Results match baseline for all completed tests.",
+    "completedTests": 38,
+    "passed": 35,
+    "failed": 3,
+    "identicalToBaseline": true
+  },
+  "baselinePlaywright": {
+    "total": 45,
+    "passed": 41,
+    "failed": 4,
+    "failedTests": [
+      { "name": "ai-advisor.spec.ts:19:5", "reason": "Backend returned 422 AI_ADVISOR_UNGROUNDED_NUMBER" },
+      { "name": "card-statement-import.spec.ts:121:7", "reason": "PDF content mismatch (pre-existing)" },
+      { "name": "privacy-mode.spec.ts:55:5", "reason": "Currency leak pattern detected (pre-existing)" },
+      { "name": "salary-receipts.spec.ts:62:5", "reason": "PDF content mismatch (known failure)" }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+# APP-UX-STATE-CONSISTENCY-001 v1.0.0 — File Hash Verification
+
+## All 12 files match superseded inspection (v1.0.0 checklist)
+
+| # | File (current) | SHA-256 Match | Size Match |
+|---|----------------|---------------|------------|
+| 1 | states/async-state.tsx | ✓ | ✓ |
+| 2 | sections/importaciones-section.tsx | ✓ | ✓ |
+| 3 | sections/importaciones-section.legacy.tsx | ✓ | ✓ |
+| 4 | sections/conciliacion-section.tsx | ✓ | ✓ |
+| 5 | sections/conciliacion-section.legacy.tsx | ✓ | ✓ |
+| 6 | sections/asesor-ia-section.tsx | ✓ | ✓ |
+| 7 | sections/asesor-ia-section.legacy.tsx | ✓ | ✓ |
+| 8 | sections/cierres-section.tsx | ✓ | ✓ |
+| 9 | sections/cierres-section.legacy.tsx | ✓ | ✓ |
+| 10 | sections/respaldo-section.tsx | ✓ | ✓ |
+| 11 | sections/respaldo-section.legacy.tsx | ✓ | ✓ |
+| 12 | tests/state-consistency.spec.ts | ✓ | ✓ |
+
+## Hashes (current = implemented)
+
+| File | SHA-256 | Size |
+|------|---------|------|
+| async-state.tsx | 571EB53768C48368F492D18C3C557D079E9B32D67813ACA7E6812B54D006D19F | 5278 |
+| importaciones-section.tsx | DC5B6D42E13FEFF752C6C7F4EB6543D212C6C40C3D488F2260CD4F6863C44268 | 416 |
+| importaciones-section.legacy.tsx | 32E0F409A091F95B1CADB996CEDA31CFC5E363A971E52234FACB61290BFA1BC0 | 22506 |
+| conciliacion-section.tsx | D12FC9528A74E2556E4AFB64B4D7007C86BB635667244BC158A479B934FAFF7B | 400 |
+| conciliacion-section.legacy.tsx | 1EBA5298D8D5C20B8862F7D96F17DC13B0E1F6943DED9AC99853ECA53EAF152A | 28156 |
+| asesor-ia-section.tsx | E612CFC47B7A8731009533B7861C0189818DF678BF4D97A8575335701DB7FB56 | 371 |
+| asesor-ia-section.legacy.tsx | A87B788436C00FB92B085A546C765444CE5294FB596EF42183FA7F1615B82232 | 21520 |
+| cierres-section.tsx | 0432B40C20A7743A3BB9C82231FABC4168A27E806DA7376689C033B57FA250D9 | 350 |
+| cierres-section.legacy.tsx | BA9E51067D325B40FC662FFAEF0B3A10B2516C3417B2B608FDD80F4DE4431186 | 20874 |
+| respaldo-section.tsx | B725754D6958711F54195D3419F0FF81A5116277678BCC5EB939551CA03F25D1 | 306 |
+| respaldo-section.legacy.tsx | D52A26DBC01C22AB2AFB50DE48C55CF22BEE820E2AFB623741EE2A0C3858F922 | 21129 |
+| state-consistency.spec.ts | 46E3A3DB944E7D4B8D18343EE149AF8609022C8E8C5D08ACE981A2981EBFE879 | 5781 |
+
+## Conclusion
+
+All 12 files match their corresponding `implemented` copies in the superseded inspection directory. No Dropbox content hashes were used - all verification was done with local SHA-256 via `Get-FileHash -Algorithm SHA256`.
+
+Note: Many of the `sections/*.tsx` files are small "router" files (400-350 bytes) that delegate to the legacy versions. The legacy versions (20-28KB) contain the actual implementation.

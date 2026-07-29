@@ -1,0 +1,9 @@
+{
+  "query": 2,
+  "question": "Resumen de finanzas.",
+  "status": "201",
+  "duration_ms": 9574,
+  "attempts": 1,
+  "match": true,
+  "fingerprint": "verified"
+}

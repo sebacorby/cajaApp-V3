@@ -1,0 +1,16 @@
+"use client";
+
+import { CardStatementHistoryPanel } from "@/components/finance/imports/card-statement-history-panel";
+import { StateConsistencyBoundary } from "@/components/finance/states/async-state";
+import { ImportacionesSection as LegacyImportacionesSection } from "./importaciones-section.legacy";
+
+export function ImportacionesSection() {
+  return (
+    <StateConsistencyBoundary section="importaciones" label="Centro de importaciones">
+      <div className="space-y-7">
+        <CardStatementHistoryPanel />
+        <LegacyImportacionesSection />
+      </div>
+    </StateConsistencyBoundary>
+  );
+}

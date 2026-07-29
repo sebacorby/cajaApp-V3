@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-07-22T19:32:35.197Z",
+  "step": "DIRECT-CHAT-2",
+  "command": "POST http://127.0.0.1:11434/api/chat",
+  "request_body": {"model":"gemma4:31b-cloud","messages":[{"role":"user","content":"Respondé exactamente OLLAMA_OK y nada más."}],"stream":false,"keep_alive":"5m","options":{"temperature":0,"num_predict":32}},
+  "http_status": 200,
+  "response": {"model":"gemma4:31b","created_at":"2026-07-22T19:32:35.19701187Z","message":{"role":"assistant","content":"OLLAMA_OK"},"done":true,"done_reason":"stop","total_duration":379072673,"prompt_eval_count":27,"eval_count":6},
+  "validation": {
+    "http_200": true,
+    "json_valid": true,
+    "model_compatible": true,
+    "model_exact": "gemma4:31b-cloud",
+    "message_content_normalized": "OLLAMA_OK",
+    "content_exactly_OLLAMA_OK": true,
+    "no_error": true,
+    "duration_ns": 379072673
+  }
+}

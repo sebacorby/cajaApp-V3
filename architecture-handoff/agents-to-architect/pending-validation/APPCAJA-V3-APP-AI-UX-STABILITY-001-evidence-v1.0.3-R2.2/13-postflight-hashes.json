@@ -1,0 +1,10 @@
+{
+  "postflight_hashes": {
+    "categories_service_ts": "1632F79FF4F37B0AE6AE8A09E8AB1489A7BCFFCEABEA831AE21C3A2F8D929E64",
+    "preflight_categories_service_ts": "1632F79FF4F37B0AE6AE8A09E8AB1489A7BCFFCEABEA831AE21C3A2F8D929E64",
+    "hashes_match": true,
+    "backend_pid": 54448,
+    "backend_status": "running",
+    "validation": "PASS - No source modifications detected"
+  }
+}

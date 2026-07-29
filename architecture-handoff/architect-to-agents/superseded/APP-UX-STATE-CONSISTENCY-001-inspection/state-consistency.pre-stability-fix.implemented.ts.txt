@@ -1,0 +1,173 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const EMPTY_IMPORT_CENTER = {
+  items: [],
+  summary: {
+    total: 0,
+    processing: 0,
+    needsReview: 0,
+    accepted: 0,
+    failed: 0,
+    corrected: 0,
+    reversed: 0,
+  },
+  pagination: { total: 0, limit: 25, offset: 0, hasMore: false },
+};
+
+const EMPTY_RECONCILIATION = {
+  items: [],
+  summary: {
+    total: 0,
+    open: 0,
+    resolved: 0,
+    dismissed: 0,
+    duplicates: 0,
+    relations: 0,
+    excluded: 0,
+    current: 0,
+  },
+  pagination: { total: 0, limit: 25, offset: 0, hasMore: false },
+};
+
+async function openSection(page: Page, name: string): Promise<void> {
+  await page.getByRole("button", { name, exact: true }).first().click();
+}
+
+test("los cinco verticales exponen el contrato compartido sin controles demo", async ({ page }) => {
+  await page.route("**/api/import-center?**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(EMPTY_IMPORT_CENTER),
+    }),
+  );
+  await page.route("**/api/reconciliation?**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(EMPTY_RECONCILIATION),
+    }),
+  );
+  await page.route("**/api/ai-advisor/context?**", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Contexto no disponible" }),
+    }),
+  );
+  await page.route("**/api/ai-advisor/history?**", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+  );
+
+  await page.goto("/");
+
+  for (const [label, section] of [
+    ["Importaciones", "importaciones"],
+    ["Conciliación", "conciliacion"],
+    ["Cierres", "cierres"],
+    ["Respaldo", "respaldo"],
+    ["Asesor IA", "asesor"],
+  ] as const) {
+    await openSection(page, label);
+    const scope = page.getByTestId(`state-scope-${section}`);
+    await expect(scope).toBeVisible();
+    await expect(scope).toHaveAttribute("data-state-contract", "real-v1");
+  }
+
+  await expect(page.getByText(/estado demo/i)).toHaveCount(0);
+});
+
+test("Importaciones muestra loading, empty, error y reintento mediante operaciones reales", async ({ page }) => {
+  let releaseInitial: (() => void) | undefined;
+  const initialGate = new Promise<void>((resolve) => {
+    releaseInitial = resolve;
+  });
+  let requests = 0;
+
+  await page.route("**/api/import-center?**", async (route) => {
+    requests += 1;
+    if (requests === 1) {
+      await initialGate;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(EMPTY_IMPORT_CENTER),
+      });
+      return;
+    }
+    if (requests === 2) {
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Fallo controlado de importaciones" }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(EMPTY_IMPORT_CENTER),
+    });
+  });
+
+  await page.goto("/");
+  await openSection(page, "Importaciones");
+  const scope = page.getByTestId("state-scope-importaciones");
+  await expect(scope.getByText("Cargando importaciones…")).toBeVisible();
+  releaseInitial?.();
+  await expect(scope.getByText("No hay importaciones para mostrar")).toBeVisible();
+
+  await scope.getByTestId("import-center-refresh").click();
+  await expect(scope.getByRole("alert")).toContainText("Fallo controlado de importaciones");
+  await scope.getByTestId("import-center-refresh").click();
+  await expect(scope.getByText("No hay importaciones para mostrar")).toBeVisible();
+  expect(requests).toBeGreaterThanOrEqual(3);
+});
+
+test("Conciliación conserva empty y success vinculados a datos y escaneo reales", async ({ page }) => {
+  await page.route("**/api/reconciliation?**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(EMPTY_RECONCILIATION),
+    }),
+  );
+  await page.route("**/api/reconciliation/scan", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ detected: 0 }),
+    }),
+  );
+
+  await page.goto("/");
+  await openSection(page, "Conciliación");
+  const scope = page.getByTestId("state-scope-conciliacion");
+  await expect(scope.getByText("No hay casos para estos filtros")).toBeVisible();
+  await scope.getByTestId("reconciliation-scan").click();
+  await expect(scope.getByRole("status")).toContainText("0 casos");
+});
+
+test("Asesor IA presenta error recuperable y no deja un spinner indefinido", async ({ page }) => {
+  let contextRequests = 0;
+  await page.route("**/api/ai-advisor/context?**", (route) => {
+    contextRequests += 1;
+    return route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Contexto controladamente no disponible" }),
+    });
+  });
+  await page.route("**/api/ai-advisor/history?**", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+  );
+
+  await page.goto("/");
+  await openSection(page, "Asesor IA");
+  const scope = page.getByTestId("state-scope-asesor");
+  await expect(scope.getByText("No se pudo preparar el asesor IA")).toBeVisible();
+  await expect(scope).toContainText("Contexto controladamente no disponible");
+  await expect(scope.getByTestId("ai-advisor-loading")).toHaveCount(0);
+  await scope.getByRole("button", { name: "Reintentar" }).click();
+  await expect.poll(() => contextRequests).toBeGreaterThan(1);
+});

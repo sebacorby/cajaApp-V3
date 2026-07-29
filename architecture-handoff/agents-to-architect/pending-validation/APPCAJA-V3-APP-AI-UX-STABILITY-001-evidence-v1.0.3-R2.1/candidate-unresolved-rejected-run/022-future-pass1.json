@@ -1,0 +1,10 @@
+{
+  "id": "022",
+  "test": "future.spec.ts:16",
+  "name": "Deuda y compromisos futuros › muestra un compromiso confirmado y permite abrir su origen",
+  "status": "PASS",
+  "duration_seconds": 8.1,
+  "evidence_dir": "022-future-pass1",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:35:00Z"
+}

@@ -1,0 +1,8 @@
+﻿node version: v22.14.0
+npm install: SUCCESS
+prisma generate: SUCCESS
+prisma migrate dev: SUCCESS
+npm run build: SUCCESS
+npm run test: SUCCESS (52 tests)
+GET /health: FAILED - No es posible conectar con el servidor remoto
+Smoke test completed

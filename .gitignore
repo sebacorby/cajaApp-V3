@@ -1,0 +1,53 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+build/
+coverage/
+
+# env/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# logs
+*.log
+logs/
+
+# local agent/sandbox garbage
+.agents/
+.mavis/
+.agent/
+.sandbox/
+
+# pending-validation: ignore contents but keep .gitkeep
+pending-validation/*
+!pending-validation/.gitkeep
+
+# diagnostics: captured requests for debugging (never commit)
+.diagnostics/
+*.ollama-request.json
+backend-request-*.json
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# temp/debug
+*.tmp
+*.bak
+debug_*.py
+debug_*.js
+test_*.py
+
+# Python
+.venv/
+python/__pycache__/
+*.pyc

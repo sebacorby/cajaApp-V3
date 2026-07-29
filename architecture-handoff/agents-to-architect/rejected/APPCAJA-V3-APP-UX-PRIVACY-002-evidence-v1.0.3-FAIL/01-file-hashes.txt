@@ -1,0 +1,20 @@
+# APP-UX-PRIVACY-002 v1.0.3 — File Hashes
+
+## Changed file (per architect instruction)
+
+| File | SHA-256 | Size |
+|------|---------|------|
+| workspace\frontend\tests\privacy-mode.spec.ts | 3E2C7AB7D5144B24079C5AA1E398D6B08A325D7F05EA8C1EED7355897B9B0152 | 5141 bytes |
+
+(v1.0.2: 61E4AA02EAA6EB3F16CAB5A42BD08512D41E8C2F8735D7AB69D73BD534FB0EB7)
+
+## Verified unchanged files
+
+| File | SHA-256 | Size |
+|------|---------|------|
+| workspace\frontend\src\components\finance\preferences\app-preferences-provider.tsx | FCDD64904E07EF01E6A2BB894052E6E732B41E60DF87BDA35F6C568009287AD3 | 5242 bytes |
+| workspace\frontend\src\components\finance\sections\configuracion-section.tsx | FCDFE55BF8D6AB4AA9C7304FB91F0B8B643D0557DDA36BFF43982A3AE196433A | 10608 bytes |
+| workspace\frontend\src\lib\finance\amount-privacy.ts | F1244FE9427945860AB81BDCA245555826A59B112383837EB7F0DBBE7279CCE2 | 7522 bytes |
+
+## Verification
+Only the test file (privacy-mode.spec.ts) was modified between v1.0.2 and v1.0.3, as specified in the architect's instruction.

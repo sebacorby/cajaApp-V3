@@ -1,0 +1,11 @@
+{
+  "playwright_ui_test": "maneja respuestas inválidas",
+  "test_location": "tests/ai-advisor.spec.ts:121",
+  "runs": 5,
+  "app_level_failures": 5,
+  "backend_crashes": 0,
+  "backend_survived_all_runs": true,
+  "health_check_after_each_run": [200, 200, 200, 200, 200],
+  "app_defect": "ai-advisor-error element not visible after AI mock response submission - app does not show error UI state",
+  "conclusion": "Backend remained stable (200) throughout all 5 UI test runs. App-level test failures are due to UI defect (error element not rendering), not backend instability."
+}

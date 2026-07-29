@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-07-22T16:47:45.000Z",
+  "step": "BUILD",
+  "command": "& 'I:\\Tools\\node-v24.18.0-win-x64\\node.exe' '.\\node_modules\\typescript\\bin\\tsc' -p '.\\tsconfig.json'",
+  "exit_code": 1,
+  "error": "src/config/env.ts(6,52): error TS1470: The 'import.meta' meta-property is not allowed in files which will build into CommonJS output.",
+  "diagnosis": "TypeScript compilation fails. Source uses ESM-only feature (import.meta.url) but tsconfig produces CommonJS output. dist/config/env.js contains 'exports.__esModule' and 'require()' despite source using import/export syntax.",
+  "root_cause": "Build configuration mismatch - tsconfig.json specifies module:NodeNext but the output is CommonJS. package.json lacks 'type:module' field. Existing dist files are CommonJS but Node.js treats file:// URLs as ESM.",
+  "runtime_error": "ReferenceError: exports is not defined in ES module scope at dist/config/env.js:5",
+  "attempted_fixes": [
+    "tsc -p tsconfig.json (exit code 1)",
+    "tsc with --skipLibCheck (same error)",
+    "npm run build (same error)"
+  ],
+  "cannot_fix_reason": "Modifying code, package.json, or tsconfig.json is prohibited by gate instructions",
+  "verdict": "FAIL",
+  "note": "Build is fundamentally broken due to pre-existing configuration issue. Cannot proceed with gate."
+}

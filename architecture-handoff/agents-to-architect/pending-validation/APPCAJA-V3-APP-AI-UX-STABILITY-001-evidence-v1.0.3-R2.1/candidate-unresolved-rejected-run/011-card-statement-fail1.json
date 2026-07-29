@@ -1,0 +1,11 @@
+{
+  "id": "011",
+  "test": "card-statement-import.spec.ts:121",
+  "name": "card statement import › imports Galicia Visa PDF and renders the real preview",
+  "status": "FAIL",
+  "reason": "Internal server error on import submission. Backend responded with 500 INTERNAL_ERROR.",
+  "evidence_dir": "011-card-statement-fail1",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:05:00Z",
+  "backend_pid": 58752
+}

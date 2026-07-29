@@ -1,0 +1,28 @@
+# APP-UX-PRIVACY-002 v1.0.4 — Frontend Gate Evidence
+
+## Typecheck
+```
+> tsc --noEmit
+(No errors)
+```
+
+## Lint
+```
+✖ 3 problems (0 errors, 3 warnings)
+- alert-center.tsx:82:5  warning
+- sidebar-data-quality.tsx:56:5  warning
+- salud-financiera-section.tsx:276:5  warning
+(All 3 warnings are pre-existing - no new issues)
+```
+
+## Build
+```
+> npm run typecheck && next build && node -e "..."
+✓ Compiled successfully in 3.6s
+✓ TypeScript passed
+✓ Generating static pages (3/3)
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+(Static) prerendered as static content
+```

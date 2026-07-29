@@ -1,0 +1,16 @@
+# APP-UX-PRIVACY-002 v1.0.1 — File Inventory
+## 11 Implemented Files with SHA-256 Hashes
+
+| File | SHA-256 | Size |
+|------|---------|------|
+| workspace\backend\src\modules\settings\settings.schemas.ts | 262193B80050F9B859C2A88BA3BCFD7CFBB584562CED8F0E881AA0CFF916C938 | 396 bytes |
+| workspace\backend\src\modules\settings\settings.service.ts | DC61FE679E690AB15A310F5444C03F4EF97B8DA21E6A973FE868F6325CA50BFD | 1885 bytes |
+| workspace\backend\tests\settings\settings.test.ts | A35E278380613E0A46349F4522143102724E468737BD42BEE09CA8CAF02F37FE | 1934 bytes |
+| workspace\frontend\src\lib\finance\settings-api.ts | B2F17F4646484639B87FF4FE8F9717093036F63552B472985E79ADFA3420A466 | 2053 bytes |
+| workspace\frontend\src\lib\finance\amount-privacy.ts | F1244FE9427945860AB81BDCA245555826A59B112383837EB7F0DBBE7279CCE2 | 7522 bytes |
+| workspace\frontend\src\components\finance\preferences\app-preferences-provider.tsx | 9814E690B5441D2067CCD8CBA1C46698E235019C895C39C131532BD8D8CBDA3A | 4776 bytes |
+| workspace\frontend\src\components\finance\sections\configuracion-section.tsx | FCDFE55BF8D6AB4AA9C7304FB91F0B8B643D0557DDA36BFF43982A3AE196433A | 10608 bytes |
+| workspace\frontend\src\lib\finance\financial-amount.ts | 7AF5042D1CE739B405CCFF0B29002374FDBAC4AC2202309F1B9E9A6441BEDCF7 | 2041 bytes |
+| workspace\frontend\src\lib\finance\money.ts | FAB8C5218249948E94568B9BC09F5EBF128992933D0504F1E998AC3BE1D00BCD | 2246 bytes |
+| workspace\frontend\src\lib\finance\format.ts | EF733C8BBB6D1237FFC82E9E47A02F76FDDF3BC7CDF077BBE9ABA3F8EDAFA8A0 | 3791 bytes |
+| workspace\frontend\tests\privacy-mode.spec.ts | 61E4AA02EAA6EB3F16CAB5A42BD08512D41E8C2F8735D7AB69D73BD534FB0EB7 | 4702 bytes |

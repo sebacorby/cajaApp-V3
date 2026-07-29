@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-17",
+  "campaign": "APP-P5-FINAL-VERTICALS-FOCAL-VALIDATION v1.3.1",
+  "tests": [
+    {
+      "name": "PRAGMA integrity_check",
+      "result": "ok",
+      "status": "PASS"
+    },
+    {
+      "name": "PRAGMA quick_check",
+      "result": "ok",
+      "status": "PASS"
+    },
+    {
+      "name": "uploadedDocument count",
+      "result": 1,
+      "status": "PASS"
+    },
+    {
+      "name": "monthClose count",
+      "result": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "reconciliationCase count",
+      "result": 0,
+      "status": "PASS"
+    }
+  ],
+  "overall": "PASS"
+}

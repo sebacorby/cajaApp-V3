@@ -1,0 +1,131 @@
+=== APPCAJA-V3 BACKEND VALIDATION LOG ===
+Started: Sun Jul 12 21:01:13     2026
+
+=== COMMAND 1: node --version ===
+v24.18.0
+EXIT_CODE_1=0
+
+=== COMMAND 2: npm ci ===
+npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+npm warn deprecated gm@1.25.1: The gm module has been sunset. Please migrate to an alternative. https://github.com/aheckmann/gm?tab=readme-ov-file#2025-02-24-this-project-is-not-maintained
+
+added 231 packages, and audited 232 packages in 14s
+
+69 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 5 packages have install scripts not yet covered by allowScripts:
+npm warn allow-scripts   @prisma/client@6.19.3 (postinstall: node scripts/postinstall.js)
+npm warn allow-scripts   @prisma/engines@6.19.3 (postinstall: node scripts/postinstall.js)
+npm warn allow-scripts   canvas@3.2.3 (install: prebuild-install -r napi || node-gyp rebuild)
+npm warn allow-scripts   esbuild@0.28.1 (postinstall: node install.js)
+npm warn allow-scripts   prisma@6.19.3 (preinstall: node scripts/preinstall-entry.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+EXIT_CODE_2=0
+
+=== COMMAND 3: npm run prisma:generate ===
+
+> cajaapp-v3-backend@1.0.0 prisma:generate
+> prisma generate
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\node_modules\@prisma\client in 109ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+EXIT_CODE_3=0
+
+=== COMMAND 4: npm run prisma:migrate:deploy ===
+
+> cajaapp-v3-backend@1.0.0 prisma:migrate:deploy
+> prisma migrate deploy
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+11 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+EXIT_CODE_4=0
+
+=== COMMAND 5: npm run prisma:migrate:status ===
+npm error Missing script: "prisma:migrate:status"
+npm error
+npm error Did you mean one of these?
+npm error   npm run prisma:migrate # run the "prisma:migrate" package script
+npm error   npm run prisma:migrate:deploy # run the "prisma:migrate:deploy" package script
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\javie\AppData\Local\npm-cache\_logs\2026-07-13T00_01_40_767Z-debug-0.log
+EXIT_CODE_5=1
+
+=== COMMAND 6: npm run build ===
+
+> cajaapp-v3-backend@1.0.0 build
+> tsc -p tsconfig.json
+
+EXIT_CODE_6=0
+
+=== COMMAND 7: npm run test ===
+
+> cajaapp-v3-backend@1.0.0 test
+> vitest run
+
+
+ RUN  v3.2.7 I:/cajaApp-V3/workspace/backend
+
+ ✓ tests/quality/frontend-runtime-contract.test.ts (3 tests) 6ms
+ ✓ tests/cards/card-statement.schema.test.ts (14 tests) 21ms
+ ✓ tests/cards/golden-fixture.test.ts (7 tests) 29ms
+ ✓ tests/settings/settings.test.ts (3 tests) 5ms
+{"level":30,"time":1783900920703,"pid":48008,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+ ✓ tests/movements/categories.rules.test.ts (4 tests) 4ms
+ ✓ tests/incomes/incomes.calculation.test.ts (7 tests) 7ms
+ ✓ tests/movements/categories (1).rules.test.ts (4 tests) 4ms
+ ✓ tests/debit-imports/debit-imports.parser.test.ts (4 tests) 10ms
+ ✓ tests/budgets/budgets.test.ts (3 tests) 7ms
+ ✓ tests/goals/goals.test.ts (3 tests) 8ms
+ ✓ tests/movements/movements-export.test.ts (2 tests) 3ms
+ ✓ tests/cards/history.test.ts (6 tests) 4ms
+{"level":30,"time":1783900920707,"pid":58412,"hostname":"NTTD-46YCT3","inputRows":2,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920707,"pid":10152,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+ ✓ tests/imports/display-order-preservation.test.ts (2 tests) 28ms
+{"level":30,"time":1783900920731,"pid":10152,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920731,"pid":10152,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920731,"pid":10152,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+ ✓ tests/cards/installment-projection.service.test.ts (11 tests) 29ms
+{"level":30,"time":1783900920712,"pid":48008,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920712,"pid":48008,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920713,"pid":48008,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920713,"pid":48008,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":5,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783900920737,"pid":48008,"hostname":"NTTD-46YCT3","monthsCount":2,"msg":"Monthly projections aggregated"}
+ ✓ tests/cards/projections.test.ts (7 tests) 36ms
+ ✓ tests/cards/exchange-rate.test.ts (3 tests) 22ms
+ ✓ tests/dashboard/dashboard.alerts.test.ts (3 tests) 14ms
+ ✓ tests/future/future.service.test.ts (4 tests) 27ms
+ ✓ tests/reports/reports.service.test.ts (3 tests) 24ms
+ ✓ tests/dashboard/dashboard.service.test.ts (3 tests) 27ms
+ ✓ tests/movements/movements.amount.test.ts (4 tests) 3ms
+{"level":30,"time":1783900921131,"pid":13280,"hostname":"NTTD-46YCT3","creditCardScore":6,"bankAccountScore":0,"invoiceScore":0,"receiptScore":0,"msg":"Detected credit card statement (keyword)"}
+ ✓ tests/imports/ai-job-timeout.test.ts (3 tests) 2ms
+{"level":40,"time":1783900921131,"pid":13280,"hostname":"NTTD-46YCT3","creditCardScore":0,"bankAccountScore":0,"invoiceScore":0,"receiptScore":0,"msg":"Unknown document type (keyword)"}
+ ✓ tests/imports/pdf-import-contract.test.ts (11 tests) 4ms
+{"level":30,"time":1783900922380,"pid":31508,"hostname":"NTTD-46YCT3","fromMonth":"2026-07","toMonth":"2027-01","monthsCount":0,"msg":"Updated values retrieved"}
+ ✓ tests/smoke/api-smoke.test.ts (3 tests) 574ms
+
+ Test Files  24 passed (24)
+      Tests  117 passed (117)
+   Start at  21:01:59
+   Duration  2.97s (transform 2.76s, setup 0ms, collect 14.35s, tests 896ms, environment 6ms, prepare 7.97s)
+
+EXIT_CODE_7=0
+

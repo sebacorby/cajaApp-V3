@@ -1,0 +1,10 @@
+{
+  "id": "034",
+  "test": "reports.spec.ts:293",
+  "name": "Reportes mantiene paridad exacta entre payload, gráficos y tablas ARS/USD",
+  "status": "PASS",
+  "duration_seconds": 2.5,
+  "evidence_dir": "034-reports-arsusd-pass1",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:50:00Z"
+}

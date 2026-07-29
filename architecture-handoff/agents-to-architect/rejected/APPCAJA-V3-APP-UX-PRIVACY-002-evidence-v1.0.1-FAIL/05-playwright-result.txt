@@ -1,0 +1,37 @@
+# APP-UX-PRIVACY-002 v1.0.1 — Playwright Test Result
+
+## Test: tests/privacy-mode.spec.ts
+**Command:** `npx playwright test tests/privacy-mode.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: FAIL
+
+```
+Running 1 test using 1 worker
+
+  x  1 [chromium] › tests\privacy-mode.spec.ts:48:5 › Privacidad persiste y oculta importes globalmente sin alterar datos (33.1s)
+
+  1) [chromium] › tests\privacy-mode.spec.ts:48:5 › Privacidad persiste y oculta importes globalmente sin alterar datos
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('settings-section').getByText('Preferencias guardadas en CajaApp.')
+    Expected: visible
+    Timeout: 30000ms
+    Error: element(s) not found
+```
+
+## Failure Analysis
+
+The test expects the success message "Preferencias guardadas en CajaApp." to appear after clicking the save button. This message does not appear.
+
+Additionally, the error context shows the checkbox "Ocultar importes sensibles" is [checked] when the test expects it NOT to be checked after the API reset at the beginning of the test.
+
+This suggests:
+1. The API reset (`PUT /api/settings` with `hideAmounts: false`) may not have properly persisted
+2. The UI is not correctly reflecting the API state
+3. The success message is not being displayed after save
+
+## Test Artifacts
+- Screenshot: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/test-failed-1.png`
+- Video: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/video.webm`
+- Trace: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/trace.zip`

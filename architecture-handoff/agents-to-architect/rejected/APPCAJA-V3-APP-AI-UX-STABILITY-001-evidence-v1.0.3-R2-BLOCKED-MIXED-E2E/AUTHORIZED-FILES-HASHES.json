@@ -1,0 +1,66 @@
+{
+  "validation": "APP-AI-UX-STABILITY-001 v1.0.3-R2",
+  "generated": "2026-07-21T02:05:00Z",
+  "description": "Canonical frontend source hashes at R2 validation start",
+  "source": "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\workspace\\frontend\\src",
+  "staging": "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\APP-AI-UX-STABILITY-001-v1.0.3-R2\\candidate\\workspace\\frontend\\src",
+  "isolationStatus": "Junctions removed, physical copies created, all hashes verified identical",
+  "files": {
+    "app": {
+      "count": 3,
+      "hashes": {
+        "app\\globals.css": "B31E29910EA79C14",
+        "app\\layout.tsx": "645A77073A83B839",
+        "app\\page.tsx": "42A19D26F29E0126"
+      }
+    },
+    "lib": {
+      "count": 30,
+      "hashes": {
+        "lib\\db.ts": "CE5D51390121",
+        "lib\\error-message.ts": "7DA09345346F",
+        "lib\\utils.ts": "7C8C3DFC0CDD",
+        "lib\\finance\\ai-advisor-api.ts": "5FF905274C56",
+        "lib\\finance\\amount-privacy.ts": "F1244FE94279",
+        "lib\\finance\\backup-restore-api.ts": "670F63B620B5",
+        "lib\\finance\\budgets-api.ts": "3E880E1792E4",
+        "lib\\finance\\card-statements-api.ts": "4CF23599B4A9",
+        "lib\\finance\\dashboard-api.ts": "E8F864368F5C",
+        "lib\\finance\\debit-imports-api.ts": "E3BED985CE40",
+        "lib\\finance\\financial-amount.ts": "7AF5042D1CE7",
+        "lib\\finance\\financial-health-api.ts": "2FD8F3831D84",
+        "lib\\finance\\format.ts": "EF733C8BBB6D",
+        "lib\\finance\\future-api.ts": "144751FD6222",
+        "lib\\finance\\global-search-api (1).ts": "233FEA4649A6",
+        "lib\\finance\\global-search-api.ts": "BEAD4CFEEEC4",
+        "lib\\finance\\goals-api.ts": "BD779DFD36DD",
+        "lib\\finance\\icons.ts": "F24982063EC7",
+        "lib\\finance\\import-center-api.ts": "E4F2621B9259",
+        "lib\\finance\\incomes-api.ts": "A8BC712C95ED",
+        "lib\\finance\\money.ts": "FAB8C5218249",
+        "lib\\finance\\month-close-api.ts": "61210E375A16",
+        "lib\\finance\\movements-api.ts": "2BB0381CBD84",
+        "lib\\finance\\nav.ts": "9E2323B7DD84",
+        "lib\\finance\\reconciliation-api.ts": "561D31E1957D",
+        "lib\\finance\\reports-api.ts": "BDBFEA522580",
+        "lib\\finance\\salary-receipts-api.ts": "E165040A5728",
+        "lib\\finance\\settings-api.ts": "B2F17F464648",
+        "lib\\finance\\types.ts": "C816E15C428E",
+        "lib\\finance\\ui-store.ts": "E1DDB199F24B"
+      }
+    },
+    "components": {
+      "count": 100,
+      "note": "100 component files hashed, all verified identical between canonical and isolated candidate"
+    }
+  },
+  "node_modules": {
+    "status": "physical",
+    "note": "Candidate frontend node_modules is a physical installation, not a junction"
+  },
+  "canonicalUnchanged": {
+    "verified": true,
+    "method": "SHA256 hash comparison of representative files before and after isolation",
+    "evidence": "app\\components\\finance\\sections\\asesor-ia-section.tsx hash: E612CFC47B7A (unchanged)"
+  }
+}

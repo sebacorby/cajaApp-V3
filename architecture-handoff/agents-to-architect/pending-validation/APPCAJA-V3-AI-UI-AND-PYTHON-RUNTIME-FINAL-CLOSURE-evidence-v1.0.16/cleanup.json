@@ -1,0 +1,31 @@
+# Cleanup Verification — v1.0.16 Campaign
+
+## Services Stopped
+
+- node processes: killed
+- powershell processes: killed
+
+## Artifacts Deleted
+
+- workspace/frontend/.next: deleted
+- workspace/frontend/test-results: deleted
+- workspace/frontend/playwright-report: deleted
+- workspace/backend/dist: deleted
+- workspace/backend/node_modules: deleted
+- workspace/frontend/node_modules: deleted
+
+## SQLite Restored
+
+- Original hash: E24E819EF022028C034214104B62CC409D9161211D43D8EA0A1683A932351208
+- Final hash: E24E819EF022028C034214104B62CC409D9161211D43D8EA0A1683A932351208 (MATCH ✅)
+
+## Python Runtime
+
+- Location: C:\Users\javie\AppData\Local\CajaAppV3\runtime\python\.venv
+- NOT deleted (as per instruction: external runtime should be preserved)
+
+## Evidence
+
+- test-results/ and playwright-report/ COPIED to evidence folder BEFORE cleanup
+- Original test-results/ deleted
+- Original playwright-report/ deleted

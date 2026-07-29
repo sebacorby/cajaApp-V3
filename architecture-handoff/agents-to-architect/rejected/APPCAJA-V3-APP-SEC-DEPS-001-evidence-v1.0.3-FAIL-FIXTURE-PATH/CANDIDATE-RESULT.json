@@ -1,0 +1,16 @@
+{
+  "vertical": "APP-SEC-DEPS-001",
+  "version": "v1.0.3",
+  "copy": "candidate",
+  "passed": 37,
+  "failed": 5,
+  "skipped": 0,
+  "retries": 0,
+  "failedTestNames": [
+    "tests/e2e/card-statement-import.spec.ts:121:7 › card statement import › imports Galicia Visa PDF and renders the real preview",
+    "tests/e2e/card-statement-import.spec.ts:309:7 › card statement import › stops polling and offers retry when extraction fails",
+    "tests/privacy-mode.spec.ts:55:5 › Privacidad persiste y oculta importes globalmente sin alterar datos",
+    "tests/salary-receipts.real.spec.ts:22:5 › Recibos de sueldo importa, acepta y anula un PDF real",
+    "tests/salary-receipts.spec.ts:62:5 › Recibos de sueldo permite revisar y aceptar un borrador desde Ingresos"
+  ]
+}

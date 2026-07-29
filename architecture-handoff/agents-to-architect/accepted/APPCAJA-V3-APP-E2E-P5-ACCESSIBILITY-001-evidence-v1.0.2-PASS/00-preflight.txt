@@ -1,0 +1,25 @@
+# APP-E2E-P5-ACCESSIBILITY-001 v1.0.2 — Preflight Evidence
+## Timestamp: 2026-07-18T04:17:00Z
+
+## Node.js & NPM
+- Node: v24.18.0
+- NPM: 10.9.2
+- Node Path: I:\Tools\node-v24.18.0-win-x64\node.exe
+- NPM Path: I:\Tools\node-v24.18.0-win-x64\npm.ps1
+
+## Root Verification
+- Root: C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+- Verified: YES
+
+## SQLite Database Initial State
+- Path: workspace\backend\prisma\dev.db
+- Size: 5627904 bytes
+- SHA-256: E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C
+- Backup created: PRE-v1.0.2-dev.db
+
+## Ports & PIDs
+- Backend port: 11436 (FREE before validation; PID 76312 after start)
+- Frontend port: 11437 (FREE before validation; PID 66092 after start)
+
+## Evidence Folder
+- Created: architecture-handoff/agents-to-architect/pending-validation/APPCAJA-V3-APP-E2E-P5-ACCESSIBILITY-001-evidence-v1.0.2

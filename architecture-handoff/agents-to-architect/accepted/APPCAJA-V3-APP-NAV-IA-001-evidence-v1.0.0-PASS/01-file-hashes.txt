@@ -1,0 +1,25 @@
+# APP-NAV-IA-001 v1.0.0 — File Hash Verification
+
+## All 3 files match expected SHA-256 hashes (v1.0.0 checklist)
+
+| # | File | Expected SHA-256 | Actual SHA-256 | Size | Status |
+|---|------|------------------|----------------|------|--------|
+| 1 | nav.ts | 9E2323B7DD84286A7653808FD1D75F31A872917F4BA7BE21AA7F7B83C17FA2E4 | 9E2323B7DD84286A7653808FD1D75F31A872917F4BA7BE21AA7F7B83C17FA2E4 | 4141 | ✓ MATCH |
+| 2 | sidebar.tsx | 567630BE36AE94468FEC83A5DAF69D70687DE342F30124B7E18C8E1E83344C08 | 567630BE36AE94468FEC83A5DAF69D70687DE342F30124B7E18C8E1E83344C08 | 3750 | ✓ MATCH |
+| 3 | navigation-information-architecture.spec.ts | ACF0749AD9EF0DB9C5F3CE3E0545A1E3C4A5731D744E956596E9CBCADE710F18 | ACF0749AD9EF0DB9C5F3CE3E0545A1E3C4A5731D744E956596E9CBCADE710F18 | 3662 | ✓ MATCH |
+
+## Gate 5 Verification: vigente == superseded
+
+| File (current) | File (superseded) | Hash Match | Size Match |
+|----------------|-------------------|------------|------------|
+| nav.ts | nav.implemented.ts.txt | ✓ | ✓ |
+| sidebar.tsx | sidebar.implemented.tsx.txt | ✓ | ✓ |
+| navigation-information-architecture.spec.ts | navigation-information-architecture.spec.implemented.ts.txt | ✓ | ✓ |
+
+## Conclusion
+
+All 3 files match both:
+1. The expected SHA-256 hashes from the v1.0.0 checklist
+2. The corresponding `implemented` copies in the superseded inspection directory
+
+No Dropbox content hashes were used - all verification was done with local SHA-256 via `Get-FileHash -Algorithm SHA256`.

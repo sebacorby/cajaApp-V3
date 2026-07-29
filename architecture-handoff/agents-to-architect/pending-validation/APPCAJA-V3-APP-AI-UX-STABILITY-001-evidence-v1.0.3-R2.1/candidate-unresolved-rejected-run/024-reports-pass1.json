@@ -1,0 +1,10 @@
+{
+  "id": "024",
+  "test": "reports.spec.ts:219",
+  "name": "Reportes consume datos reales, exporta y abre el detalle en Movimientos",
+  "status": "PASS",
+  "duration_seconds": 17.8,
+  "evidence_dir": "024-reports-pass1",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:45:00Z"
+}

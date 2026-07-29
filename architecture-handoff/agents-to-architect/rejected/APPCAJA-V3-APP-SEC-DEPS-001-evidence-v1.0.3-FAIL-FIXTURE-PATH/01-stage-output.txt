@@ -1,0 +1,63 @@
+﻿{
+  "vertical": "APP-SEC-DEPS-001",
+  "version": "v1.0.3",
+  "before": {
+    "packageJson": "7a32f731ccbd0117d5b5598998c5237ce0230d8e708f49f1388ae5de79e3ec6b",
+    "packageLock": "db0ece39a9a66b3fb10a4bd6644b2a4616d82ad42476ba9f513964ec6793e6ed"
+  },
+  "after": {
+    "packageJson": "5f46bafe79c08db4f6d59074602eb8ae59522b1b2c5fda68488f38dfbd049b61",
+    "packageLock": "5ad527e78c65a005054d6078a90eb6a2bf19c0712ba0b846937ba0f6daee8d8b"
+  },
+  "overrides": {
+    "postcss": "8.5.16",
+    "js-yaml": "4.2.0",
+    "uuid": "$uuid",
+    "prismjs": "1.30.0"
+  },
+  "removedNestedCopies": [
+    "next/node_modules/postcss@8.4.31",
+    "next-auth/node_modules/uuid@8.3.2",
+    "refractor/node_modules/prismjs@1.27.0"
+  ],
+  "upgraded": [
+    "js-yaml@4.1.1 -> 4.2.0"
+  ]
+}
+{
+    "vertical":  "APP-SEC-DEPS-001",
+    "version":  "v1.0.3",
+    "createdAt":  "2026-07-18T23:15:30.2042078-03:00",
+    "canonicalRoot":  "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3",
+    "canonicalFrontend":  "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\workspace\\frontend",
+    "canonicalUntouched":  true,
+    "stagingRoot":  "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\APP-SEC-DEPS-001-v1.0.3",
+    "baselineFrontend":  "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\APP-SEC-DEPS-001-v1.0.3\\baseline\\frontend",
+    "candidateFrontend":  "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\APP-SEC-DEPS-001-v1.0.3\\candidate\\frontend",
+    "before":  {
+                   "PackageJson":  "7A32F731CCBD0117D5B5598998C5237CE0230D8E708F49F1388AE5DE79E3EC6B",
+                   "PackageLock":  "DB0ECE39A9A66B3FB10A4BD6644B2A4616D82AD42476BA9F513964EC6793E6ED"
+               },
+    "candidate":  {
+                      "PackageJson":  "5F46BAFE79C08DB4F6D59074602EB8AE59522B1B2C5FDA68488F38DFBD049B61",
+                      "PackageLock":  "5AD527E78C65A005054D6078A90EB6A2BF19C0712BA0B846937BA0F6DAEE8D8B"
+                  },
+    "baselineCopyExitCode":  1,
+    "candidateCopyExitCode":  1,
+    "fixtures":  [
+                     {
+                         "name":  "visa-galicia-julio2026.pdf",
+                         "source":  "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\docs\\08-artifacts\\visa-galicia-julio2026.pdf",
+                         "target":  "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\docs\\08-artifacts\\visa-galicia-julio2026.pdf",
+                         "size":  447562,
+                         "sha256":  "57E3269D2A5A239345E3CED59D1E826E0F33A52B4FB5F8D285B5922F667B04B7"
+                     },
+                     {
+                         "name":  "salary-receipt.sanitized.base.pdf",
+                         "source":  "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\contracts\\examples\\salary-receipts\\salary-receipt.sanitized.base.pdf",
+                         "target":  "C:\\Users\\javie\\AppData\\Local\\CajaApp\\validation\\contracts\\examples\\salary-receipts\\salary-receipt.sanitized.base.pdf",
+                         "size":  2990,
+                         "sha256":  "289391BBE7E358840926EDF459DF204D78415693E7A1528CC892878994EB6CE8"
+                     }
+                 ]
+}

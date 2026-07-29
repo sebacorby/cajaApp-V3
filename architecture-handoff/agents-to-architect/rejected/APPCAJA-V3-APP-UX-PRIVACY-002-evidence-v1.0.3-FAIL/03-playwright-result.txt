@@ -1,0 +1,42 @@
+# APP-UX-PRIVACY-002 v1.0.3 — Playwright Test Result
+
+## Test: tests/privacy-mode.spec.ts
+**Command:** `npx playwright test tests/privacy-mode.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: FAIL
+
+```
+Running 1 test using 1 worker
+
+  x  1 [chromium] › tests\privacy-mode.spec.ts:55:5 › Privacidad persiste y oculta importes globalmente sin alterar datos (37.7s)
+
+  1) [chromium] › tests\privacy-mode.spec.ts:55:5 › Privacidad persiste y oculta importes globalmente sin alterar datos
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('[data-testid="movement-row-manual:73ed5578-095a-4bac-9c18-0d83fb7dbcc9"]:visible, [data-testid="movement-card-manual:73ed5578-095a-4bac-9c18-0d83fb7dbcc9"]:visible')
+    Expected: 1
+    Received: 0
+    Timeout:  30000ms
+```
+
+## Failure Analysis
+
+The v1.0.2 strict mode issue was fixed by scoping locators with `movementId`. However, a new failure occurs:
+
+The selector `[data-testid="movement-row-manual:73ed..."]:visible` cannot find the element. Possible causes:
+1. The colon `:` in the testid attribute value may interfere with CSS selector parsing
+2. Both responsive views (row and card) may be filtered out by `:visible` pseudo-class
+3. The movement may not be rendering with the expected testid format
+
+## Progress vs v1.0.2
+- v1.0.1: Failed at line 93 (success message missing) - FIXED by v1.0.2
+- v1.0.2: Failed at line 107 (strict mode violation) - FIXED by v1.0.3
+- v1.0.3: Failed at line 123 (no element found) - NEW issue
+
+The original two issues (success message + strict mode) were both fixed, but a third issue with element visibility/selection was exposed.
+
+## Test Artifacts
+- Screenshot: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/test-failed-1.png`
+- Video: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/video.webm`
+- Trace: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/trace.zip`

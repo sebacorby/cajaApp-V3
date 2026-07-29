@@ -1,0 +1,30 @@
+# Playwright discovery
+
+## Estado
+
+El gate de Playwright no pudo ejecutarse debido a que el ecosistema no pudo arrancar mediante el script headless autoritativo.
+
+Se seleccionaron puertos libres para el arranque:
+- Backend: 11436
+- Frontend: 11437
+
+El arranque headless fall en el backend build por archivos faltantes (`categories.service.js`, `global-search.routes.js`).
+
+Adems, el frontend no pasa `typecheck` (EXIT=2) por componentes faltantes:
+- `src/components/finance/layout/header.tsx` importa `@/components/finance/search/global-search-dialog` (directorio `search` vaco).
+- `src/components/finance/sections/section-router.tsx` importa `@/components/finance/search/search-target-banner` (directorio `search` vaco).
+
+## Discovery no realizado
+
+No se ejecut `npm exec -- playwright test --list` ni ningn otro mecanismo de discovery porque no existe un punto de entrada estable para la suite de tests.
+
+Especs relevantes del frontend (sin ejecutar):
+- `tests/categories.spec.ts` (cannico)
+- `tests/ai-advisor.spec.ts`
+- `tests/financial-health.spec.ts`
+- `tests/dashboard-trend-visual.spec.ts`
+- `tests/quality-audit.spec.ts`
+- `tests/global-search.spec.ts`
+- `tests/e2e/dashboard.spec.ts`
+
+Resultado: NOT RUN.

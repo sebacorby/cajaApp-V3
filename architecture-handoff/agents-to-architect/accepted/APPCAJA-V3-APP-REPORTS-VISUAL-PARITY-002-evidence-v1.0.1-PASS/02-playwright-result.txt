@@ -1,0 +1,50 @@
+# APP-REPORTS-VISUAL-PARITY-002 v1.0.1 — Playwright Result
+
+## Test Command
+`npx playwright test tests/e2e/deuda-futura/reports.spec.ts tests/chart-parity.spec.ts tests/e2e/dashboard.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: **PASS (4/4)**
+
+```
+Running 4 tests using 1 worker
+
+✓ tests/chart-parity.spec.ts:18:5 › Dashboard alterna modos visuales sin perder datos equivalentes (14.4s)
+✓ tests/e2e/dashboard.spec.ts:48:7 › Dashboard real › muestra movimientos reales del ledger y separa compromisos (13.2s)
+✓ tests/e2e/deuda-futura/reports.spec.ts:219:5 › Reportes consume datos reales, exporta y abre el detalle en Movimientos (7.0s)
+✓ tests/e2e/deuda-futura/reports.spec.ts:293:5 › Reportes mantiene paridad exacta entre payload, gráficos y tablas ARS/USD (2.1s)
+
+4 passed (39.4s)
+```
+
+## All Tests Validated
+
+### 1. Chart Parity (chart-parity.spec.ts)
+**Test**: Dashboard alterna modos visuales sin perder datos equivalentes
+- Validates that switching between visual modes preserves equivalent data ✓
+
+### 2. Dashboard Real (e2e/dashboard.spec.ts)
+**Test**: Dashboard real muestra movimientos reales del ledger y separa compromisos
+- Validates dashboard shows real movements and separates commitments ✓
+
+### 3. Reports Real Data (e2e/deuda-futura/reports.spec.ts:219)
+**Test**: Reportes consume datos reales, exporta y abre el detalle en Movimientos
+- Validates Reports uses real data, exports and opens detail in Movements ✓
+
+### 4. Reports Visual Parity (e2e/deuda-futura/reports.spec.ts:293)
+**Test**: Reportes mantiene paridad exacta entre payload, gráficos y tablas ARS/USD
+- Validates exact parity between payload, charts and tables in ARS/USD ✓
+
+## Validated Visual Parity Features
+
+- ✓ Gráfico mensual y tabla exponen exactamente los importes del payload en ARS y USD
+- ✓ No se suman ni convierten monedas
+- ✓ Categorías: lista, donut y tabla reflejan amount/share del payload seleccionado
+- ✓ Cambio Barras/Área, Lista/Donut funcional
+- ✓ Selector ARS/USD funciona
+- ✓ Estados vacíos honestos
+- ✓ Nombres accesibles
+- ✓ Dashboard conserva test IDs y representación ARS/USD previa
+- ✓ Cero strict-mode violations
+
+## Test Artifacts
+- `test-results/` - Full Playwright artifacts (trace, video, screenshots)

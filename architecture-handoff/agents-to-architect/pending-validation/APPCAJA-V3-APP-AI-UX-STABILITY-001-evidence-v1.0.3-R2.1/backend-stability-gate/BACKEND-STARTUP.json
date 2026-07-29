@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-07-22T17:13:54.000Z",
+  "step": "STARTUP",
+  "backend_pid": 4604,
+  "env_file": "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\workspace\\backend\\.env.candidate",
+  "startup_sequence_logged": [
+    {
+      "timestamp": "2026-07-22T17:13:54.064",
+      "level": "INFO",
+      "event": "Validating AI provider before starting server",
+      "provider": "ollama",
+      "ollamaBaseUrl": "http://127.0.0.1:11434",
+      "ollamaModel": "gemma4:31b-cloud"
+    },
+    {
+      "timestamp": "2026-07-22T17:13:54.110",
+      "level": "INFO",
+      "event": "Ollama preflight completed",
+      "provider": "ollama",
+      "mode": "local-proxy",
+      "model": "gemma4:31b-cloud",
+      "endpointHost": "127.0.0.1:11434",
+      "durationMs": 45,
+      "modelListed": true,
+      "capabilities": ["completion", "thinking", "tools", "vision"],
+      "isCloud": false,
+      "supportsThinking": true,
+      "supportsVision": true,
+      "supportsStructuredOutputs": true,
+      "contextLength": 262144
+    },
+    {
+      "timestamp": "2026-07-22T17:13:54.112",
+      "level": "INFO",
+      "event": "Database connected successfully"
+    }
+  ],
+  "validation": {
+    "ollama_preflight_before_server_listen": true,
+    "provider_correct": true,
+    "endpoint_correct": "http://127.0.0.1:11434",
+    "model_correct": "gemma4:31b-cloud",
+    "no_kimi": true,
+    "no_localhost": true,
+    "no_11435": true,
+    "no_wrong_model": true
+  },
+  "note": "First startup attempt (PID 2776) failed with EADDRINUSE because port 11436 was occupied by stale process 35832. After killing stale process, second startup succeeded with PID 4604."
+}

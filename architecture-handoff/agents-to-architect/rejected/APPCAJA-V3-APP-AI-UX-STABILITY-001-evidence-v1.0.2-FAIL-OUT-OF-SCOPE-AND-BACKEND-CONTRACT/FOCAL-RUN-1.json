@@ -1,0 +1,19 @@
+{
+  "run": "FOCAL-RUN-1",
+  "timestamp": "2026-07-19T07:00:00Z",
+  "passed": 2,
+  "failed": 0,
+  "duration": "1.2m",
+  "tests": [
+    {
+      "name": "Asesor IA mantiene fingerprint, claims y citas consistentes",
+      "passed": true,
+      "duration": "26.5s"
+    },
+    {
+      "name": "Asesor IA responde en UI desktop y conserva acceso mobile",
+      "passed": true,
+      "duration": "44.9s"
+    }
+  ]
+}

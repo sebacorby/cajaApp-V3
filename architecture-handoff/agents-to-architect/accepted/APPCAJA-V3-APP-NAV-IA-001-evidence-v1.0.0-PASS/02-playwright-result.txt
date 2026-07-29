@@ -1,0 +1,58 @@
+# APP-NAV-IA-001 v1.0.0 — Playwright Result
+
+## Test Command
+`npx playwright test tests/navigation-information-architecture.spec.ts tests/quality-audit.spec.ts tests/global-search.spec.ts tests/financial-health-compact.spec.ts tests/sidebar-data-quality.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: **PASS (10/10)**
+
+```
+Running 10 tests using 1 worker
+
+✓ tests/financial-health-compact.spec.ts:138:5 › Indicador compacto refleja score, banda, confianza, fórmula y período del payload (6.6s)
+✓ tests/financial-health-compact.spec.ts:213:5 › Indicador compacto muestra un estado explícito cuando ninguna moneda es calculable (723ms)
+✓ tests/global-search.spec.ts:18:5 › búsqueda global: teclado, navegación por registro y mobile (9.0s)
+✓ tests/navigation-information-architecture.spec.ts:70:5 › agrupa las quince secciones sin agregar pasos de navegación (1.1s)
+✓ tests/navigation-information-architecture.spec.ts:89:5 › mantiene la misma arquitectura y cierre de hoja en mobile (1.4s)
+✓ tests/quality-audit.spec.ts:24:5 › todas las secciones funcionales navegan sin promesas ficticias (2.0s)
+✓ tests/quality-audit.spec.ts:50:5 › las quince secciones están disponibles en navegación móvil (30.3s)
+✓ tests/quality-audit.spec.ts:68:5 › Cierres y Respaldo exponen controles críticos con nombres accesibles (1.5s)
+✓ tests/quality-audit.spec.ts:94:5 › header y navegación no exponen controles ficticios y aceptan teclado (1.5s)
+✓ tests/sidebar-data-quality.spec.ts:42:5 › Sidebar muestra indicadores determinísticos y navega a su origen (39.4s)
+
+10 passed (1.6m)
+```
+
+## All Tests Validated
+
+### Navigation Information Architecture (2 tests)
+1. **navigation-information-architecture.spec.ts:70**: Agrupa las quince secciones sin agregar pasos de navegación
+2. **navigation-information-architecture.spec.ts:89**: Mantiene la misma arquitectura y cierre de hoja en mobile
+
+### Quality Audit (4 tests)
+3. **quality-audit.spec.ts:24**: Todas las secciones funcionales navegan sin promesas ficticias
+4. **quality-audit.spec.ts:50**: Las quince secciones están disponibles en navegación móvil
+5. **quality-audit.spec.ts:68**: Cierres y Respaldo exponen controles críticos con nombres accesibles
+6. **quality-audit.spec.ts:94**: Header y navegación no exponen controles ficticios y aceptan teclado
+
+### Global Search (1 test)
+7. **global-search.spec.ts:18**: Búsqueda global: teclado, navegación por registro y mobile
+
+### Financial Health Compact (2 tests)
+8. **financial-health-compact.spec.ts:138**: Indicador compacto refleja score, banda, confianza, fórmula y período del payload
+9. **financial-health-compact.spec.ts:213**: Indicador compacto muestra un estado explícito cuando ninguna moneda es calculable
+
+### Sidebar Data Quality (1 test)
+10. **sidebar-data-quality.spec.ts:42**: Sidebar muestra indicadores determinísticos y navega a su origen
+
+## Validated Features (per checklist)
+
+- ✓ Cinco grupos en orden: Operación, Ingesta y calidad, Planificación, Análisis, Sistema
+- ✓ Las quince secciones una sola vez con los mismos SectionId y destinos
+- ✓ Todos los grupos expandidos, cada destino continúa a un clic
+- ✓ aria-current, foco visible, recorrido con Tab, nombres accesibles
+- ✓ Equivalencia desktop/mobile y cierre del Sheet al navegar
+- ✓ Salud compacta, Calidad del dato y Búsqueda global siguen funcionando
+- ✓ Cero strict-mode violations
+
+## Test Artifacts
+- `test-results/` - Full Playwright artifacts (trace, video, screenshots)

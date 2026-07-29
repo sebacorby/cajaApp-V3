@@ -1,0 +1,10 @@
+{
+  "cleanup": {
+    "processes_stopped": true,
+    "sqlite_restored": true,
+    "sqlite_hash": "E24E819EF022028C034214104B62CC409D9161211D43D8EA0A1683A932351208",
+    "node_modules_deleted": true,
+    "lockfiles_verified": true
+  },
+  "status": "COMPLETE"
+}

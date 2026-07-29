@@ -1,0 +1,53 @@
+{
+  "gate_id": "BACKEND-STABILITY-WITH-GEMMA-R2",
+  "timestamp": "2026-07-22T20:53:00.000Z",
+  "verdict": "FAIL",
+  "failure_reasons": [
+    {
+      "criterion": "shutdown_with_sigint",
+      "required": "SIGINT or Ctrl+C",
+      "actual": "Stop-Process (SIGTERM on Windows)",
+      "pass": false
+    },
+    {
+      "criterion": "shutdown_logs_captured",
+      "required": "Worker shutdown log, Fastify shutdown log, Prisma disconnect log",
+      "actual": "No shutdown logs present - file was captured at startup before shutdown",
+      "pass": false
+    },
+    {
+      "criterion": "exit_code_logged",
+      "required": "Exit code from shutdown signal",
+      "actual": "Exit code not captured",
+      "pass": false
+    }
+  ],
+  "pass_criteria": {
+    "single_instance": true,
+    "exact_model": true,
+    "exact_endpoint": true,
+    "preflight_before_listen": true,
+    "pid_stable": true,
+    "all_health_checks_200_pre_ai": true,
+    "all_health_checks_200_post_ai": true,
+    "ai_smoke_success": true,
+    "backend_alive_after_ai": true,
+    "worker_stable": true,
+    "prisma_stable": true,
+    "no_fatal_errors": true,
+    "port_freed_after_shutdown": true
+  },
+  "backend_pid": 42364,
+  "evidence_files": [
+    "BACKEND-PREFLIGHT.json",
+    "BACKEND-STARTUP.json",
+    "BACKEND-PRE-AI-HEALTH.json",
+    "BACKEND-AI-SMOKE.json",
+    "BACKEND-POST-AI-HEALTH.json",
+    "BACKEND-ERROR-SCAN.json",
+    "BACKEND-SHUTDOWN.json",
+    "backend-pid-42364.stdout.log",
+    "backend-pid-42364.stderr.log"
+  ],
+  "note": "Gate FAIL due to shutdown requirements not met. Stop-Process sends SIGTERM not SIGINT. Shutdown logs not captured. Exit code not logged. All other criteria PASS."
+}

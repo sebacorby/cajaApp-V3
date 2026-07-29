@@ -1,0 +1,44 @@
+# 16 - Startup State — v1.0.2 Salary Receipt Focal Revalidation
+
+## Date: 2026-07-16
+
+## Status: BLOCKED
+
+## Startup Script Failure
+
+The startup script `cajaapp-headless-up.ps1` fails at the Python verification step with:
+
+```
+"El runtime Python existe, pero pdfplumber no pudo cargarse. File \"<string>\", line 1
+    import
+          ^
+SyntaxError: invalid syntax"
+```
+
+## Root Cause
+
+The `Invoke-CapturedProcess` function uses `Start-Process` with `-WindowStyle Hidden` and output redirects. When `Start-Process` invokes Python with `-ArgumentList @("-c", "import pdfplumber;print(...)")`, the command is malformed.
+
+This is a pre-existing bug in the startup script's infrastructure function, not in the salary-receipts vertical code.
+
+## Workaround
+
+The backend was started manually with the correct Node.js v24.18.0 and PYTHON_EXECUTABLE environment variable. It started successfully on port 11436 and passed HTTP health checks.
+
+## Backend Started Successfully (manual workaround)
+
+```
+[08:01:59.980] INFO (27076): Database connected successfully
+[08:02:00.086] INFO (27076): Server running on http://127.0.0.1:11436
+[08:02:00.118] INFO (27076): Ollama preflight completed
+```
+
+HTTP health check: 200 ✅
+
+## Files Verified Unchanged
+
+- cajaapp-headless-up.ps1: 540D1A488D352ECB5D1F2C06B7FEAA959952930A7B73EC0DE30FD930F1532C7E (unchanged from v1.0.1)
+
+## Note
+
+The Python remediation (safe `-c` argument with no space: `import pdfplumber;print(...)`) is correctly implemented in the script. The bug is in `Invoke-CapturedProcess`'s use of `Start-Process` for Python invocation, which corrupts the command on Windows.

@@ -1,0 +1,23 @@
+# APP-SEC-DEPS-001 v1.0.2 — CHECKLIST
+
+- [ ] Root y Node v24.18.0 verificados.
+- [ ] package.json y lockfile canónicos siguen en hashes baseline.
+- [ ] SQLite respaldada y SHA-256 inicial registrado.
+- [ ] Fixtures Visa Galicia y recibo de sueldo existen, con tamaño y SHA-256.
+- [ ] Staging baseline y candidate creados fuera de Dropbox.
+- [ ] Mismo código/tests/configuración en ambas copias; sólo package files difieren.
+- [ ] npm ci PASS en ambas copias, sin EBUSY.
+- [ ] Candidate npm audit total 0.
+- [ ] Candidate npm ls muestra next 16.2.10, postcss 8.5.16, js-yaml 4.2.0, uuid 11.1.1 y prismjs 1.30.0.
+- [ ] No existen copias vulnerables anidadas.
+- [ ] Typecheck, lint y build PASS en baseline y candidate.
+- [ ] Backend/frontend HTTP 200 para ambas corridas.
+- [ ] Playwright completo excepto ai-advisor, Chromium, workers=1, retries=0.
+- [ ] BASELINE-RESULT.json y CANDIDATE-RESULT.json incluyen tests exactos.
+- [ ] COMPARISON.json demuestra cero fallos nuevos y cero degradación.
+- [ ] No hay ENOENT de fixtures, skips ni retries.
+- [ ] SQLite restaurada; puertos y procesos liberados.
+- [ ] GATES-PASS.json creado sólo con todos los requisitos cumplidos.
+- [ ] Promoción atómica ejecutada únicamente después del PASS.
+- [ ] package.json y package-lock.json canónicos coinciden con hashes candidato.
+- [ ] Evidencia completa y 00-verdict.md entregados.

@@ -1,0 +1,63 @@
+{
+  "gate_id": "BACKEND-STABILITY-WITH-GEMMA",
+  "timestamp": "2026-07-22T20:23:15.000Z",
+  "verdict": "PASS",
+  "backend_pid": 4604,
+  "model": "gemma4:31b-cloud",
+  "endpoint": "http://127.0.0.1:11434",
+  "assertions": {
+    "single_instance": true,
+    "exact_model": true,
+    "exact_endpoint": true,
+    "preflight_before_listen": true,
+    "pid_stable": true,
+    "all_health_checks_200": true,
+    "pre_ai_health_checks": 10,
+    "post_ai_health_checks": 10,
+    "ai_smoke_success": true,
+    "backend_alive_after_ai": true,
+    "worker_stable": true,
+    "prisma_stable": true,
+    "no_restart": true,
+    "no_fatal_errors": true,
+    "shutdown_clean": true,
+    "packages_intact": true,
+    "no_backend_modifications": true
+  },
+  "smoke_test_details": {
+    "endpoint": "POST http://127.0.0.1:11436/api/ai-advisor/ask",
+    "status": 201,
+    "duration_ms": 31227,
+    "provider": "ollama",
+    "model": "gemma4:31b",
+    "provider_calls": 1,
+    "correlation_id": "4b5713d0-df49-4a25-befd-ea0443801db5",
+    "response_valid": true,
+    "no_error_in_response": true
+  },
+  "prohibited_activities_check": {
+    "frontend_started": false,
+    "playwright_ran": false,
+    "e2e_ran": false,
+    "vitest_ran": false,
+    "scripts_created": false,
+    "code_modified": false,
+    "localhost_used": false,
+    "port_11435_used": false,
+    "wrong_model_used": false,
+    "multiple_backend_instances": false,
+    "auto_restart_on_crash": false
+  },
+  "evidence_files": [
+    "BACKEND-STABILITY-PREFLIGHT.json",
+    "BACKEND-STARTUP.json",
+    "BACKEND-STARTUP-ORDER.json",
+    "BACKEND-PRE-AI-HEALTH.json",
+    "BACKEND-AI-SMOKE.json",
+    "BACKEND-POST-AI-HEALTH.json",
+    "BACKEND-ERROR-SCAN.json",
+    "BACKEND-SHUTDOWN.json",
+    "BACKEND-STABILITY-GATE.json"
+  ],
+  "note": "Backend stability gate PASS. Backend survived with PID 4604 for the entire session without crashes, handled AI request successfully, and shut down cleanly. No fatal errors observed."
+}

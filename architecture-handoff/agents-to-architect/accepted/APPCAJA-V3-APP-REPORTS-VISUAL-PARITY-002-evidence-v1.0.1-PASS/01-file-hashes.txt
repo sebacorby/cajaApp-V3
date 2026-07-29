@@ -1,0 +1,29 @@
+# APP-REPORTS-VISUAL-PARITY-002 v1.0.1 — File Hash Verification
+
+## All 5 files match expected SHA-256 hashes (v1.0.1 checklist)
+
+| # | File | Expected SHA-256 | Actual SHA-256 | Size | Status |
+|---|------|------------------|----------------|------|--------|
+| 1 | chart-contracts.ts | 8F6B11289061F97567C220035C277B1F3E5E0C3F6A6A07EBFD168AFB47549FCC | 8F6B11289061F97567C220035C277B1F3E5E0C3F6A6A07EBFD168AFB47549FCC | 574 | ✓ MATCH |
+| 2 | monthly-evolution-chart.tsx | DD6AF0182F8B2AEB9495CCEAE25B50EA76960D9FD6307A2A50F4E9FF73726BE3 | DD6AF0182F8B2AEB9495CCEAE25B50EA76960D9FD6307A2A50F4E9FF73726BE3 | 18029 | ✓ MATCH |
+| 3 | category-donut.tsx | 6FDF499B9CE323C1831A0B574DFEF7791A509D0FA3AD53DBFE5A2A4C30F267F3 | 6FDF499B9CE323C1831A0B574DFEF7791A509D0FA3AD53DBFE5A2A4C30F267F3 | 14711 | ✓ MATCH |
+| 4 | reportes-section.tsx | 69039F198AB84933B76626844A4048F6200B320E2A7F0A42F812C7E67099852C | 69039F198AB84933B76626844A4048F6200B320E2A7F0A42F812C7E67099852C | 29794 | ✓ MATCH |
+| 5 | reports.spec.ts | 0B999924D17CFA514D7FEC2127FA3CD36F595096D062FD340FC9161A00A3C8A1 | 0B999924D17CFA514D7FEC2127FA3CD36F595096D062FD340FC9161A00A3C8A1 | 12109 | ✓ MATCH |
+
+## Gate 5 Verification: vigente == superseded
+
+| File (current) | File (superseded) | Hash Match | Size Match |
+|----------------|-------------------|------------|------------|
+| chart-contracts.ts | chart-contracts.implemented.ts.txt | ✓ | ✓ |
+| monthly-evolution-chart.tsx | monthly-evolution-chart.implemented.tsx.txt | ✓ | ✓ |
+| category-donut.tsx | category-donut.implemented.tsx.txt | ✓ | ✓ |
+| reportes-section.tsx | reportes-section.implemented.tsx.txt | ✓ | ✓ |
+| reports.spec.ts | reports.spec.implemented.ts.txt | ✓ | ✓ |
+
+## Conclusion
+
+All 5 files match both:
+1. The expected SHA-256 hashes from the v1.0.1 checklist
+2. The corresponding `implemented` copies in the superseded inspection directory
+
+The v1.0.0 failure was due to the architect's checklist using Dropbox content hashes instead of SHA-256. The actual files in the repo have been unchanged.

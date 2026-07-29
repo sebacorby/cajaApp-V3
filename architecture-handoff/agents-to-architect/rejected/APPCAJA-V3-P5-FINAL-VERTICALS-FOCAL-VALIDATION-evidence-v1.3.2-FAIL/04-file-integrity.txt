@@ -1,0 +1,32 @@
+# P5 v1.3.2 — File Integrity Evidence
+## Timestamp: 2026-07-17T21:05:00Z
+
+## SQLite Database Restoration
+
+### Initial State (Preflight)
+- Path: workspace\backend\prisma\dev.db
+- Size: 5627904 bytes
+- SHA-256: E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C
+- Backup created: PRE-v1.3.2-dev.db
+
+### Final State (Post Validation)
+- Path: workspace\backend\prisma\dev.db
+- Size: 5627904 bytes
+- SHA-256: E05FDF545F51085038A9BB5FD8A7E7C5E5CB5CEA424886F1CEE27D8D0869252C
+
+### Restoration Result: PASS ✓
+- Hash match: YES
+- Size match: YES
+
+## Evidence Files Inventory
+1. 00-preflight.txt - Preflight checks, Node version, initial hash
+2. 01-backend-tests.txt - Backend 11/11 test results
+3. 02-frontend-tests.txt - Frontend typecheck, lint, build, Playwright 3/3
+4. 03-api-smoke-tests.txt - API smoke test results
+5. 04-file-integrity.txt - SQLite restoration verification
+6. 00-verdict.md - Final verdict
+
+## Backend Server Processes
+- Backend PID 42136 (stopped)
+- Frontend PID 70332 (stopped)
+- Ports 11436 and 11437 now free

@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from "next/server";
+
+const MAX_FIELD_LENGTH = 8_000;
+
+function safeText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, MAX_FIELD_LENGTH);
+}
+
+export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV !== "development") {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
+  const payload = {
+    event: safeText(body.event) || "frontend.client.error",
+    message: safeText(body.message) || "Unknown browser error",
+    stack: safeText(body.stack),
+    url: safeText(body.url),
+    source: safeText(body.source),
+    timestamp: safeText(body.timestamp) || new Date().toISOString(),
+  };
+
+  console.error("[frontend-client]", JSON.stringify(payload));
+
+  return NextResponse.json({ ok: true });
+}

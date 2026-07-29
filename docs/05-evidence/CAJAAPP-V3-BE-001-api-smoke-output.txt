@@ -1,0 +1,50 @@
+# APPCAJA-V3-BE-001 v1.0.2 Smoke Test Evidence
+
+## Environment
+- node version: v22.14.0
+- npm install: SUCCESS
+- prisma generate: SUCCESS
+- prisma migrate dev: SUCCESS
+- npm run build: SUCCESS
+- npm run test: SUCCESS (55 tests passed)
+
+## API Smoke Tests (via app.inject)
+- GET /health: 200 OK - returns status "ok"
+- GET /api/card-statements/updated-values?from=2026-07&to=2027-01: 200 OK - returns months array
+- GET /api/card-statements/updated-values (no params): 400 Bad Request - validation error
+
+## Validation Checklist
+- [x] node -v: v22.14.0
+- [x] npm install: SUCCESS
+- [x] npx prisma generate: SUCCESS
+- [x] npx prisma migrate dev: SUCCESS
+- [x] npm run build: SUCCESS
+- [x] npm run test: SUCCESS (55 tests)
+- [x] Prisma schema uses sectionKey/groupKey (not FK UUIDs)
+- [x] acceptDraft uses $transaction
+- [x] updateDraft uses $transaction
+- [x] PUT endpoint for draft updates exists
+- [x] AI_MOCK_MODE=true in .env.example
+- [x] lint script removed from package.json
+- [x] Golden fixture has correct section order (11 sections)
+- [x] Golden fixture has correct group order (6792, 5884, 4255, 0015)
+- [x] Golden fixture has REAL rows from PDF (not invented)
+- [x] docs/03-specs created
+- [x] Mock extracted from fixture file (not hardcoded)
+- [x] detectDocumentTypeWithAI used in imports flow
+- [x] Blocking errors separate from warnings
+- [x] USD projections preserved (not discarded)
+- [x] totalDollars in MonthlyProjection
+- [x] CardStatementMapper converts Prisma to frontend contract
+- [x] Smoke tests pass (app.inject)
+
+## Changes from v1.0.1
+- B1: Mock AI reads from fixture file, not hardcoded
+- B2: detectDocumentTypeWithAI used in import flow
+- B3: Golden fixture has real rows from PDF
+- B4: CardStatementMapper converts Prisma to frontend contract
+- B5: acceptDraft and updateDraft use $transaction
+- B6: USD projections preserved, totalDollars added
+- B7: Smoke test with app.inject() added
+- B8: Blocking errors separated from warnings
+- B9: Enhanced validation in place

@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-07-22T17:25:00.000Z",
+  "step": "PREFLIGHT",
+  "port_11436_verification_1": {
+    "connections": 0,
+    "free": true
+  },
+  "port_11436_verification_2": {
+    "connections": 0,
+    "free": true
+  },
+  "port_11437_verification": {
+    "connections": 0,
+    "free": true
+  },
+  "node_processes_before_start": [
+    {"PID": 11560, "CommandLine": "\"C:\\Users\\javie\\nodejs\\node.exe\" ... npm ..."},
+    {"PID": 15704, "CommandLine": "node ... @upstash/context7-mcp ..."},
+    {"PID": 25572, "CommandLine": "\"I:\\Tools\\node-v24.18.0-win-x64\\node.exe\" dist/main.js"},
+    {"PID": 32876, "CommandLine": "I:\\Tools\\node-v24.18.0-win-x64\\node.exe npm run start:prod"},
+    {"PID": 50816, "CommandLine": "... next start -p 11437"},
+    {"PID": 51944, "CommandLine": "node ... @azure-devops/mcp ..."},
+    {"PID": 51976, "CommandLine": "node ./mcp/server.mjs"},
+    {"PID": 53156, "CommandLine": "node ... vite ..."},
+    {"PID": 57260, "CommandLine": "node dist/main"},
+    {"PID": 60040, "CommandLine": "node ... vite ..."}
+  ],
+  "actual_backend_pid": 42364,
+  "env_file": "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\workspace\\backend\\.env.candidate",
+  "node_executable": "I:\\Tools\\node-v24.18.0-win-x64\\node.exe",
+  "working_directory": "C:\\Users\\javie\\Javier.s.corbella Dropbox\\Javier Corbella\\cajaApp-V3\\workspace\\backend",
+  "dist_files": {
+    "dist_main_js_hash": "CFCDF9CFB2AE44DE1F94214AEB382783508B80BC8AD05AA6B8EEE79E62D426C5",
+    "dist_config_env_js_hash": "436463D489FAA8F6F2D417D39990CF165B6F32910DE327A8A4C0B52557FE4AB9"
+  },
+  "health_endpoint": "GET http://127.0.0.1:11436/health",
+  "note": "Backend PID 42364 confirmed listening on 11436. Startup logs captured in backend-pid-42364.stdout.log."
+}

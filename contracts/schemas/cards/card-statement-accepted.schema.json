@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CardStatementAccepted",
+  "description": "Schema for accepted card statement - persisted after user accepts",
+  "type": "object",
+  "required": ["id", "status", "acceptedAt", "source", "summary", "sections", "groups", "rows", "projections"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "const": "accepted" },
+    "acceptedAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "properties": {
+        "bankName": { "type": ["string", "null"] },
+        "brand": { "type": ["string", "null"] },
+        "statementNumber": { "type": ["string", "null"] },
+        "pageCount": { "type": "number" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "totalPesos": { "type": ["string", "null"] },
+        "totalDollars": { "type": ["string", "null"] },
+        "minimumPaymentPesos": { "type": ["string", "null"] },
+        "currentDueDate": { "type": ["string", "null"] },
+        "nextClosingDate": { "type": ["string", "null"] },
+        "nextDueDate": { "type": ["string", "null"] }
+      }
+    },
+    "sections": { "type": "array", "items": { "type": "object" } },
+    "groups": { "type": "array", "items": { "type": "object" } },
+    "rows": { "type": "array", "items": { "type": "object" } },
+    "projections": {
+      "type": "array",
+      "description": "CajaApp-calculated future installment projections. These are distinct from issuerFutureInstallments.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "monthKey": { "type": "string" },
+          "label": { "type": "string" },
+          "totalPesos": { "type": "string" },
+          "totalDollars": { "type": "string" }
+        }
+      }
+    },
+    "issuerFutureInstallments": {
+      "type": "array",
+      "description": "Issuer-provided future installment reference retained as historical evidence for later validation. It must never be summed into CajaApp projections.",
+      "items": {
+        "type": "object",
+        "required": ["sourceRowId", "displayOrder", "sourceLabel", "sourcePage", "periodLabelRaw", "issuerPeriodKey", "targetPaymentMonthKey", "periodBasis", "amountPesosRaw", "amountDollarsRaw", "currencyOriginal", "originalText", "confidence"],
+        "properties": {
+          "sourceRowId": { "type": "string" },
+          "displayOrder": { "type": "number" },
+          "sourceLabel": { "type": ["string", "null"] },
+          "sourcePage": { "type": ["number", "null"] },
+          "periodLabelRaw": { "type": "string" },
+          "issuerPeriodKey": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}$" },
+          "targetPaymentMonthKey": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}$" },
+          "periodBasis": { "type": "string", "enum": ["unknown"] },
+          "amountPesosRaw": { "type": ["string", "null"] },
+          "amountDollarsRaw": { "type": ["string", "null"] },
+          "currencyOriginal": { "type": "string", "enum": ["ARS", "USD", "MIXED", "UNKNOWN"] },
+          "originalText": { "type": "string" },
+          "confidence": { "type": ["number", "null"] }
+        }
+      }
+    }
+  }
+}

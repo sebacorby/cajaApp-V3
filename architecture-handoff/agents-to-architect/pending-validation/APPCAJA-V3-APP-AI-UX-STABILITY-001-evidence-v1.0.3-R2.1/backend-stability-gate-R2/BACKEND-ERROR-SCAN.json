@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-07-22T20:52:00.000Z",
+  "step": "ERROR-SCAN",
+  "searched_errors": [
+    "OLLAMA_MODEL_NOT_FOUND",
+    "OLLAMA_CONNECTION_FAILED",
+    "EADDRINUSE",
+    "unhandledRejection",
+    "uncaughtException",
+    "Failed to start server",
+    "Prisma disconnection"
+  ],
+  "none_found_in_captured_logs": true,
+  "note": "No fatal errors observed in the captured stdout/stderr logs during the backend lifetime. Backend was stable on PID 42364 throughout."
+}

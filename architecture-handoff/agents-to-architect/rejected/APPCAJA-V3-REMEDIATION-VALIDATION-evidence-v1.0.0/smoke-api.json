@@ -1,0 +1,67 @@
+[
+  {
+    "url": "http://127.0.0.1:11436/api/settings/system",
+    "status": 200,
+    "body_preview": "{\"mode\":\"local\",\"backend\":\"available\",\"databaseEngine\":\"SQLite\",\"storageDirectory\":\"I:\\\\cajaApp-V3\\\\workspace\\\\backend\\\\storage\",\"databaseConfigured\":true,\"nodeVersion\":\"v24.18.0\",\"environment\":\"development\",\"bankConnections\":false,\"authentication\":false,\"notifications\":false}"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/settings",
+    "status": 200,
+    "body_preview": "{\"displayName\":\"Javi\",\"locale\":\"es-AR\",\"timezone\":\"America/Argentina/Tucuman\",\"defaultCurrency\":\"ARS\",\"theme\":\"system\",\"updatedAt\":\"2026-07-13T01:15:12.170Z\"}"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/card-statements/statements?limit=100&includeArchived=true",
+    "status": 200,
+    "body_preview": "{\"statements\":[]}"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/reports?from=2026-07-01&to=2026-07-13",
+    "status": 200,
+    "body_preview": "{\"range\":{\"from\":\"2026-07-01\",\"to\":\"2026-07-13\"},\"previousRange\":{\"from\":\"2026-06-18\",\"to\":\"2026-06-30\"},\"monthCount\":1,\"summary\":{\"actual\":{\"incomeArs\":\"0,00\",\"expenseArs\":\"0,00\",\"resultArs\":\"0,00\",\"incomeUsd\":\"0.00\",\"expenseUsd\":\"0.00\",\"resultUsd\":\"0.00\",\"savingsRateArs\":null,\"savingsRateUsd\":null,\"records\":0},\"pending\":{\"incomeArs\":\"0,00\",\"expenseArs\":\"0,00\",\"resultArs\":\"0,00\",\"incomeUsd\":\"0.00\",\"expenseUsd\":\"0.00\",\"resultUsd\":\"0.00\",\"savingsRateArs\":null,\"savingsRateUsd\":null,\"records\":0},\"p"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/goals",
+    "status": 200,
+    "body_preview": "[]"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/budgets",
+    "status": 200,
+    "body_preview": "[]"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/card-statements/exchange-rate",
+    "status": 200,
+    "body_preview": "{\"configured\":false,\"pair\":\"USD_ARS\",\"rate\":null,\"effectiveDate\":null,\"source\":null,\"status\":\"missing\",\"updatedAt\":null}"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/movements/categories?includeInactive=true",
+    "status": 200,
+    "body_preview": "[{\"id\":\"44bea446-9035-4fd6-bcc1-90048b7dcef3\",\"name\":\"Cargos de tarjeta\",\"color\":\"#9333ea\",\"icon\":\"receipt-text\",\"isSystem\":true,\"active\":true,\"keywords\":[\"comision\",\"mantenimiento\",\"cargo de tarjeta\"],\"manualMovementCount\":0,\"debitCsvRowCount\":0,\"usageCount\":0,\"createdAt\":\"2026-07-12T13:45:39.779Z\",\"updatedAt\":\"2026-07-13T01:15:12.209Z\"},{\"id\":\"8c82277a-90b1-422e-8ed8-9b0360f8e648\",\"name\":\"Impuestos y percepciones\",\"color\":\"#dc2626\",\"icon\":\"landmark\",\"isSystem\":true,\"active\":true,\"keywords\":[\"i"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/dashboard?from=2026-07-01&to=2026-07-13",
+    "status": 200,
+    "body_preview": "{\"range\":{\"from\":\"2026-07-01\",\"to\":\"2026-07-13\"},\"previousRange\":{\"from\":\"2026-06-18\",\"to\":\"2026-06-30\"},\"summary\":{\"actual\":{\"incomeArs\":\"0,00\",\"expenseArs\":\"0,00\",\"balanceArs\":\"0,00\",\"incomeUsd\":\"0.00\",\"expenseUsd\":\"0.00\",\"balanceUsd\":\"0.00\",\"savingsRateArs\":null,\"savingsRateUsd\":null,\"records\":0},\"pending\":{\"incomeArs\":\"0,00\",\"expenseArs\":\"0,00\",\"balanceArs\":\"0,00\",\"incomeUsd\":\"0.00\",\"expenseUsd\":\"0.00\",\"balanceUsd\":\"0.00\",\"savingsRateArs\":null,\"savingsRateUsd\":null,\"records\":0},\"projected\":{"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/future-commitments?from=2026-07&months=6",
+    "status": 200,
+    "body_preview": "{\"range\":{\"from\":\"2026-07\",\"to\":\"2026-12\",\"months\":6},\"summary\":{\"confirmedIncome\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"projectedIncome\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"confirmedCardDebt\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"projectedCardDebt\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"confirmedOtherCommitments\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"projectedOtherCommitments\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"confirmedCommitments\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"projectedCommitments\":{\"ars\":\"0,00\",\"usd\":\"0.00\"},\"expectedIncome\":{\"ars\":\"0,00\",\"u"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/movements/export.csv?from=2026-07-01&to=2026-07-13",
+    "status": 200,
+    "body_preview": "﻿\"Fecha\";\"Mes de impacto\";\"Tipo\";\"Fuente técnica\";\"Origen\";\"Descripción\";\"Categoría\";\"Moneda\";\"Importe\";\"Estado\";\"Notas\";\"ID de origen\";\"ID de resumen\";\"ID de ingreso\";\"ID de importación CSV\""
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/movements?from=2026-07-01&to=2026-07-13",
+    "status": 200,
+    "body_preview": "{\"range\":{\"from\":\"2026-07-01\",\"to\":\"2026-07-13\"},\"filters\":{\"type\":null,\"source\":null,\"category\":null,\"status\":null,\"currency\":null,\"q\":null,\"includeProjected\":false},\"summary\":{\"incomeArs\":\"0,00\",\"expenseArs\":\"0,00\",\"balanceArs\":\"0,00\",\"incomeUsd\":\"0.00\",\"expenseUsd\":\"0.00\",\"balanceUsd\":\"0.00\",\"records\":0},\"pagination\":{\"page\":1,\"pageSize\":25,\"total\":0,\"totalPages\":1,\"hasPreviousPage\":false,\"hasNextPage\":false},\"items\":[]}"
+  },
+  {
+    "url": "http://127.0.0.1:11436/api/reports/export.csv?from=2026-07-01&to=2026-07-13",
+    "status": 200,
+    "body_preview": "﻿Seccion;Periodo;Dimension;Estado;ARS;USD;Registros;Porcentaje\r\n\"Evolucion mensual\";\"julio de 2026\";\"Ingresos\";\"Real\";\"0,00\";\"0.00\";\"0\";\"\"\r\n\"Evolucion mensual\";\"julio de 2026\";\"Egresos\";\"Real\";\"0,00\";\"0.00\";\"0\";\"\"\r\n\"Evolucion mensual\";\"julio de 2026\";\"Resultado\";\"Real\";\"0,00\";\"0.00\";\"0\";\"\"\r\n\"Evolucion mensual\";\"julio de 2026\";\"Egresos\";\"Esperado\";\"0,00\";\"0.00\";\"0\";\"\"\r\n\"Deuda tarjeta\";\"julio de 2026\";\"Egresos\";\"Real\";\"0,00\";\"0.00\";\"0\";\"\"\r\n\"Deuda tarjeta\";\"julio de 2026\";\"Egresos\";\"Proyectado\";\"0,"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "010",
+  "test": "debit-csv-import.spec.ts:16",
+  "name": "Importación de débitos CSV › previsualiza, acepta, deduplica y revierte una importación",
+  "status": "PASS",
+  "duration_seconds": 19.8,
+  "evidence_dir": "010-debit-csv-pass1",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T20:00:00Z"
+}

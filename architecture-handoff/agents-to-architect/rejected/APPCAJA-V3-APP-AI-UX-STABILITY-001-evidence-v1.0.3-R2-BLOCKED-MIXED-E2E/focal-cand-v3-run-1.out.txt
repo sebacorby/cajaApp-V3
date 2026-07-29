@@ -1,0 +1,39 @@
+
+Running 2 tests using 1 worker
+
+  ok 1 [chromium] › tests\ai-advisor.spec.ts:19:5 › Asesor IA mantiene fingerprint, claims y citas consistentes (45.6s)
+  x  2 [chromium] › tests\ai-advisor.spec.ts:60:5 › Asesor IA responde en UI desktop y conserva acceso mobile (4.2m)
+
+
+  1) [chromium] › tests\ai-advisor.spec.ts:60:5 › Asesor IA responde en UI desktop y conserva acceso mobile 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: apiRequestContext.delete: Target page, context or browser has been closed
+
+       96 |   } finally {
+       97 |     for (const id of [...new Set(interactionIds)]) await request.delete(`${API_BASE_URL}/api/ai-advisor/history/${id}`);
+    >  98 |     for (const id of movementIds) await request.delete(`${API_BASE_URL}/api/movements/manual/${id}`);
+          |                                                       ^
+       99 |   }
+      100 | });
+      101 |
+        at C:\Users\javie\AppData\Local\CajaApp\validation\APP-AI-UX-STABILITY-001-v1.0.3-R2\candidate\workspace\frontend\tests\ai-advisor.spec.ts:98:55
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-advisor-Asesor-IA-respo-14420-op-y-conserva-acceso-mobile-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-advisor-Asesor-IA-respo-14420-op-y-conserva-acceso-mobile-chromium\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\ai-advisor-Asesor-IA-respo-14420-op-y-conserva-acceso-mobile-chromium\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\ai-advisor-Asesor-IA-respo-14420-op-y-conserva-acceso-mobile-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests\ai-advisor.spec.ts:60:5 › Asesor IA responde en UI desktop y conserva acceso mobile 
+  1 passed (5.2m)

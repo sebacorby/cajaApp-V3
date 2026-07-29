@@ -1,0 +1,716 @@
+"use client";
+
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+} from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  CircleDot,
+  ExternalLink,
+  GitCompareArrows,
+  History,
+  Link2,
+  Loader2,
+  RefreshCw,
+  ScanSearch,
+  ShieldCheck,
+  Unlink,
+  XCircle,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  getReconciliationDetail,
+  listReconciliation,
+  reopenReconciliation,
+  resolveReconciliation,
+  scanReconciliation,
+  type ReconciliationItem,
+  type ReconciliationParticipant,
+  type ReconciliationRelationType,
+  type ReconciliationResolution,
+  type ReconciliationResponse,
+  type ReconciliationStatus,
+} from "@/lib/finance/reconciliation-api";
+import { useFinanceUI } from "@/lib/finance/ui-store";
+
+const RELATION_LABELS: Record<ReconciliationRelationType, string> = {
+  duplicate_movement: "Posible duplicado",
+  salary_deposit: "Depósito de sueldo",
+  card_payment: "Pago de tarjeta",
+};
+
+const STATUS_LABELS: Record<ReconciliationStatus, string> = {
+  open: "Pendiente",
+  resolved: "Resuelta",
+  dismissed: "Descartada",
+};
+
+const RESOLUTION_LABELS: Record<ReconciliationResolution, string> = {
+  exclude_left: "Excluir registro A",
+  exclude_right: "Excluir registro B",
+  keep_both: "Mantener ambos",
+  link_only: "Vincular sin excluir",
+  dismiss: "Descartar sugerencia",
+};
+
+function todayInTucuman(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Tucuman",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function ninetyDaysBefore(date: string): string {
+  const value = new Date(`${date}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() - 90);
+  return value.toISOString().slice(0, 10);
+}
+
+function statusClass(status: ReconciliationStatus): string {
+  if (status === "resolved") {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  }
+  if (status === "dismissed") {
+    return "border-muted-foreground/20 bg-muted text-muted-foreground";
+  }
+  return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+}
+
+function confidenceClass(confidence: number): string {
+  if (confidence >= 90) return "text-emerald-700 dark:text-emerald-300";
+  if (confidence >= 75) return "text-amber-700 dark:text-amber-300";
+  return "text-muted-foreground";
+}
+
+function displayDate(value: string | null): string {
+  if (!value) return "Fecha no informada";
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T00:00:00Z`));
+}
+
+function displayTimestamp(value: string): string {
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Argentina/Tucuman",
+  }).format(new Date(value));
+}
+
+function displayAmount(
+  value: string | null,
+  currency: "ARS" | "USD" | null,
+): string {
+  if (!value || !currency) return "Importe no informado";
+  return `${currency} ${value}`;
+}
+
+function metadataEntries(
+  metadata: Record<string, string | number | boolean | null>,
+): Array<[string, string]> {
+  return Object.entries(metadata)
+    .filter(([, value]) => value !== null && value !== "")
+    .map(([key, value]) => [
+      key,
+      typeof value === "boolean" ? (value ? "Sí" : "No") : String(value),
+    ]);
+}
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  testId,
+}: {
+  label: string;
+  value: number;
+  icon: typeof Link2;
+  testId: string;
+}) {
+  return (
+    <Card className="shadow-sm" data-testid={testId}>
+      <CardContent className="flex items-center justify-between p-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 text-2xl font-semibold">{value}</p>
+        </div>
+        <Icon className="size-5 text-primary" aria-hidden="true" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ParticipantCard({
+  participant,
+  label,
+  onNavigate,
+}: {
+  participant: ReconciliationParticipant;
+  label: string;
+  onNavigate: () => void;
+}) {
+  const metadata = metadataEntries(participant.metadata);
+  return (
+    <div
+      className={`rounded-xl border p-4 ${
+        participant.excluded
+          ? "border-destructive/40 bg-destructive/5"
+          : "bg-card"
+      }`}
+      data-testid={`reconciliation-participant-${participant.role}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 font-medium">{participant.description}</p>
+        </div>
+        {participant.excluded ? (
+          <Badge variant="outline" className="border-destructive/30 text-destructive">
+            Excluido del ledger
+          </Badge>
+        ) : null}
+      </div>
+      <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+        <p>
+          <span className="text-muted-foreground">Fecha: </span>
+          {displayDate(participant.occurredOn)}
+        </p>
+        <p>
+          <span className="text-muted-foreground">Importe: </span>
+          {displayAmount(participant.amount, participant.currency)}
+        </p>
+        <p>
+          <span className="text-muted-foreground">Fuente: </span>
+          {participant.sourceType}
+        </p>
+        <p className="truncate" title={participant.sourceId}>
+          <span className="text-muted-foreground">ID: </span>
+          {participant.sourceId}
+        </p>
+      </div>
+      {metadata.length > 0 ? (
+        <dl className="mt-3 grid gap-2 border-t pt-3 text-xs sm:grid-cols-2">
+          {metadata.map(([key, value]) => (
+            <div key={key}>
+              <dt className="text-muted-foreground">{key}</dt>
+              <dd className="font-medium">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <Button variant="ghost" size="sm" className="mt-3" onClick={onNavigate}>
+        <ExternalLink className="mr-2 size-4" />
+        {participant.navigation.label}
+      </Button>
+    </div>
+  );
+}
+
+export function ConciliacionSection() {
+  const setSection = useFinanceUI((state) => state.setSection);
+  const initialTo = useMemo(() => todayInTucuman(), []);
+  const [from, setFrom] = useState(() => ninetyDaysBefore(initialTo));
+  const [to, setTo] = useState(initialTo);
+  const [status, setStatus] = useState<"all" | ReconciliationStatus>("open");
+  const [relationType, setRelationType] = useState<
+    "all" | ReconciliationRelationType
+  >("all");
+  const [scope, setScope] = useState<"all" | "current" | "historical">(
+    "current",
+  );
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const [offset, setOffset] = useState(0);
+  const [data, setData] = useState<ReconciliationResponse | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ReconciliationItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [actioning, setActioning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const limit = 25;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await listReconciliation({
+        status,
+        relationType,
+        scope,
+        search: deferredSearch,
+        limit,
+        offset,
+      });
+      setData(response);
+      if (
+        response.items.length === 0 &&
+        offset > 0 &&
+        response.pagination.total <= offset
+      ) {
+        setOffset(Math.max(0, offset - limit));
+      }
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "No se pudo cargar la conciliación.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [deferredSearch, offset, relationType, scope, status]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const resetPage = useCallback(() => {
+    setOffset(0);
+    setExpandedId(null);
+    setDetail(null);
+  }, []);
+
+  const scan = useCallback(async () => {
+    if (to < from) {
+      setError("La fecha final no puede ser anterior a la inicial.");
+      return;
+    }
+    setScanning(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await scanReconciliation({ from, to });
+      setMessage(
+        result.detected === 1
+          ? "Se detectó 1 caso para revisar."
+          : `Se detectaron ${result.detected} casos para revisar.`,
+      );
+      setStatus("open");
+      setScope("current");
+      setOffset(0);
+      setData(
+        await listReconciliation({
+          status: "open",
+          relationType,
+          scope: "current",
+          search: deferredSearch,
+          limit,
+          offset: 0,
+        }),
+      );
+    } catch (scanError) {
+      setError(
+        scanError instanceof Error
+          ? scanError.message
+          : "No se pudo analizar el período.",
+      );
+    } finally {
+      setScanning(false);
+    }
+  }, [deferredSearch, from, relationType, to]);
+
+  const toggleDetail = useCallback(
+    async (item: ReconciliationItem) => {
+      if (expandedId === item.id) {
+        setExpandedId(null);
+        setDetail(null);
+        return;
+      }
+      setExpandedId(item.id);
+      setDetail(null);
+      setDetailLoading(true);
+      setError(null);
+      try {
+        setDetail(await getReconciliationDetail(item.id));
+      } catch (detailError) {
+        setError(
+          detailError instanceof Error
+            ? detailError.message
+            : "No se pudo cargar el caso.",
+        );
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [expandedId],
+  );
+
+  const applyAction = useCallback(
+    async (item: ReconciliationItem, action: ReconciliationResolution) => {
+      setActioning(true);
+      setError(null);
+      setMessage(null);
+      try {
+        const updated = await resolveReconciliation(item.id, action);
+        setDetail(updated);
+        setMessage(
+          action === "exclude_left" || action === "exclude_right"
+            ? "Conciliación guardada. La representación elegida ya no se cuenta en Movimientos."
+            : "Decisión de conciliación guardada.",
+        );
+        setStatus("all");
+        setOffset(0);
+        setData(
+          await listReconciliation({
+            status: "all",
+            relationType,
+            scope,
+            search: deferredSearch,
+            limit,
+            offset: 0,
+          }),
+        );
+      } catch (actionError) {
+        setError(
+          actionError instanceof Error
+            ? actionError.message
+            : "No se pudo guardar la conciliación.",
+        );
+      } finally {
+        setActioning(false);
+      }
+    },
+    [deferredSearch, relationType, scope],
+  );
+
+  const reopen = useCallback(
+    async (item: ReconciliationItem) => {
+      setActioning(true);
+      setError(null);
+      try {
+        const updated = await reopenReconciliation(item.id);
+        setDetail(updated);
+        setMessage(
+          "El caso volvió a quedar pendiente y cualquier exclusión fue revertida.",
+        );
+        setStatus("open");
+        setOffset(0);
+        setData(
+          await listReconciliation({
+            status: "open",
+            relationType,
+            scope,
+            search: deferredSearch,
+            limit,
+            offset: 0,
+          }),
+        );
+      } catch (reopenError) {
+        setError(
+          reopenError instanceof Error
+            ? reopenError.message
+            : "No se pudo reabrir el caso.",
+        );
+      } finally {
+        setActioning(false);
+      }
+    },
+    [deferredSearch, relationType, scope],
+  );
+
+  const summary = data?.summary ?? {
+    total: 0,
+    open: 0,
+    resolved: 0,
+    dismissed: 0,
+    duplicates: 0,
+    relations: 0,
+    excluded: 0,
+    current: 0,
+  };
+  const items = data?.items ?? [];
+  const rangeLabel = useMemo(() => {
+    if (!data || data.pagination.total === 0) return "Sin resultados";
+    const start = data.pagination.offset + 1;
+    const end = data.pagination.offset + data.items.length;
+    return `${start}–${end} de ${data.pagination.total}`;
+  }, [data]);
+
+  return (
+    <section className="space-y-6" data-testid="reconciliation-section">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <GitCompareArrows className="size-6 text-primary" aria-hidden="true" />
+            <h1 className="text-2xl font-semibold tracking-tight">Conciliación</h1>
+          </div>
+          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+            Detectá registros que podrían representar el mismo hecho financiero,
+            vinculalos y evitá doble conteo sin borrar ninguna fuente original.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => void load()}
+          disabled={loading}
+          data-testid="reconciliation-refresh"
+        >
+          {loading ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Actualizar
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <SummaryCard label="Pendientes" value={summary.open} icon={CircleDot} testId="reconciliation-summary-open" />
+        <SummaryCard label="Resueltas" value={summary.resolved} icon={CheckCircle2} testId="reconciliation-summary-resolved" />
+        <SummaryCard label="Descartadas" value={summary.dismissed} icon={XCircle} testId="reconciliation-summary-dismissed" />
+        <SummaryCard label="Relaciones" value={summary.relations} icon={Link2} testId="reconciliation-summary-relations" />
+        <SummaryCard label="Exclusiones" value={summary.excluded} icon={ShieldCheck} testId="reconciliation-summary-excluded" />
+      </div>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ScanSearch className="size-4" />
+            Analizar fuentes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+          <label className="space-y-1 text-sm">
+            <span className="text-muted-foreground">Desde</span>
+            <Input type="date" value={from} onChange={(event: ChangeEvent<HTMLInputElement>) => setFrom(event.target.value)} data-testid="reconciliation-scan-from" />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="text-muted-foreground">Hasta</span>
+            <Input type="date" value={to} onChange={(event: ChangeEvent<HTMLInputElement>) => setTo(event.target.value)} data-testid="reconciliation-scan-to" />
+          </label>
+          <Button className="self-end" onClick={() => void scan()} disabled={scanning} data-testid="reconciliation-scan">
+            {scanning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ScanSearch className="mr-2 size-4" />}
+            {scanning ? "Analizando..." : "Buscar coincidencias"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Buscar y filtrar</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_190px_210px_180px]">
+          <Input
+            value={search}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              setSearch(event.target.value);
+              resetPage();
+            }}
+            placeholder="Descripción, fuente, importe o motivo"
+            aria-label="Buscar conciliaciones"
+            data-testid="reconciliation-search"
+          />
+          <select
+            value={status}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+              setStatus(event.target.value as "all" | ReconciliationStatus);
+              resetPage();
+            }}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filtrar por estado"
+            data-testid="reconciliation-status"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="open">Pendientes</option>
+            <option value="resolved">Resueltas</option>
+            <option value="dismissed">Descartadas</option>
+          </select>
+          <select
+            value={relationType}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+              setRelationType(event.target.value as "all" | ReconciliationRelationType);
+              resetPage();
+            }}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filtrar por relación"
+            data-testid="reconciliation-relation"
+          >
+            <option value="all">Todas las relaciones</option>
+            <option value="duplicate_movement">Posibles duplicados</option>
+            <option value="salary_deposit">Depósitos de sueldo</option>
+            <option value="card_payment">Pagos de tarjeta</option>
+          </select>
+          <select
+            value={scope}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+              setScope(event.target.value as "all" | "current" | "historical");
+              resetPage();
+            }}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filtrar por vigencia"
+            data-testid="reconciliation-scope"
+          >
+            <option value="current">Detección vigente</option>
+            <option value="historical">Históricos</option>
+            <option value="all">Todos</option>
+          </select>
+        </CardContent>
+      </Card>
+
+      {error ? (
+        <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive" role="alert">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : null}
+      {message ? (
+        <div className="flex gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300" role="status">
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+          <span>{message}</span>
+        </div>
+      ) : null}
+
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <CardTitle className="text-base">Casos detectados</CardTitle>
+          <span className="text-xs text-muted-foreground">{rangeLabel}</span>
+        </CardHeader>
+        <CardContent>
+          {loading && !data ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Cargando conciliaciones...
+            </div>
+          ) : items.length === 0 ? (
+            <div className="rounded-xl border border-dashed py-12 text-center">
+              <ShieldCheck className="mx-auto size-9 text-muted-foreground" />
+              <p className="mt-3 font-medium">No hay casos para estos filtros</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ejecutá un análisis o cambiá el período y los filtros.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4" data-testid="reconciliation-list">
+              {items.map((item) => {
+                const isExpanded = expandedId === item.id;
+                const visibleDetail = isExpanded ? detail : null;
+                return (
+                  <article key={item.id} className="rounded-xl border" data-testid={`reconciliation-case-${item.relationType}`}>
+                    <div className="p-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className={statusClass(item.status)}>{STATUS_LABELS[item.status]}</Badge>
+                            <Badge variant="secondary">{RELATION_LABELS[item.relationType]}</Badge>
+                            {!item.isCurrent ? <Badge variant="outline"><History className="mr-1 size-3" />Histórico</Badge> : null}
+                          </div>
+                          <h2 className="mt-3 font-semibold">{item.title}</h2>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {displayAmount(item.amount, item.currency)} · {displayDate(item.occurredOn)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className={`text-xl font-semibold ${confidenceClass(item.confidence)}`}>{item.confidence}%</p>
+                            <p className="text-xs text-muted-foreground">confianza</p>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => void toggleDetail(item)} aria-expanded={isExpanded}>
+                            {isExpanded ? "Ocultar" : "Revisar"}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-4 grid items-center gap-2 md:grid-cols-[1fr_auto_1fr]">
+                        <p className="truncate rounded-lg bg-muted/60 px-3 py-2 text-sm">{item.participants[0]?.description ?? "Registro A"}</p>
+                        <ArrowRight className="mx-auto size-4 rotate-90 text-muted-foreground md:rotate-0" />
+                        <p className="truncate rounded-lg bg-muted/60 px-3 py-2 text-sm">{item.participants[1]?.description ?? "Registro B"}</p>
+                      </div>
+                      {item.resolution ? (
+                        <p className="mt-3 text-xs text-muted-foreground">Decisión: {RESOLUTION_LABELS[item.resolution]} · {displayTimestamp(item.updatedAt)}</p>
+                      ) : null}
+                    </div>
+
+                    {isExpanded ? (
+                      <div className="border-t bg-muted/20 p-4" data-testid="reconciliation-detail">
+                        {detailLoading || !visibleDetail ? (
+                          <div className="flex items-center py-8 text-sm text-muted-foreground"><Loader2 className="mr-2 size-4 animate-spin" />Cargando detalle...</div>
+                        ) : (
+                          <div className="space-y-5">
+                            <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
+                              <ParticipantCard participant={visibleDetail.participants[0]} label="Registro A" onNavigate={() => setSection(visibleDetail.participants[0].navigation.section)} />
+                              <Link2 className="mx-auto size-5 self-center text-muted-foreground" aria-hidden="true" />
+                              <ParticipantCard participant={visibleDetail.participants[1]} label="Registro B" onNavigate={() => setSection(visibleDetail.participants[1].navigation.section)} />
+                            </div>
+
+                            <div className="rounded-xl border bg-card p-4">
+                              <p className="font-medium">Por qué se detectó</p>
+                              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                {visibleDetail.rationale.map((reason) => <li key={reason}>• {reason}</li>)}
+                              </ul>
+                            </div>
+
+                            {visibleDetail.status === "open" ? (
+                              <div className="space-y-3">
+                                <p className="text-sm font-medium">Elegí cómo tratar este caso</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {visibleDetail.participants[0]?.movementId ? (
+                                    <Button size="sm" onClick={() => void applyAction(visibleDetail, "exclude_left")} disabled={actioning} data-testid="reconciliation-exclude-left">Excluir A del ledger</Button>
+                                  ) : null}
+                                  {visibleDetail.participants[1]?.movementId ? (
+                                    <Button size="sm" onClick={() => void applyAction(visibleDetail, "exclude_right")} disabled={actioning} data-testid="reconciliation-exclude-right">Excluir B del ledger</Button>
+                                  ) : null}
+                                  <Button size="sm" variant="outline" onClick={() => void applyAction(visibleDetail, "keep_both")} disabled={actioning}>Mantener ambos</Button>
+                                  <Button size="sm" variant="outline" onClick={() => void applyAction(visibleDetail, "link_only")} disabled={actioning}>Sólo vincular</Button>
+                                  <Button size="sm" variant="ghost" onClick={() => void applyAction(visibleDetail, "dismiss")} disabled={actioning}><Unlink className="mr-2 size-4" />No están relacionados</Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Excluir sólo afecta el total del ledger. La fuente y su trazabilidad permanecen intactas.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
+                                <div>
+                                  <p className="font-medium">Caso {STATUS_LABELS[visibleDetail.status].toLocaleLowerCase("es")}</p>
+                                  <p className="text-sm text-muted-foreground">{visibleDetail.resolution ? RESOLUTION_LABELS[visibleDetail.resolution] : "Sin decisión registrada"}</p>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => void reopen(visibleDetail)} disabled={actioning} data-testid="reconciliation-reopen"><RefreshCw className="mr-2 size-4" />Reabrir</Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {data && data.pagination.total > 0 ? (
+            <div className="mt-5 flex items-center justify-between border-t pt-4">
+              <Button variant="outline" size="sm" disabled={offset === 0 || loading} onClick={() => setOffset(Math.max(0, offset - limit))}>Anterior</Button>
+              <span className="text-xs text-muted-foreground">{rangeLabel}</span>
+              <Button variant="outline" size="sm" disabled={!data.pagination.hasMore || loading} onClick={() => setOffset(offset + limit)}>Siguiente</Button>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}

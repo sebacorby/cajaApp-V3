@@ -1,0 +1,14 @@
+{
+  "stdout": "--- stderr ---\n\"npm\" no se reconoce como un comando interno o externo,\nprograma o archivo por lotes ejecutable.\n\n\nERROR: prisma:generate fallo con codigo 1\n{\n    \"ok\":  false,\n    \"error\":  \"prisma:generate fallo con codigo 1\",\n    \"stateFile\":  \"C:\\\\Users\\\\javie\\\\AppData\\\\Local\\\\Temp\\\\cajaapp-headless\\\\state.json\"\n}\n",
+  "stderr": "",
+  "exit_code": 1,
+  "cmd": [
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    "I:\\cajaApp-V3\\cajaapp-headless-up.ps1",
+    "-JsonOnly"
+  ]
+}

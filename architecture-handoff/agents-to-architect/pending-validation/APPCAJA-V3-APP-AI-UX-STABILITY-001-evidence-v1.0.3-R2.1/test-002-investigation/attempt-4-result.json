@@ -1,0 +1,14 @@
+{
+  "attempt": 4,
+  "test_name": "Asesor IA maneja respuestas inválidas, responde en UI y conserva acceso mobile",
+  "test_location": "ai-advisor.spec.ts:121",
+  "status": "FAIL",
+  "timestamp": "2026-07-22T22:05:00Z",
+  "backend_pid": 9856,
+  "backend_health": 200,
+  "failure_point": "line 162 - ai-advisor-section not visible after clicking button",
+  "root_cause": "Backend database timeout - Prisma query failed",
+  "error_details": "Invalid prisma.movementCategoryRule.upsert() invocation - Socket timeout (the database failed to respond to a query within the configured timeout)",
+  "page_snapshot_summary": "Page shows 'No se pudo preparar el asesor IA' with error in backend/dist/modules/movements/categories.service.js:171",
+  "note": "Backend database query timed out during AI advisor initialization. Backend process is still alive (PID 9856) but database operation failed."
+}

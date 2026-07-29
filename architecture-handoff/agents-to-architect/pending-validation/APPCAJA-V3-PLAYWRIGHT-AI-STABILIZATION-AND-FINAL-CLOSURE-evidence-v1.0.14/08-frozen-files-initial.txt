@@ -1,0 +1,21 @@
+# Frozen Files Initial
+
+## Backend Service (v1.0.13 fingerprint fix - verified frozen)
+
+- File: `workspace/backend/src/modules/ai-advisor/ai-advisor.service.ts`
+- Hash: `AD7F34B0A72CAFCC5447633E699639708125BD37F3D77637C6ABF36B24FB692C`
+
+## Backend Tests (6 new fingerprint tests added in v1.0.13)
+
+- File: `workspace/backend/tests/ai-advisor/ai-advisor.service.test.ts`
+- Hash: `854151E6DB9FD0836FFE8A7F7CCAE0C14A68E08F650C666F2D3BF3E6A3850B21`
+
+## Frontend Playwright Config (frozen)
+
+- File: `workspace/frontend/playwright.config.ts`
+- Hash: `90343109880CD4C1251E5E64428D658F0A6B37CBEA949CE5B11371DDEC970546`
+
+## Lockfiles (unchanged)
+
+- `workspace/backend/package-lock.json`: `825D44D6C4E1E59D8F489B33D08F52EE56EE434C8F70003B5CFED2261B458A87`
+- `workspace/frontend/package-lock.json`: `DB0ECE39A9A66B3FB10A4BD6644B2A4616D82AD42476BA9F513964EC6793E6ED`

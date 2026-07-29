@@ -1,0 +1,27 @@
+{
+    "ok":  true,
+    "startedAt":  "2026-07-14T19:25:24.7476846-03:00",
+    "durationSeconds":  25.59,
+    "node":  {
+                 "version":  "v24.18.0",
+                 "path":  "I:\\Tools\\node-v24.18.0-win-x64\\node.exe"
+             },
+    "backend":  {
+                    "pid":  49876,
+                    "port":  11436,
+                    "healthUrl":  "http://127.0.0.1:11436/health",
+                    "apiBaseUrl":  "http://127.0.0.1:11436",
+                    "logPath":  "C:\\Users\\javie\\AppData\\Local\\Temp\\cajaapp-headless\\backend.log",
+                    "errLogPath":  "C:\\Users\\javie\\AppData\\Local\\Temp\\cajaapp-headless\\backend.err.log",
+                    "readyAfterChecks":  1
+                },
+    "frontend":  {
+                     "pid":  34292,
+                     "port":  11437,
+                     "url":  "http://127.0.0.1:11437",
+                     "logPath":  "C:\\Users\\javie\\AppData\\Local\\Temp\\cajaapp-headless\\frontend.log",
+                     "errLogPath":  "C:\\Users\\javie\\AppData\\Local\\Temp\\cajaapp-headless\\frontend.err.log",
+                     "readyAfterChecks":  1
+                 },
+    "stopHint":  "Run with -Stop, or: taskkill /PID 49876 /T /F \u0026\u0026 taskkill /PID 34292 /T /F"
+}

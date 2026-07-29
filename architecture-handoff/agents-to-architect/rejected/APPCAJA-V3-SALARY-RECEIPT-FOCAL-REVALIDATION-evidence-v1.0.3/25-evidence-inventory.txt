@@ -1,0 +1,39 @@
+# 25 - Evidence Inventory — v1.0.3 Salary Receipt Focal Revalidation
+
+## Date: 2026-07-16
+
+## Files (30 total)
+
+01-environment.md
+02-fifth-remediation-integrity.md
+03-sqlite-initial.md
+04-backend-npm-ci.log
+05-prisma-generate.log
+06-prisma-status.log
+07-prisma-migrate-deploy.log
+08-backend-build.log
+09-backend-focal-test.log
+10-frontend-npm-ci.log
+11-frontend-focal-lint.log
+12-query-http-validation.md
+13-startup-log-summary.md
+14-pdf-verification.md
+15-api-smoke.md
+16-future-base-default.md
+17-future-base-explicit-false.md
+18-replacement.md
+19-playwright-ui-focal.md
+20-playwright-real-e2e.md
+21-cleanup.md
+22-sqlite-final.md
+23-integrity-final.md
+24-known-issues.md
+25-evidence-inventory.txt
+00-verdict.md
+26-sqlite-initial-addendum.md
+27-startup-detailed.md
+28-deliverable-to-architect.md
+30-final-summary.md
+
+## Completeness
+All 30 files written. All logs captured. No empty files (except intentional placeholders).

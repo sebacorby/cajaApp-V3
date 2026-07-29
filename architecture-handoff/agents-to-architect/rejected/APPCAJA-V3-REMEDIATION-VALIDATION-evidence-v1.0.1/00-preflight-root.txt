@@ -1,0 +1,47 @@
+# 00-preflight-root.txt
+
+Ejecutado: 2026-07-13 00:37:04 -03:00 (America/Buenos_Aires, UTC-3)
+
+## §2 Entorno obligatorio
+
+```
+$ & "I:\Tools\node-v24.18.0-win-x64\node.exe" --version
+v24.18.0
+
+$ & "I:\Tools\node-v24.18.0-win-x64\npm.cmd" --version
+11.16.0
+```
+
+Coincide con el nodo de referencia exigido: **OK** (sin disparar `BLOCKED` por §2).
+
+## §6.1 Preflight de root
+
+| Control                                                                                  | Resultado |
+| ---------------------------------------------------------------------------------------- | --------- |
+| Existe `I:\cajaApp-V3\cajaapp-headless-up.ps1`                                           | TRUE      |
+| Primera línea del script                                                                 | `[CmdletBinding()]` |
+| No comienza con `#!/bin/bash`                                                            | TRUE      |
+| No contiene un script Bash disfrazado de `.ps1` (`# Bash` / `#!/bin/bash`)              | TRUE      |
+| Acepta `-Status`                                                                         | TRUE      |
+| Acepta `-Stop`                                                                           | TRUE      |
+| Acepta `-Restart`                                                                        | TRUE      |
+| Acepta `-Rebuild`                                                                        | TRUE      |
+| Acepta `-SkipMigrate`                                                                    | TRUE      |
+| Acepta `-JsonOnly`                                                                       | TRUE      |
+| Resolución explícita de `node.exe`                                                       | TRUE (línea 14: `NodeHome = "I:\Tools\node-v24.18.0-win-x64"`) |
+| Resolución explícita de `npm.cmd`                                                        | TRUE (uso de `& "$NodeHome\npm.cmd"`) |
+| Resolución explícita de `cmd.exe`                                                        | TRUE (líneas 36-40: `$SystemDirectory` + `$CmdExe`) |
+| Resolución explícita de `taskkill.exe`                                                   | TRUE (línea 41: `$TaskKillExe`) |
+| Captura stdout/stderr sin `.Trim()` sobre `$null`                                        | TRUE (no se encontró `\.Trim\(\)\s*\|\s*Out-Null`) |
+
+## §6.1 Archivos prohibidos en root (deben estar AUSENTES)
+
+| Archivo                          | Estado  |
+| -------------------------------- | ------- |
+| `cajaapp-headless-up.sh`         | ABSENT  |
+| `start-cajaapp-temp.ps1`         | ABSENT  |
+| `diag-node.ps1`                  | ABSENT  |
+| `diag-env.ps1`                   | ABSENT  |
+| `plan.md`                        | ABSENT  |
+
+`detect-env.sh` está PRESENTE — permitido por la tarea como archivo histórico preexistente, no forma parte del defecto.

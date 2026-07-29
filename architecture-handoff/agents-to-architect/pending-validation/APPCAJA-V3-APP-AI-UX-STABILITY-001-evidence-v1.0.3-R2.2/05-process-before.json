@@ -1,0 +1,9 @@
+{
+  "previous_backend_pid": 9856,
+  "previous_start_time": "2026-07-22T20:41:47-03:00",
+  "previous_path": "I:\\Tools\\node-v24.18.0-win-x64\\node.exe",
+  "previous_working_set_bytes": 179580928,
+  "previous_private_memory_bytes": 173666304,
+  "previous_port": 11436,
+  "command_used_to_stop": "Stop-Process -Id 9856 -Force"
+}

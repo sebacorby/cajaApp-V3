@@ -1,0 +1,163 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:11436";
+const CURRENCY_LEAK_PATTERN = /(?:US\$|U\$D|USD|ARS|\$)\s*[-+]?\s*\d/u;
+
+function todayInTucuman(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Tucuman",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+async function assertNoCurrencyLeaks(page: Page): Promise<void> {
+  const textLeak = await page.locator("body").evaluate((body) => {
+    const text = (body as HTMLElement).innerText;
+    return text.match(/(?:US\$|U\$D|USD|ARS|\$)\s*[-+]?\s*\d/u)?.[0] ?? null;
+  });
+  expect(textLeak).toBeNull();
+
+  const attributeLeaks = await page
+    .locator("[aria-label], [title]")
+    .evaluateAll((elements) =>
+      elements
+        .map((element) =>
+          [element.getAttribute("aria-label"), element.getAttribute("title")]
+            .filter(Boolean)
+            .join(" "),
+        )
+        .filter((value) =>
+          /(?:US\$|U\$D|USD|ARS|\$)\s*[-+]?\s*\d/u.test(value),
+        ),
+    );
+  expect(attributeLeaks).toEqual([]);
+}
+
+async function openSection(page: Page, name: string): Promise<void> {
+  await page.getByRole("button", { name: new RegExp(`^${name}$`, "i") }).click();
+  await page.waitForTimeout(100);
+}
+
+function visibleMovement(page: Page, sourceId: string) {
+  return page.locator(
+    `[data-testid="movement-row-${sourceId}"]:visible, ` +
+      `[data-testid="movement-card-${sourceId}"]:visible`,
+  );
+}
+
+test("Privacidad persiste y oculta importes globalmente sin alterar datos", async ({
+  page,
+  request,
+}) => {
+  const originalResponse = await request.get(`${API_BASE_URL}/api/settings`);
+  expect(originalResponse.ok()).toBeTruthy();
+  const original = await originalResponse.json();
+
+  const description = `PRIVACY-SENTINEL-${Date.now()}`;
+  const sentinelAmount = "987654.32";
+  const createResponse = await request.post(
+    `${API_BASE_URL}/api/movements/manual`,
+    {
+      data: {
+        occurredOn: todayInTucuman(),
+        type: "expense",
+        sourceType: "manual_unexpected",
+        description,
+        currency: "ARS",
+        amount: sentinelAmount,
+        status: "actual",
+        notes: "Dato centinela temporal para APP-UX-PRIVACY-002",
+      },
+    },
+  );
+  expect(createResponse.status()).toBe(201);
+  const created = await createResponse.json();
+  const movementId = created.id ?? created.movement?.id;
+  const sourceId =
+    created.sourceId ??
+    created.movement?.sourceId ??
+    (typeof movementId === "string" && movementId.startsWith("manual:")
+      ? movementId.slice("manual:".length)
+      : movementId);
+  expect(typeof movementId).toBe("string");
+  expect(typeof sourceId).toBe("string");
+
+  try {
+    const resetResponse = await request.put(`${API_BASE_URL}/api/settings`, {
+      data: { ...original, hideAmounts: false },
+    });
+    expect(resetResponse.ok()).toBeTruthy();
+
+    await page.goto("/");
+    await openSection(page, "Configuración");
+    const section = page.getByTestId("settings-section");
+    const privacyControl = section.getByLabel("Ocultar importes sensibles");
+    await expect(privacyControl).not.toBeChecked();
+    await privacyControl.check();
+    await section.getByTestId("save-local-settings").click();
+    await expect(
+      section.getByText("Preferencias guardadas en CajaApp."),
+    ).toBeVisible();
+
+    await page.reload();
+    await openSection(page, "Configuración");
+    await expect(
+      page
+        .getByTestId("settings-section")
+        .getByLabel("Ocultar importes sensibles"),
+    ).toBeChecked();
+
+    for (const name of [
+      "Inicio",
+      "Movimientos",
+      "Ingresos",
+      "Tarjetas",
+      "Cierres",
+    ]) {
+      await openSection(page, name);
+      await assertNoCurrencyLeaks(page);
+    }
+
+    await openSection(page, "Movimientos");
+    const hiddenMovement = visibleMovement(page, sourceId);
+    await expect(hiddenMovement).toHaveCount(1);
+    await expect(
+      hiddenMovement.getByText(description, { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("body")).toContainText("••••");
+    await expect(page.locator("body")).not.toContainText(CURRENCY_LEAK_PATTERN);
+    await expect(page.locator("body")).not.toContainText(/987[.\u00a0 ]654,32/u);
+
+    await openSection(page, "Configuración");
+    const persistedControl = page
+      .getByTestId("settings-section")
+      .getByLabel("Ocultar importes sensibles");
+    await persistedControl.uncheck();
+    await page.getByTestId("save-local-settings").click();
+    await expect(
+      page
+        .getByTestId("settings-section")
+        .getByText("Preferencias guardadas en CajaApp."),
+    ).toBeVisible();
+
+    await openSection(page, "Movimientos");
+    const visibleSentinel = visibleMovement(page, sourceId);
+    await expect(visibleSentinel).toHaveCount(1);
+    await expect(
+      visibleSentinel.getByText(description, { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("body")).toContainText(/987[.\u00a0 ]654,32/u);
+  } finally {
+    await request.put(`${API_BASE_URL}/api/settings`, { data: original });
+    if (typeof sourceId === "string") {
+      await request.delete(`${API_BASE_URL}/api/movements/manual/${sourceId}`);
+    }
+  }
+});

@@ -1,0 +1,47 @@
+# APP-UX-PRIVACY-002 v1.0.2 — Playwright Test Result
+
+## Test: tests/privacy-mode.spec.ts
+**Command:** `npx playwright test tests/privacy-mode.spec.ts --project=chromium --workers=1 --retries=0`
+
+## Result: FAIL
+
+```
+Running 1 test using 1 worker
+
+  x  1 [chromium] › tests\privacy-mode.spec.ts:48:5 › Privacidad persiste y oculta importes globalmente sin alterar datos (19.8s)
+
+  1) [chromium] › tests\privacy-mode.spec.ts:48:5 › Privacidad persiste y oculta importes globalmente sin alterar datos
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('PRIVACY-SENTINEL-1784341297676', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('PRIVACY-SENTINEL-1784341297676', { exact: true }) resolved to 2 elements:
+        1) <p class="font-medium text-foreground">PRIVACY-SENTINEL-1784341297676</p> aka getByTestId('movement-row-032ea2b0-6b5f-4975-8dec-c2da5603d9fa').getByText('PRIVACY-SENTINEL-')
+        2) <p class="font-medium">PRIVACY-SENTINEL-1784341297676</p> aka getByTestId('movement-card-032ea2b0-6b5f-4975-8dec-c2da5603d9fa').getByText('PRIVACY-SENTINEL-')
+```
+
+## Failure Analysis
+
+The previous v1.0.1 issue (success message disappearing on save) appears FIXED. The test now passes line 93 (the original failure point).
+
+However, a NEW failure occurs at line 107. The test uses `page.getByText(description, { exact: true })` which under Playwright strict mode fails when multiple elements match.
+
+The implementation correctly renders the movement in TWO responsive views:
+1. `movement-row-*` testid (desktop/table view)
+2. `movement-card-*` testid (mobile/responsive view)
+
+Both contain the sentinel description text "PRIVACY-SENTINEL-..." causing the strict mode violation.
+
+This is a test strictness issue, not an implementation bug.
+
+## Progress vs v1.0.1
+- v1.0.1: Failed at line 93 (success message missing)
+- v1.0.2: Failed at line 107 (strict mode violation - different issue)
+
+The original fix (success message stability) worked correctly.
+
+## Test Artifacts
+- Screenshot: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/test-failed-1.png`
+- Video: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/video.webm`
+- Trace: `test-results/privacy-mode-Privacidad-pe-84818-obalmente-sin-alterar-datos-chromium/trace.zip`

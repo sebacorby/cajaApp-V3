@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cajaapp.local/schemas/salary-receipt-v1.json",
+  "title": "CajaApp Salary Receipt Preview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "documentType", "source", "summary", "items", "warnings"],
+  "properties": {
+    "version": { "const": "salary-receipt-v1" },
+    "documentType": { "const": "salary_receipt_pdf" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["employerName", "employerTaxId", "employeeName", "employeeTaxId", "periodMonthKey", "payDate", "currency"],
+      "properties": {
+        "employerName": { "type": "string", "minLength": 1 },
+        "employerTaxId": { "type": ["string", "null"] },
+        "employeeName": { "type": "string", "minLength": 1 },
+        "employeeTaxId": { "type": ["string", "null"] },
+        "periodMonthKey": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$" },
+        "payDate": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "currency": { "enum": ["ARS", "USD"] }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grossAmount", "deductionsAmount", "netAmount"],
+      "properties": {
+        "grossAmount": { "$ref": "#/$defs/money" },
+        "deductionsAmount": { "$ref": "#/$defs/money" },
+        "netAmount": { "$ref": "#/$defs/money" }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "displayOrder", "kind", "code", "label", "amount", "sourcePage", "originalText", "confidence"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "displayOrder": { "type": "integer", "minimum": 1 },
+          "kind": { "enum": ["earning", "deduction", "employer_contribution", "information"] },
+          "code": { "type": ["string", "null"] },
+          "label": { "type": "string", "minLength": 1 },
+          "amount": { "$ref": "#/$defs/money" },
+          "sourcePage": { "type": ["integer", "null"], "minimum": 1 },
+          "originalText": { "type": "string" },
+          "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "money": { "type": "string", "pattern": "^\\d+(?:\\.\\d{1,2})?$" }
+  }
+}

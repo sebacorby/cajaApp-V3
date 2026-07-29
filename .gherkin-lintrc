@@ -1,0 +1,7 @@
+{
+  "no-files-without-scenarios": "off",
+  "no-unnamed-features": "off",
+  "no-unnamed-scenarios": "off",
+  "no-scenario-outlines-without-examples": "off",
+  "no-empty-background": "off"
+}

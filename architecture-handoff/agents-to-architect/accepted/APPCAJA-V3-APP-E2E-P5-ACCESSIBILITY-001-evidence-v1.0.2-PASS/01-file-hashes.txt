@@ -1,0 +1,26 @@
+# APP-E2E-P5-ACCESSIBILITY-001 v1.0.2 — File Hash Verification
+
+## All 5 files match expected hashes (from v1.0.2 checklist)
+
+| # | File | Expected SHA-256 | Actual SHA-256 | Size | Status |
+|---|------|------------------|----------------|------|--------|
+| 1 | cierres-section.tsx | BA9E51067D325B40FC662FFAEF0B3A10B2516C3417B2B608FDD80F4DE4431186 | BA9E51067D325B40FC662FFAEF0B3A10B2516C3417B2B608FDD80F4DE4431186 | 20874 | ✓ MATCH |
+| 2 | respaldo-section.tsx | D52A26DBC01C22AB2AFB50DE48C55CF22BEE820E2AFB623741EE2A0C3858F922 | D52A26DBC01C22AB2AFB50DE48C55CF22BEE820E2AFB623741EE2A0C3858F922 | 21129 | ✓ MATCH |
+| 3 | month-close.spec.ts | 652276E0FE5B8BB6CA8BC0798CB91E40A8AB96767B40D78BC4ECFE2107281A8F | 652276E0FE5B8BB6CA8BC0798CB91E40A8AB96767B40D78BC4ECFE2107281A8F | 8227 | ✓ MATCH |
+| 4 | backup-restore.spec.ts | 2C60D3B5569241C4334C8851CA26E24BD910CAB451B2DAE5FE163F371134ADAB | 2C60D3B5569241C4334C8851CA26E24BD910CAB451B2DAE5FE163F371134ADAB | 10656 | ✓ MATCH |
+| 5 | quality-audit.spec.ts | B7BB75E3590BE9B94CB0BC160AF93DE5192FF134989FF94A8BE050FFF2319D5B | B7BB75E3590BE9B94CB0BC160AF93DE5192FF134989FF94A8BE050FFF2319D5B | 3627 | ✓ MATCH |
+
+## Changes from v1.0.1
+
+| File | v1.0.1 hash | v1.0.2 hash | Changed? |
+|------|-------------|-------------|----------|
+| cierres-section.tsx | BA9E5106... | BA9E5106... | NO (productive unchanged) |
+| respaldo-section.tsx | D52A26DB... | D52A26DB... | NO (productive unchanged) |
+| month-close.spec.ts | 22A854A7... | 652276E0... | YES (test fixed) |
+| backup-restore.spec.ts | E796BDA9... | 2C60D3B5... | YES (test fixed) |
+| quality-audit.spec.ts | A5E9301E... | B7BB75E3... | YES (test fixed) |
+
+## Conclusion
+- The 2 productive files (cierres-section.tsx, respaldo-section.tsx) are unchanged
+- The 3 test files were updated to exclude Next.js internals from selectors
+- All hashes match the expected values from the v1.0.2 checklist

@@ -1,0 +1,12 @@
+{
+  "id": "037",
+  "test": "financial-health-compact.spec.ts:138",
+  "name": "Indicador compacto refleja score, banda, confianza, fórmula y período del payload",
+  "status": "FAIL",
+  "reason": "Element 'financial-health-section' not found after clicking sidebar-financial-health-open. Test cannot locate the section.",
+  "attempt": 2,
+  "evidence_dir": "037-health-compact-fail2",
+  "session": "R2.1-unresolved-manual-serial",
+  "timestamp": "2026-07-22T21:10:00Z",
+  "backend_pid": 57224
+}

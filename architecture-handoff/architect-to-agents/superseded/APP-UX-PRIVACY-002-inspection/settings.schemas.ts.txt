@@ -1,0 +1,11 @@
+import { z } from "zod";
+
+export const updateSettingsSchema = z.object({
+  displayName: z.string().trim().min(1).max(80),
+  locale: z.enum(["es-AR"]),
+  timezone: z.enum(["America/Argentina/Tucuman"]),
+  defaultCurrency: z.enum(["ARS", "USD"]),
+  theme: z.enum(["system", "light", "dark"]),
+});
+
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;

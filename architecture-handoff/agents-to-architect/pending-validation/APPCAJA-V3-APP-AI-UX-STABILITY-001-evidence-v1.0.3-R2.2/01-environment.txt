@@ -1,0 +1,6 @@
+Node.js version: v24.18.0
+npm version: 11.16.0
+Node installation: I:\Tools\node-v24.18.0-win-x64\node.exe
+
+Note: Previous environment check incorrectly flagged v24 as BLOCKED_ENVIRONMENT.
+Correct instruction: v24.18.0 is the preferred installation for this project.
