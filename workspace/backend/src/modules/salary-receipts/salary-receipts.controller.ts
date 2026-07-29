@@ -8,7 +8,11 @@ import {
   salaryReceiptIdSchema,
   salaryReceiptPreviewSchema,
 } from "./salary-receipts.schemas.js";
-import { deleteSalaryReceipt } from "./salary-receipt-delete.service.js";
+import {
+  deleteSalaryReceipt,
+  deleteSalaryReceiptDraft,
+  listPendingSalaryReceiptDrafts,
+} from "./salary-receipt-delete.service.js";
 import { salaryReceiptsService } from "./salary-receipts.service.js";
 import type { AcceptSalaryReceiptInput, SalaryReceiptPreview } from "./salary-receipts.types.js";
 
@@ -22,6 +26,10 @@ export const salaryReceiptsController: FastifyPluginAsync = async (app: FastifyI
       file: new Uint8Array(await upload.toBuffer()),
     });
     return reply.status(201).send(result);
+  });
+
+  app.get("/drafts", async (_request, reply) => {
+    return reply.send(await listPendingSalaryReceiptDrafts());
   });
 
   app.get("/drafts/:draftId", async (request, reply) => {
@@ -52,6 +60,14 @@ export const salaryReceiptsController: FastifyPluginAsync = async (app: FastifyI
       useAsFutureBase: payload.useAsFutureBase ?? true,
     };
     return reply.status(201).send(await salaryReceiptsService.acceptDraft(draftId, input));
+  });
+
+  app.delete("/drafts/:draftId", async (request, reply) => {
+    const draftId = validateData(
+      salaryReceiptDraftIdSchema,
+      (request.params as { draftId: string }).draftId,
+    );
+    return reply.send(await deleteSalaryReceiptDraft(draftId));
   });
 
   app.get("/", async (request, reply) => {

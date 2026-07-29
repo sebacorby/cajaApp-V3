@@ -11,6 +11,14 @@ export type ReversedSalaryReceipt = {
   document: { fileName: string };
 };
 
+export type PendingSalaryReceiptDraft = {
+  id: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  document: { fileName: string };
+};
+
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.ok) return response.json() as Promise<T>;
 
@@ -22,6 +30,23 @@ async function parseResponse<T>(response: Response): Promise<T> {
     // Keep the HTTP fallback when the backend did not return JSON.
   }
   throw new Error(message);
+}
+
+export async function listPendingSalaryReceiptDrafts(): Promise<PendingSalaryReceiptDraft[]> {
+  const response = await fetch(`${API_BASE_URL}/api/salary-receipts/drafts`, {
+    cache: "no-store",
+  });
+  return parseResponse(response);
+}
+
+export async function deletePendingSalaryReceiptDraft(
+  draftId: string,
+): Promise<{ deleted: true; deletedDraftId: string; deletedDocumentId: string | null }> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/salary-receipts/drafts/${encodeURIComponent(draftId)}`,
+    { method: "DELETE" },
+  );
+  return parseResponse(response);
 }
 
 export async function listReversedSalaryReceipts(): Promise<ReversedSalaryReceipt[]> {
