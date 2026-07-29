@@ -8,6 +8,7 @@ import {
   salaryReceiptIdSchema,
   salaryReceiptPreviewSchema,
 } from "./salary-receipts.schemas.js";
+import { deleteSalaryReceipt } from "./salary-receipt-delete.service.js";
 import { salaryReceiptsService } from "./salary-receipts.service.js";
 import type { AcceptSalaryReceiptInput, SalaryReceiptPreview } from "./salary-receipts.types.js";
 
@@ -76,5 +77,13 @@ export const salaryReceiptsController: FastifyPluginAsync = async (app: FastifyI
       (request.params as { receiptId: string }).receiptId,
     );
     return reply.send(await salaryReceiptsService.reverse(receiptId));
+  });
+
+  app.delete("/:receiptId", async (request, reply) => {
+    const receiptId = validateData(
+      salaryReceiptIdSchema,
+      (request.params as { receiptId: string }).receiptId,
+    );
+    return reply.send(await deleteSalaryReceipt(receiptId));
   });
 };
