@@ -1,7 +1,7 @@
 # APPCAJA V3 — SSOT DE CONTINUACIÓN
 
 **Fecha de corte:** 2026-07-27  
-**Última actualización:** 2026-07-27 — cierre funcional y visual de **Pagos de tarjeta**  
+**Última actualización:** 2026-07-29 — apertura del vertical de recibos de sueldo determinísticos y actualización de la forma de trabajo  
 **Proyecto:** CajaApp V3  
 **Root canónico:** `I:\cajaApp-V3`  
 **Objetivo:** permitir retomar el trabajo sin depender del historial del chat y conservar únicamente el estado funcional realmente vigente/validado.
@@ -16,11 +16,24 @@ Este documento es la fuente de continuidad operativa del proyecto.
 
 La regla vigente es vinculante:
 
-- ChatGPT diseña la solución, diagnostica y modifica directamente el código.
-- El usuario realiza las pruebas funcionales finales.
-- No se utilizan agentes externos/adicionales para programar, validar ni modificar el proyecto.
-- No generar handoffs, specs de ejecución ni tareas para agentes salvo que el usuario cambie explícitamente esta regla.
+- ChatGPT diseña la solución, diagnostica y escribe directamente todo el código del vertical activo.
+- ChatGPT también escribe o actualiza los tests automatizados necesarios y corrige los defectos informados.
+- Una vez materializado un bloque coherente de implementación, un agente externo ejecuta las validaciones técnicas indicadas y devuelve evidencia reproducible.
+- El agente externo no programa, no redefine la solución y no modifica código salvo autorización explícita del usuario.
+- Durante la implementación activa sólo se ejecutan build, typecheck, lint focalizado, pruebas unitarias, pruebas de parser y pruebas de integración.
+- No se ejecutan tests E2E durante las fases intermedias de implementación.
+- Los tests E2E se reservan para el gate final, cuando todo el alcance del vertical esté implementado y los gates no E2E estén verdes.
+- El usuario realiza la aceptación funcional final.
+- Los planes, instrucciones y evidencias para el agente externo deben quedar versionados y referenciados desde este SSOT.
 - Cuando se modifica código, preservar rollback razonable antes de cambios sensibles.
+
+### Vertical activo — Recibos de sueldo determinísticos
+
+- ID: `APP-INCOME-SALARY-RECEIPT-DETERMINISTIC-001`
+- Rama: `feat/ingresos`
+- Estado: `PLANIFICADO — IMPLEMENTACIÓN NO INICIADA`
+- Plan rector: [`docs/11-new features/APPCAJA-V3-INGRESOS-RECIBOS-DETERMINISTICOS-PLAN-v1.0.0.md`](../11-new%20features/APPCAJA-V3-INGRESOS-RECIBOS-DETERMINISTICOS-PLAN-v1.0.0.md)
+- Objetivo: sustituir la interpretación IA de recibos de sueldo por extracción y parsing determinísticos, siguiendo el patrón arquitectónico de la importación de tarjetas sin reutilizar supuestos específicos de ese dominio.
 
 ### Node.js obligatorio
 
@@ -39,7 +52,6 @@ No recomendar otra instalación y no introducir checks nuevos de versión en scr
 **CERRADO POR AHORA / PASS FUNCIONAL PUNTA A PUNTA + AJUSTES UI VALIDADOS**
 
 El usuario confirmó exitosamente:
-
 1. importación determinística de Mastercard Galicia;
 2. aceptación del resumen Mastercard;
 3. importación determinística de Visa Galicia;
@@ -50,7 +62,6 @@ El usuario confirmó exitosamente:
 8. visualización del total agregado del próximo mes inmediato;
 9. corrección de alineación de `Total a pagar`, `Cotización USD`, `Aplicar` y `Horizonte`;
 10. mejora visual del formulario **Nuevo movimiento** para evitar campos pegados a los bordes.
-
 El usuario indicó explícitamente que **Pagos de tarjeta queda cerrado por el momento**.
 
 ---
@@ -64,7 +75,6 @@ La importación de resúmenes debe seguir siendo determinística:
 La IA no debe interpretar los resúmenes de tarjeta.
 
 Reglas:
-
 - parser programático por layout/emisor;
 - la preview debe representar el RAW extraído;
 - la aceptación persiste datos normalizados;
@@ -94,7 +104,6 @@ Reglas:
 - Líneas parseadas: 71
 - Referencias futuras: 6
 - Account identity persistida: `1163998245`
-
 Los grupos 8238/9138 pertenecen a una única cuenta Visa.
 
 ### 4.2 Mastercard Galicia julio 2026
@@ -114,7 +123,6 @@ Los grupos 8238/9138 pertenecen a una única cuenta Visa.
 - Líneas parseadas: 53
 - Referencias futuras: 6
 - Account identity persistida: `2724883-0-4`
-
 Los adicionales del resumen Mastercard son grupos internos del statement y no cuentas separadas.
 
 ---
@@ -221,7 +229,6 @@ Resultado esperado:
 La pantalla representa cuentas/resúmenes reales, no plásticos internos.
 
 Debe cumplirse siempre:
-
 - Visa y Mastercard pueden coexistir simultáneamente.
 - Agregar/aceptar un resumen nunca debe borrar u ocultar otra cuenta distinta.
 - Titular y adicionales de un mismo resumen pertenecen al mismo statement.
@@ -334,7 +341,6 @@ El valor se calcula agregando `totalsByMonth` de todas las tarjetas seleccionada
 En la última validación visual el bloque mostró:
 
 `$ 2.592.160,23`
-
 Este importe se registra como valor visual observado del estado de datos actual; no debe hardcodearse.
 
 ### 9.3 Toolbar superior
@@ -365,7 +371,6 @@ Responsabilidades del wrapper actual:
 - cierre inicial de cards;
 - ajuste visual de la toolbar;
 - refresco del total al aplicar cotización.
-
 La lógica financiera de tabla existente permanece en la base y no debe reescribirse sin necesidad.
 
 ---
@@ -383,7 +388,6 @@ Archivos:
 `workspace/frontend/src/components/finance/sections/movimientos-section.base.tsx`
 
 Objetivo del wrapper:
-
 - padding lateral consistente;
 - mayor separación entre bloques;
 - header con espacio para el botón cerrar;
@@ -409,7 +413,6 @@ Archivos relevantes:
 `workspace/backend/src/modules/cards/cards.schemas.ts`
 
 `workspace/backend/src/modules/cards/cards.schemas.base.ts`
-
 `workspace/backend/src/modules/cards/card-payments-multicard.ts`
 
 `workspace/backend/src/modules/cards/card-payments-multicard.test.ts`
@@ -444,7 +447,6 @@ Reglas derivadas del resumen Visa actualmente contempladas:
 Pipeline conceptual:
 
 `cuotas/compras -> bases imponibles -> impuestos dinámicos -> subtotal ARS/USD -> conversión USD -> total real`
-
 No copiar impuestos futuros como importes fijos de un resumen anterior.
 
 ---
@@ -478,7 +480,6 @@ Después de aceptar ambos resúmenes el usuario confirmó visualmente:
 - luego ambas cerradas por default tras el ajuste UX;
 - total agregado superior visible;
 - toolbar final alineada.
-
 **Conclusión:** el flujo real PDF -> parser -> preview -> aceptación -> persistencia -> multicard -> proyección -> UI está operativo para los dos resúmenes Galicia usados en UAT real.
 
 ---
@@ -555,7 +556,6 @@ La implementación anterior completa de movimientos permanece además en:
 ## 16. Estado de continuidad recomendado
 
 Cuando se retome CajaApp V3 después de este punto:
-
 1. considerar **Pagos de tarjeta cerrado por ahora**;
 2. no volver a tocar parser/identidad/multicard salvo una regresión reproducible;
 3. mantener Visa + Mastercard como prueba real de no regresión;
@@ -568,11 +568,9 @@ Cuando se retome CajaApp V3 después de este punto:
 ## 17. Regla de verdad para próximos cambios
 
 Ante discrepancias entre documentación antigua, backups, handoffs o conversaciones anteriores:
-
 1. este SSOT vigente tiene prioridad;
 2. luego manda el comportamiento real validado por el usuario;
 3. los archivos `*.base.*` preservan implementaciones anteriores pero no son la interfaz activa;
 4. backups dentro de `architecture-handoff/architect-working` no deben tratarse como runtime;
 5. no reintroducir soluciones antiguas que vuelvan a ocultar, fusionar o reemplazar cuentas diferentes.
-
 **Estado al cierre:** CajaApp V3 carga y presenta correctamente los resúmenes reales Visa Galicia + Mastercard Galicia; Pagos de tarjeta queda funcionalmente estable y visualmente cerrado por el momento.
