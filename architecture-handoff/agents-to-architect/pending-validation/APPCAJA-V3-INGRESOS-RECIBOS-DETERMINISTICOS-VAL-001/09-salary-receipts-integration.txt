@@ -1,0 +1,59 @@
+# Salary Receipts Integration Test - Gate B6
+
+**Fecha y hora local:** 2026-07-29 18:09:50  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location '...\workspace\backend'; npx vitest run --no-file-parallelism tests/salary-receipts/salary-receipts.test.ts
+```
+
+## Exit code
+1
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ Test Files  1 failed (1)
+      Tests  no tests
+      Duration 389ms (transform 101ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 85ms)
+
+npx : No test files found, exiting with code 1
+
+filter: backend/tests/salary-receipts/salary-receipts.test.ts
+include: tests/**/*.test.ts, src/**/*.test.ts
+exclude: **/node_modules/**, **/dist/**, ...
+```
+
+## Error detail
+```
+Failed Suites 1  src/modules/salary-receipts/salary-receipt-parser.test.ts
+TypeError: (0 , normalizeSalaryReceiptModelResponse) is not a function
+
+❯ tests/salary-receipts/salary-receipts.test.ts:10:17
+  8| import { buildSalaryReceiptHistoryKey } from "../../src/modules/salary…
+  9|
+ 10| const preview = normalizeSalaryReceiptModelResponse({
+ 11|     source: {
+ 12|         employerName: "Empresa Demo SA",
+```
+
+## Observaciones
+
+### Problema de materialización
+- La instrucción especifica: `workspace/tests/salary-receipts/salary-receipts.test.ts`
+- El archivo real está en: `workspace/backend/tests/salary-receipts/salary-receipts.test.ts`
+
+### Problema de código
+- El archivo `tests/salary-receipts/salary-receipts.test.ts` importa `normalizeSalaryReceiptModelResponse`
+- Esta función no existe o no se exporta correctamente desde el módulo importado
+- Error: `TypeError: (0 , normalizeSalaryReceiptModelResponse) is not a function`
+
+### Análisis
+El test tiene un import de una función que no existe. Posibles causas:
+1. La función fue renombrada o eliminada
+2. El import path es incorrecto
+3. La función no está exportada
+
+## Veredicto: FAIL

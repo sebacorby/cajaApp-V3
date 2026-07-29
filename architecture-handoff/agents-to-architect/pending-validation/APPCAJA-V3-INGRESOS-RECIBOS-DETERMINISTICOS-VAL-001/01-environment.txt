@@ -1,0 +1,48 @@
+# Environment Check - Gate Previo
+
+**Fecha y hora local:** 2026-07-29 18:09:00  
+**Working directory:** I:\cajaApp-V3
+
+## Comando exacto
+```powershell
+$repo = 'I:\cajaApp-V3'; $nodeHome = 'I:\Tools\node-v24.18.0-win-x64'; $env:PATH = "$nodeHome;$env:PATH"; Set-Location $repo; node --version; npm --version; where.exe node; where.exe npm
+```
+
+## Exit code
+0
+
+## stdout
+```
+v24.18.0
+11.16.0
+I:\Tools\node-v24.18.0-win-x64\node.exe
+I:\Tools\node-v24.18.0-win-x64\npm
+I:\Tools\node-v24.18.0-win-x64\npm.cmd
+C:\Users\javie\AppData\Roaming\npm
+npm.cmd
+```
+
+## Stderr
+(ninguno)
+
+## Duración aproximada
+< 1 segundo
+
+## Observaciones
+- Node versión: v24.18.0 ✓ (coincide con requerido)
+- npm versión: 11.16.0 ✓
+- Ruta de node.exe: I:\Tools\node-v24.18.0-win-x64\node.exe ✓
+
+---
+
+## Problema detectado
+
+La verificación de entorno en `I:\cajaApp-V3` funcionó, pero el repositorio Git NO está en esa ubicación. El repositorio real está en:
+
+```
+C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+```
+
+Este es un problema de configuración de rutas. La carpeta `I:\cajaApp-V3` podría ser un acceso directo o symlink a la carpeta de Dropbox, pero Git no la reconoce como repositorio válido.
+
+**Recomendación:** Usar la ruta real del repositorio para todas las operaciones Git.

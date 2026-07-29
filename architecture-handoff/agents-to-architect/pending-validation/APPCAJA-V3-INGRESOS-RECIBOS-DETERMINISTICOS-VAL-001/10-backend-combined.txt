@@ -1,0 +1,53 @@
+# Backend Combined Test - Gate B7
+
+**Fecha y hora local:** 2026-07-29 18:10:00  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location '...\workspace\backend'; npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-parser.test.ts src/modules/salary-receipts/generic-argentina.salary-receipt.parser.test.ts src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts tests/salary-receipts/salary-receipts.test.ts
+```
+
+## Exit code
+1
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ❯ src/modules/salary-receipts/salary-receipt-parser.test.ts (8 tests | 1 failed) 7ms
+   ✓ salary receipt parser utilities > parses 1.234,56 to exact cents 1ms
+   ✓ salary receipt parser utilities > parses $ 1.234,50 to exact cents 0ms
+   ✓ salary receipt parser utilities > parses 1234.56 to exact cents 0ms
+   ✓ salary receipt parser utilities > parses -250,10 to exact cents 0ms
+   ✓ salary receipt parser utilities > formats exact cents without floating point operations 0ms
+   × salary receipt parser utilities > normalizes line endings and repeated horizontal whitespace 4ms
+   ✓ SalaryReceiptParserRegistry > fails closed when no parser supports the layout 0ms
+   ✓ SalaryReceiptParserRegistry > rejects ambiguous layout detection 0ms
+ ✓ src/modules/salary-receipts/generic-argentina.salary-receipt.parser.test.ts (5 tests) 5ms
+ ✓ src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts (4 tests) 2ms
+ ✓ src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts (2 tests) 1ms
+
+ Test Files  2 failed (5)
+      Tests  1 failed | 18 passed (19)
+```
+
+## Failed tests
+1. `src/modules/salary-receipts/salary-receipt-parser.test.ts` - 1 failed
+   - Test: `normalizes line endings and repeated horizontal whitespace`
+   
+2. `tests/salary-receipts/salary-receipts.test.ts` - 1 failed (no tests run)
+   - Error: `TypeError: (0 , normalizeSalaryReceiptModelResponse) is not a function`
+
+## Duración aproximada
+420ms
+
+## Observaciones
+
+La ejecución combinada confirma los fallos individuales de B2 y B6. No hay interferencias adicionales entre los archivos de prueba.
+
+- B2 (parser contracts): 1 test falla
+- B6 (integration): 1 suite falla por función inexistente
+- B3, B4, B5: Pasan correctamente
+
+## Veredicto: FAIL

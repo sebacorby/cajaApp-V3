@@ -1,0 +1,85 @@
+# Git Revision and Worktree Check
+
+**Fecha y hora local:** 2026-07-29 18:09:10  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando exacto
+```powershell
+git branch --show-current; git rev-parse HEAD; git rev-parse origin/feat/ingresos; git status --short; git merge-base --is-ancestor e75d6466de9819f0d0e7a2e1a8eac8ec2a8f3090 HEAD; $LASTEXITCODE
+```
+
+## Exit code
+0 (para el último comando)
+
+## stdout
+```
+main
+ed241aa412e49b57ab5e5432b1a161a3418b01bb
+fatal: ambiguous argument 'origin/feat/ingresos': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like 'git <command> [<revision>...] -- [<file>...]'
+
+```
+
+## Git branch -a
+```
+  backup-before-filter
+* main
+  remotes/origin/main
+```
+
+## Git remote -v
+```
+origin	git@github.com:sebacorby/cajaApp-V3.git (fetch)
+origin	git@github.com:sebacorby/cajaApp-V3.git (push)
+```
+
+## git rev-parse e75d6466de9819f0d0e7a2e1a8eac8ec2a8f3090
+```
+e75d6466de9819f0d0e7a2e1a8eac8ec2a8f3090
+```
+
+## git log --oneline -5
+```
+ed241aa Merge pull request #2 from feat/ingresos
+c57f3fa docs(handoff): archive issued work and add validation order
+da7af31 fix(importaciones): refrescar historial al eliminar borradores
+e75d646 test(salary-receipts): guard deterministic cutover
+b051215 refactor(salary-receipts): replace AI extraction with parser
+```
+
+## git merge-base --is-ancestor e75d6466de9819f0d0e7a2e1a8eac8ec2a8f3090 HEAD
+```
+(ninguna salida, exit code 0 = el baseline ES ancestro)
+```
+
+## git status --short
+```
+(ninguna salida = worktree limpio)
+```
+
+## Duración aproximada
+< 1 segundo
+
+## Observaciones
+
+### Problema de Rama
+- **Rama actual:** `main` (NO `feat/ingresos`)
+- **Requerido:** `feat/ingresos`
+- **Problema:** La rama `feat/ingresos` fue fusionada a `main` via PR #2 "Merge pull request #2 from feat/ingresos"
+
+### Problema de Remote
+- `origin/feat/ingresos` NO existe como rama remota
+- Solo existe `origin/main`
+
+### Verificaciones positivas
+- Commit baseline `e75d6466de9819f0d0e7a2e1a8eac8ec2a8f3090` **EXISTE** ✓
+- Baseline **ES ancestro** de HEAD ✓
+- Worktree **LIMPIO** ✓
+
+### Conclusión: BLOCKED_REVISION_OR_WORKTREE
+
+La instrucción requiere explícitamente:
+- Rama: `feat/ingresos`
+- HEAD igual a `origin/feat/ingresos`
+
+Estas condiciones NO se cumplen porque la rama fue fusionada a `main`. La validación no puede proceder bajo las condiciones especificadas.

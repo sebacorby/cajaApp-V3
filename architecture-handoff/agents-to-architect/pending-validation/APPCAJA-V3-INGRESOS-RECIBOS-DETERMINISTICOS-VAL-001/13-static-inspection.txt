@@ -1,0 +1,56 @@
+# Static Inspection Results
+
+**Fecha y hora local:** 2026-07-29 18:10:15  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando exacto
+```powershell
+Set-Location 'C:\Users\javie\...\cajaApp-V3'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'modules/ai|\.\./ai/'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiExtractionRun\.create'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiRunId:\s*null'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'deterministic://salary-receipts'
+git status --short
+```
+
+## Resultados por búsqueda
+
+### 1. Búsqueda: `modules/ai` o `../ai/` en salary-receipt-extraction.service.ts
+**Resultado:** Sin coincidencias ✓
+
+### 2. Búsqueda: `aiExtractionRun.create` en salary-receipts.service.ts
+**Resultado:** Sin coincidencias ✓
+
+### 3. Búsqueda: `aiRunId:\s*null` en salary-receipts.service.ts
+**Resultado:** 1 coincidencia
+```
+workspace\backend\src\modules\salary-receipts\salary-receipts.service.ts:79:        aiRunId: null,
+```
+
+### 4. Búsqueda: `deterministic://salary-receipts` en salary-receipt-extraction.service.ts
+**Resultado:** 1 coincidencia
+```
+workspace\backend\src\modules\salary-receipts\salary-receipt-extraction.service.ts:75:      promptPath: "deterministic://salary-receipts",
+```
+
+### 5. git status --short
+**Resultado:** (ninguna salida = worktree limpio)
+
+## Análisis de resultados
+
+### Positivos
+- El servicio de extracción NO importa módulos de IA ✓
+- El servicio NO crea registros AiExtractionRun ✓
+- El servicio activo USA `aiRunId: null` para nuevos borradores ✓
+- El servicio activa USA el protocolo `deterministic://salary-receipts` ✓
+- Worktree limpio (sin cambios en código) ✓
+
+### Conclusión de inspección
+
+La inspección estática confirma que:
+1. El código ha migrado correctamente del flujo IA al flujo determinístico
+2. Los nuevos borradores usan `aiRunId: null`
+3. No hay referencias a módulos AI en el servicio de extracción
+4. No hay creación de AiExtractionRun
+
+## Veredicto: PASS
