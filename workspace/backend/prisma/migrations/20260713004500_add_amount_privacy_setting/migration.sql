@@ -1,0 +1,1 @@
+ALTER TABLE "LocalAppSettings" ADD COLUMN "hideAmounts" BOOLEAN NOT NULL DEFAULT false;

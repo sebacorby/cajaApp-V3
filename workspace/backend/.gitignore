@@ -1,0 +1,79 @@
+# dependencies
+node_modules/
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# Python virtualenv + bytecode
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+.env.backup
+.env.bak
+.env.bak-*
+.env.before-*
+.env.candidate
+.env.candidate.bak-*
+.env.original
+.env.replaced-*
+
+# runtime logs (rotated, never commit)
+*.log
+*.err
+*.out
+backend.log
+backend.err
+server.log
+server2.log
+server3.log
+worker-debug.log
+worker-out.log
+dev-with-log.mjs
+
+# Prisma / SQLite
+prisma/*.db
+prisma/dev.db
+prisma/dev.db.*
+prisma/schema.prisma.bak-*
+
+# source backups (snapshots of pre-refactor files)
+src/*.bak
+src/*.bak-*
+backup-before-*/
+APPCAJA-V3-BE-011-ollama-native-implementation/
+
+# runtime uploads / blob storage (data, not source)
+storage/
+!storage/.gitkeep
+
+# diagnostics
+.ollama-request.json
+.ollama-response.json
+ollama-request.json
+ollama-response.json
+backend-request-*.json
+test-image.txt
+test-small.pdf
+*.bak
+
+# one-off debug scripts at backend root
+check-*.js
+clear-*.js
+e2e-test.js
+parse-*.js
+save-*.js
+test-*.js
+tmp_*.js
+
+# OS
+desktop.ini
+nul

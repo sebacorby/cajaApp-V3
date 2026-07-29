@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS "CardIssuerFutureReference" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "statementId" TEXT NOT NULL,
+  "sourceRowId" TEXT NOT NULL,
+  "displayOrder" INTEGER NOT NULL,
+  "sourceLabel" TEXT,
+  "sourcePage" INTEGER,
+  "periodLabelRaw" TEXT NOT NULL,
+  "issuerPeriodKey" TEXT,
+  "targetPaymentMonthKey" TEXT,
+  "periodBasis" TEXT NOT NULL DEFAULT 'unknown',
+  "amountPesosRaw" TEXT,
+  "amountDollarsRaw" TEXT,
+  "currencyOriginal" TEXT NOT NULL DEFAULT 'UNKNOWN',
+  "originalText" TEXT NOT NULL,
+  "confidence" REAL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "CardIssuerFutureReference_statementId_fkey"
+    FOREIGN KEY ("statementId") REFERENCES "CardStatement" ("id")
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "CardIssuerFutureReference_statementId_idx"
+  ON "CardIssuerFutureReference"("statementId");
+
+CREATE INDEX IF NOT EXISTS "CardIssuerFutureReference_statementId_issuerPeriodKey_idx"
+  ON "CardIssuerFutureReference"("statementId", "issuerPeriodKey");
