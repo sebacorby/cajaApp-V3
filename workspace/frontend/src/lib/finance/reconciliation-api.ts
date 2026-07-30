@@ -5,7 +5,6 @@ export type ReconciliationRelationType =
   | "duplicate_movement"
   | "salary_deposit"
   | "card_payment";
-
 export type ReconciliationStatus = "open" | "resolved" | "dismissed";
 export type ReconciliationResolution =
   | "exclude_left"
@@ -17,6 +16,12 @@ export type ReconciliationResolution =
 export interface ReconciliationNavigation {
   section: "movimientos" | "tarjetas" | "ingresos";
   label: string;
+  recordId: string;
+  recordType: "movement" | "card_statement" | "income_source";
+  module: string;
+  typeLabel: string;
+  title: string;
+  context: string;
 }
 
 export interface ReconciliationParticipant {
@@ -86,6 +91,7 @@ export interface ReconciliationScanResponse {
   detected: number;
   summary: ReconciliationSummary;
   items: ReconciliationItem[];
+  refreshedAt?: string;
 }
 
 export class ReconciliationApiError extends Error {
@@ -134,58 +140,62 @@ export async function listReconciliation(input: {
   params.set("relationType", input.relationType ?? "all");
   params.set("scope", input.scope ?? "current");
   if (input.search?.trim()) params.set("search", input.search.trim());
-  params.set("limit", String(input.limit ?? 25));
+  params.set("limit", String(input.limit ?? 100));
   params.set("offset", String(input.offset ?? 0));
-
-  const response = await fetch(`${API_BASE_URL}/api/reconciliation?${params}`, {
-    cache: "no-store",
-  });
-  return handleResponse(response);
+  return handleResponse(
+    await fetch(`${API_BASE_URL}/api/reconciliation?${params}`, {
+      cache: "no-store",
+    }),
+  );
 }
 
 export async function scanReconciliation(input: {
   from: string;
   to: string;
 }): Promise<ReconciliationScanResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/reconciliation/scan`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return handleResponse(response);
+  return handleResponse(
+    await fetch(`${API_BASE_URL}/api/reconciliation/scan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    }),
+  );
 }
 
 export async function getReconciliationDetail(
   caseId: string,
 ): Promise<ReconciliationItem> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}`,
-    { cache: "no-store" },
+  return handleResponse(
+    await fetch(
+      `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}`,
+      { cache: "no-store" },
+    ),
   );
-  return handleResponse(response);
 }
 
 export async function resolveReconciliation(
   caseId: string,
   action: ReconciliationResolution,
 ): Promise<ReconciliationItem> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}/resolve`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    },
+  return handleResponse(
+    await fetch(
+      `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}/resolve`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      },
+    ),
   );
-  return handleResponse(response);
 }
 
 export async function reopenReconciliation(
   caseId: string,
 ): Promise<ReconciliationItem> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}/reopen`,
-    { method: "POST" },
+  return handleResponse(
+    await fetch(
+      `${API_BASE_URL}/api/reconciliation/${encodeURIComponent(caseId)}/reopen`,
+      { method: "POST" },
+    ),
   );
-  return handleResponse(response);
 }

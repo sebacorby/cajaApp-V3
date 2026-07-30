@@ -100,18 +100,33 @@ function enrichItem(item: ReconciliationItem): ReconciliationItem {
 
 export class ReconciliationService extends BaseReconciliationService {
   override async scan(input: ScanReconciliationInput) {
-    // La última ejecución es la única detección vigente. Los casos que ya no
-    // reaparecen permanecen como historia, pero nunca vuelven a contaminar
-    // el contador ni la bandeja pendiente actual.
+    const scanStartedAt = new Date();
+    const result = await super.scan(input);
+
+    // Los casos que no fueron redetectados por la última ejecución dejan de ser
+    // vigentes, aunque correspondan a otro rango histórico. Si el scan falla,
+    // esta limpieza nunca se ejecuta y la bandeja anterior permanece intacta.
     await prisma.reconciliationCase.updateMany({
-      where: { isCurrent: true },
+      where: {
+        isCurrent: true,
+        lastDetectedAt: { lt: scanStartedAt },
+      },
       data: { isCurrent: false },
     });
 
-    const result = await super.scan(input);
+    const current = await this.list({
+      status: "all",
+      relationType: "all",
+      scope: "current",
+      search: "",
+      limit: 100,
+      offset: 0,
+    });
+
     return {
       ...result,
-      items: result.items.map(enrichItem),
+      summary: current.filteredSummary,
+      items: current.items,
       refreshedAt: new Date().toISOString(),
     };
   }

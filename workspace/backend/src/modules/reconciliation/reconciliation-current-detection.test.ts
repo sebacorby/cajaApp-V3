@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("reconciliation current detection", () => {
-  it("invalidates every previous current case before rebuilding the latest scan", async () => {
+  it("expires cases not redetected only after a successful scan", async () => {
     const source = await fs.readFile(
       path.resolve(
         process.cwd(),
@@ -12,10 +12,12 @@ describe("reconciliation current detection", () => {
       "utf8",
     );
 
-    expect(source).toContain("where: { isCurrent: true }");
+    expect(source).toContain("const result = await super.scan(input)");
+    expect(source).toContain("lastDetectedAt: { lt: scanStartedAt }");
     expect(source).toContain("data: { isCurrent: false }");
-    expect(source).toContain("await super.scan(input)");
-    expect(source).not.toContain("occurredOn: { gte: input.from, lte: input.to }");
+    expect(source.indexOf("await super.scan(input)")).toBeLessThan(
+      source.indexOf("lastDetectedAt: { lt: scanStartedAt }"),
+    );
   });
 
   it("returns record-aware navigation instead of section-only destinations", async () => {
