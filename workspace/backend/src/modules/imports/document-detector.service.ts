@@ -12,129 +12,72 @@ export type DocumentType =
   | "jpg"
   | "unknown";
 
+function has(text: string, pattern: RegExp): boolean {
+  return pattern.test(text);
+}
+
 export class DocumentDetectorService {
   detectMimeType(filename: string, mimeType: string): DocumentType {
     const ext = filename.toLowerCase().split(".").pop();
-
-    if (mimeType === "text/csv" || ext === "csv") {
-      return "csv";
-    }
-    if (mimeType === "image/png" || ext === "png") {
-      return "png";
-    }
-    if (mimeType === "image/jpeg" || ext === "jpg" || ext === "jpeg") {
-      return "jpg";
-    }
-    if (mimeType === "application/pdf" || ext === "pdf") {
-      return "credit_card_statement_pdf";
-    }
-
+    if (mimeType === "text/csv" || ext === "csv") return "csv";
+    if (mimeType === "image/png" || ext === "png") return "png";
+    if (mimeType === "image/jpeg" || ext === "jpg" || ext === "jpeg") return "jpg";
+    if (mimeType === "application/pdf" || ext === "pdf") return "credit_card_statement_pdf";
     return "unknown";
   }
 
   detectDocumentType(text: string): DocumentType {
-    const lowerText = text.toLowerCase();
+    const normalized = text.normalize("NFKC").replace(/\s+/g, " ").toLowerCase();
 
-    const creditCardKeywords = [
-      "tarjeta",
-      "visa",
-      "mastercard",
-      "amex",
-      "consumo",
-      "resumen",
-      "cierre",
-      "vencimiento",
-      "cuota",
-      "total a pagar",
-      "pago mínimo",
-      "galicia",
-      "bbva",
-      "santander",
-      "provincia",
-      "macro",
-    ];
+    const cardSignals = [
+      has(normalized, /total\s+a\s+pagar|saldo\s+actual|total\s+adeudado/),
+      has(normalized, /vencimiento|vence\s+el/),
+      has(normalized, /cierre|estado\s+de\s+cuenta\s+al|emitido\s+el/),
+      has(normalized, /detalle\s+(?:del\s+)?(?:consumo|mes)|compras\s+del\s+mes|fecha\s+.*(?:detalle|referencia)/),
+      has(normalized, /pago\s+m[ií]nimo|menor\s+entrega/),
+      has(normalized, /cuotas?\s+a\s+vencer|saldo\s+financiable|tasa\s+de\s+inter[eé]s/),
+    ].filter(Boolean).length;
 
-    const bankAccountKeywords = [
-      "cuenta corriente",
-      "cuenta bancaria",
-      "depósito",
-      "extracción",
-      "saldo disponible",
-      "saldo anterior",
-    ];
+    const bankSignals = [
+      has(normalized, /saldo\s+disponible/),
+      has(normalized, /dep[oó]sito|extracci[oó]n/),
+      has(normalized, /cuenta\s+corriente|caja\s+de\s+ahorro/),
+      has(normalized, /cbu|alias/),
+    ].filter(Boolean).length;
 
-    const invoiceKeywords = [
-      "factura",
-      " IVA ",
-      "cuit",
-      "razón social",
-      "condición fiscal",
-      "subtotal",
-    ];
+    const invoiceSignals = [
+      has(normalized, /factura/),
+      has(normalized, /raz[oó]n\s+social/),
+      has(normalized, /condici[oó]n\s+fiscal/),
+      has(normalized, /subtotal.*iva.*total/),
+    ].filter(Boolean).length;
 
-    const receiptKeywords = [
-      "recibo",
-      "comprobante de pago",
-      "pago realizado",
-    ];
+    const receiptSignals = [
+      has(normalized, /recibo\s+de\s+sueldo|liquidaci[oó]n\s+de\s+haberes/),
+      has(normalized, /haberes.*descuentos/),
+      has(normalized, /neto\s+(?:a\s+cobrar|en\s+mano)/),
+    ].filter(Boolean).length;
 
-    let creditCardScore = 0;
-    let bankAccountScore = 0;
-    let invoiceScore = 0;
-    let receiptScore = 0;
-
-    for (const keyword of creditCardKeywords) {
-      if (lowerText.includes(keyword)) creditCardScore++;
-    }
-    for (const keyword of bankAccountKeywords) {
-      if (lowerText.includes(keyword)) bankAccountScore++;
-    }
-    for (const keyword of invoiceKeywords) {
-      if (lowerText.includes(keyword)) invoiceScore++;
-    }
-    for (const keyword of receiptKeywords) {
-      if (lowerText.includes(keyword)) receiptScore++;
-    }
-
-    if (creditCardScore >= 3) {
-      logger.info({ creditCardScore, bankAccountScore, invoiceScore, receiptScore }, "Detected credit card statement (keyword)");
+    if (cardSignals >= 4) {
+      logger.info({ cardSignals, bankSignals, invoiceSignals, receiptSignals }, "Detected credit card statement structurally");
       return "credit_card_statement_pdf";
     }
-    if (bankAccountScore >= 3) {
-      logger.info({ creditCardScore, bankAccountScore, invoiceScore, receiptScore }, "Detected bank account statement (keyword)");
-      return "bank_account_statement_pdf";
-    }
-    if (invoiceScore >= 3) {
-      logger.info({ creditCardScore, bankAccountScore, invoiceScore, receiptScore }, "Detected invoice (keyword)");
-      return "invoice_pdf";
-    }
-    if (receiptScore >= 2) {
-      logger.info({ creditCardScore, bankAccountScore, invoiceScore, receiptScore }, "Detected receipt (keyword)");
-      return "receipt_pdf";
-    }
-
-    logger.warn({ creditCardScore, bankAccountScore, invoiceScore, receiptScore }, "Unknown document type (keyword)");
+    if (bankSignals >= 3) return "bank_account_statement_pdf";
+    if (invoiceSignals >= 3) return "invoice_pdf";
+    if (receiptSignals >= 2) return "receipt_pdf";
+    logger.warn({ cardSignals, bankSignals, invoiceSignals, receiptSignals }, "Unknown document type by structural evidence");
     return "unknown";
   }
 
   async detectDocumentTypeWithAI(text: string, pageCount: number): Promise<DocumentType> {
-    if (env.AI_MOCK_MODE) {
-      logger.info({}, "AI_MOCK_MODE enabled, using keyword detection");
-      return this.detectDocumentType(text);
-    }
-
+    if (env.AI_MOCK_MODE) return this.detectDocumentType(text);
     try {
       const result = await aiExtractionService.detectDocumentType(text, pageCount);
-
-      if (result.documentType === "credit_card_statement_pdf") {
-        logger.info({ documentType: result.documentType }, "Detected credit card statement (AI)");
-        return "credit_card_statement_pdf";
-      }
-
-      logger.warn({ documentType: result.documentType }, "AI detected non-credit-card document");
-      return "unknown";
+      return result.documentType === "credit_card_statement_pdf"
+        ? "credit_card_statement_pdf"
+        : "unknown";
     } catch (error) {
-      logger.error({ error }, "AI detection failed, falling back to keyword detection");
+      logger.error({ error }, "AI detection failed, falling back to structural detection");
       return this.detectDocumentType(text);
     }
   }

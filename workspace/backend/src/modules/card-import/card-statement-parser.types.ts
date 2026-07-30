@@ -1,6 +1,10 @@
 import type { CardStatementPreview } from "../cards/cards.types.js";
 
-export type StatementLayout = "galicia-mastercard" | "galicia-visa";
+export type StatementLayout =
+  | "galicia-mastercard"
+  | "galicia-visa"
+  | "adaptive-tabular"
+  | "adaptive-narrative";
 
 export type ParserDiagnosticLine = {
   pageNumber: number;
@@ -11,6 +15,10 @@ export type ParserDiagnosticLine = {
 
 export type CardStatementParseDiagnostics = {
   layout: StatementLayout;
+  parserId?: string;
+  parserVersion?: string;
+  detectionScore?: number;
+  detectionSignals?: string[];
   sourcePageCount: number;
   sourceLineCount: number;
   candidateTransactionLines: number;
