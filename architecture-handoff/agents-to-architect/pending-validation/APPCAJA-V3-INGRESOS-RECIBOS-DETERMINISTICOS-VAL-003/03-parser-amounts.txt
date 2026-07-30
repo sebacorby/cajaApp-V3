@@ -1,0 +1,39 @@
+# Parser Amounts Test - Gate B2
+
+**Fecha:** 2026-07-29 21:07  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-parser.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/salary-receipt-parser.test.ts (12 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+```
+
+## Casos verificados
+
+| Input | Output | Pass |
+|-------|--------|------|
+| 1.234,56 | 123456 centavos | ✓ |
+| $ 1.234,50 | 123450 centavos | ✓ |
+| 1234.56 | 123456 centavos | ✓ |
+| 1,234.56 | 123456 centavos | ✓ |
+| USD 1,234.56 | 123456 centavos | ✓ |
+| -250,10 | -25010 centavos | ✓ |
+| -1,234.56 | -123456 centavos | ✓ |
+| 1.23.4,56 | rechazo | ✓ |
+| 1,23,4.56 | rechazo | ✓ |
+
+## Duración: 260ms
+
+## Veredicto: PASS
