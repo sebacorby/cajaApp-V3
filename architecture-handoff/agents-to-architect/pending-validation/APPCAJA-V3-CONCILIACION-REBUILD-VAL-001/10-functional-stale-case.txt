@@ -1,0 +1,12 @@
+# Functional Validation F2 - Stale Case
+
+**Fecha:** 2026-07-30 06:23  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Estado: BLOCKED_TEST_ENVIRONMENT
+
+## Motivo
+
+Igual que F1 - requiere aplicación en ejecución y datos de prueba autorizables.
+
+## Veredicto: BLOCKED_TEST_ENVIRONMENT

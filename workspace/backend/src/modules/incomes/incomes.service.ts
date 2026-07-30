@@ -8,66 +8,13 @@ import { analyzeSalaryReceiptExtras } from "../salary-receipts/salary-receipt-ex
 
 export * from "./incomes.service.base.js";
 
-type Currency = "ARS" | "USD";
-
-interface OverviewRecurringItem {
-  sourceId: string;
-  name: string;
-  employer: string | null;
-  kind: string;
-  currency: Currency;
-  amount: string;
-  status: "actual" | "projected";
-  origin: string;
-  eventId: string | null;
-}
-
-interface OverviewOneOffItem {
-  id: string;
-  kind: string;
-  label: string;
-  currency: Currency;
-  amount: string;
-  status: "actual" | "projected";
-  notes: string | null;
-}
-
-interface OverviewMonth {
-  monthKey: string;
-  label: string;
-  totalArs: string;
-  totalUsd: string;
-  recurringArs: string;
-  recurringUsd: string;
-  oneOffArs: string;
-  oneOffUsd: string;
-  recurring: OverviewRecurringItem[];
-  oneOffs: OverviewOneOffItem[];
-}
-
-interface OverviewSource {
-  id: string;
-  kind: string;
-  currency: Currency;
-  baseAmount: string;
-}
-
-interface IncomeOverviewShape {
-  range: { from: string; to: string };
-  currentMonthKey: string;
-  summary: {
-    totalArs: string;
-    totalUsd: string;
-    recurringArs: string;
-    recurringUsd: string;
-    oneOffArs: string;
-    oneOffUsd: string;
-    recurringSources: number;
-    oneOffCount: number;
-  };
-  sources: OverviewSource[];
-  months: OverviewMonth[];
-}
+type BaseIncomeOverview = Awaited<
+  ReturnType<BaseIncomesService["getOverview"]>
+>;
+type OverviewMonth = BaseIncomeOverview["months"][number];
+type OverviewRecurringItem = OverviewMonth["recurring"][number];
+type OverviewOneOffItem = OverviewMonth["oneOffs"][number];
+type Currency = OverviewRecurringItem["currency"];
 
 function cents(value: string, currency: Currency): bigint {
   return parseIncomeAmount(value, currency);
@@ -121,8 +68,11 @@ function recomputeMonth(month: OverviewMonth): void {
 }
 
 export class SacAwareIncomesService extends BaseIncomesService {
-  override async getOverview(from: string, to: string) {
-    const overview = (await super.getOverview(from, to)) as IncomeOverviewShape;
+  override async getOverview(
+    from: string,
+    to: string,
+  ): Promise<BaseIncomeOverview> {
+    const overview = await super.getOverview(from, to);
     const receipts = await prisma.salaryReceipt.findMany({
       where: {
         sourceId: { not: null },
@@ -206,7 +156,7 @@ export class SacAwareIncomesService extends BaseIncomesService {
           recurringItem.amount = formatIncomeCents(recurringBase, currency);
           recurringItem.status = "projected";
         }
-        month.oneOffs.push({
+        const actualSac: OverviewOneOffItem = {
           id: `sac-actual:${receipt.id}`,
           kind: "aguinaldo",
           label: "SAC real",
@@ -214,7 +164,8 @@ export class SacAwareIncomesService extends BaseIncomesService {
           amount: receipt.netAmountRaw,
           status: "actual",
           notes: "Importe real tomado de un recibo exclusivo de SAC.",
-        });
+        };
+        month.oneOffs.push(actualSac);
       }
 
       for (const month of overview.months.filter((candidate) =>
@@ -247,7 +198,7 @@ export class SacAwareIncomesService extends BaseIncomesService {
         month.oneOffs = month.oneOffs.filter(
           (item) => item.id !== `sac-estimate:${source.id}:${month.monthKey}`,
         );
-        month.oneOffs.push({
+        const projectedSac: OverviewOneOffItem = {
           id: `sac-estimate:${source.id}:${month.monthKey}`,
           kind: "aguinaldo",
           label: "SAC estimado",
@@ -256,7 +207,8 @@ export class SacAwareIncomesService extends BaseIncomesService {
           status: "projected",
           notes:
             "Estimación financiera del neto: 50% del mayor neto mensual proyectado del semestre. La liquidación laboral real puede diferir.",
-        });
+        };
+        month.oneOffs.push(projectedSac);
       }
     }
 

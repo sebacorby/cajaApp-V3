@@ -1,0 +1,29 @@
+# Frontend Redesign Test - Gate F2
+
+**Fecha:** 2026-07-30 06:22  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\frontend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/components/finance/sections/conciliacion-section.redesign.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v4.1.10  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/frontend
+
+ ✓ src/components/finance/sections/conciliacion-section.redesign.test.ts (2 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+```
+
+## Cobertura
+- Sección no importa legacy ✓
+- Scan ejecuta al montar ✓
+
+## Duración: 172ms
+
+## Veredicto: PASS

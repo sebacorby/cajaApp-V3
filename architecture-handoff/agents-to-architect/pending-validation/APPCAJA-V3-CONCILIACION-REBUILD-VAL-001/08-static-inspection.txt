@@ -1,0 +1,33 @@
+# Static Inspection Results
+
+**Fecha:** 2026-07-30 06:22  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando
+```powershell
+Select-String -Path 'workspace/frontend/src/components/finance/sections/conciliacion-section.tsx' -Pattern 'conciliacion-section.legacy'
+Select-String -Path 'workspace/frontend/src/components/finance/sections/conciliacion-section.tsx' -Pattern 'scanReconciliation\(scanRange\(\)\)'
+Select-String -Path 'workspace/frontend/src/components/finance/sections/conciliacion-section.tsx' -Pattern 'navigateToSearchResult'
+Select-String -Path 'workspace/backend/src/modules/reconciliation/reconciliation.service.ts' -Pattern 'lastDetectedAt: \{ lt: scanStartedAt \}'
+Select-String -Path 'workspace/backend/src/modules/reconciliation/reconciliation.service.ts' -Pattern 'recordType: "movement"|recordType: "card_statement"|recordType: "income_source"'
+```
+
+## Resultados
+
+| Patrón | Archivo | Resultado |
+|--------|---------|-----------|
+| conciliacion-section.legacy | - | Sin coincidencias ✓ |
+| scanReconciliation(scanRange()) | conciliacion-section.tsx:145 | ✓ |
+| navigateToSearchResult | conciliacion-section.tsx:108,109,182 | ✓ |
+| lastDetectedAt: { lt: scanStartedAt } | reconciliation.service.ts:112 | ✓ |
+| recordType | reconciliation.service.ts:19,54,71,83 | ✓ |
+
+## Análisis
+
+- Sección NO usa archivo legacy ✓
+- Scan ejecuta con scanRange() ✓
+- Navegación usa navigateToSearchResult ✓
+- Inhabilitación usa lastDetectedAt < scanStartedAt ✓
+- Record types definidos para movement, card_statement, income_source ✓
+
+## Veredicto: PASS
