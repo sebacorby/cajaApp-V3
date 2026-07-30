@@ -1,11 +1,25 @@
 # APPCAJA V3 — Validación de ingresos reales y rediseño UI
 
 **ID:** `APP-INCOME-REAL-NET-UX-VAL-001`  
+**Revisión:** `1.0.1`  
 **Fecha:** `2026-07-29`  
-**Estado:** `ACTIVA`  
+**Estado:** `ACTIVA — PREFLIGHT CORREGIDO`  
 **Rama obligatoria:** `feat/ingresos`  
-**Commit exacto a probar:** `b519471e340529df3b6a6ca06e5acfa354a45d06`  
+**Baseline funcional obligatorio:** `b519471e340529df3b6a6ca06e5acfa354a45d06`  
 **E2E:** `PROHIBIDO HASTA NUEVA ORDEN`
+
+## Corrección de la revisión 1.0.1
+
+La revisión anterior exigía que `HEAD` coincidiera exactamente con el commit funcional `b519471...`. Esa condición era incorrecta porque la propia instrucción se versionó en un commit documental posterior.
+
+La condición válida es:
+
+1. `HEAD` local debe coincidir con `origin/feat/ingresos`;
+2. el baseline funcional `b519471e340529df3b6a6ca06e5acfa354a45d06` debe ser ancestro de `HEAD`;
+3. los commits posteriores al baseline pueden contener documentación, instrucciones o evidencia;
+4. el worktree debe estar limpio antes de crear evidencia.
+
+No bloquear la ejecución porque `HEAD` sea posterior al baseline si cumple esas cuatro condiciones.
 
 ## Objetivo
 
@@ -13,7 +27,7 @@ Validar tres cambios separados:
 
 1. el neto real aceptado desde recibos FluxIT y NTT Data no vuelve a cero;
 2. la presentación financiera prioriza valores reales, separa estimaciones y omite meses sin importes relevantes;
-3. la pantalla de Ingresos conserva la paleta actual pero presenta una jerarquía visual clara, dejando la administración avanzada colapsada por defecto.
+3. la pantalla de Ingresos conserva la paleta actual, presenta una jerarquía visual clara y deja la administración avanzada colapsada por defecto.
 
 El agente no modifica código, tests, configuración ni dependencias. Sólo ejecuta gates y entrega evidencia.
 
@@ -36,14 +50,25 @@ git branch --show-current
 git rev-parse HEAD
 git rev-parse origin/feat/ingresos
 git status --short
+git merge-base --is-ancestor b519471e340529df3b6a6ca06e5acfa354a45d06 HEAD
+$LASTEXITCODE
 ```
 
 Esperado:
 
 - Node `v24.18.0`;
 - rama `feat/ingresos`;
-- HEAD local y remoto iguales a `b519471e340529df3b6a6ca06e5acfa354a45d06`;
+- `git rev-parse HEAD` igual a `git rev-parse origin/feat/ingresos`;
+- `git merge-base --is-ancestor ... HEAD` con exit code `0`;
 - worktree limpio antes de crear evidencia.
+
+Si local y remoto difieren, el agente puede ejecutar únicamente:
+
+```powershell
+git pull --ff-only origin feat/ingresos
+```
+
+Después debe repetir todo el preflight. No hacer merge, rebase, reset ni checkout destructivo.
 
 ## Gates backend
 
@@ -83,7 +108,7 @@ Validaciones mínimas:
 - la vista principal importa `income-presentation`;
 - la administración previa permanece disponible mediante `ingresos-section.base.tsx`;
 - la administración avanzada está dentro de un `<details>` colapsado por defecto;
-- la pantalla principal muestra tres indicadores: ingreso real del mes, próximo estimado y fuentes activas.
+- la pantalla principal muestra ingreso real del mes, próximo estimado y fuentes activas.
 
 ## Inspección estática
 
@@ -134,6 +159,6 @@ NO SE EJECUTÓ PLAYWRIGHT, CYPRESS NI NINGUNA SUITE E2E.
 
 - `PASS_TECNICO_PENDIENTE_ACEPTACION_USUARIO`: todos los gates PASS.
 - `FAIL`: al menos un gate falla de manera reproducible.
-- `BLOCKED`: entorno, revisión o dependencias impiden ejecutar.
+- `BLOCKED`: entorno, sincronización, baseline ausente o dependencias impiden ejecutar.
 
 No hacer commit ni push de código. Se permite subir únicamente la evidencia solicitada a `feat/ingresos`. No declarar aceptación funcional final.
