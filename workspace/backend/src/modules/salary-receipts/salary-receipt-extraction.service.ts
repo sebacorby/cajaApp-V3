@@ -5,7 +5,16 @@ import {
   formatSalaryAmountFromCents,
   parseSalaryAmountToCents,
 } from "./salary-receipt-parser.utils.js";
-import type { SalaryReceiptPreview } from "./salary-receipts.types.js";
+import type {
+  SalaryReceiptItem,
+  SalaryReceiptPreview,
+} from "./salary-receipts.types.js";
+
+export {
+  looksLikeSalaryReceipt,
+  normalizeLegacySalaryAmount,
+  normalizeSalaryReceiptModelResponse,
+} from "./salary-receipt-legacy-compatibility.js";
 
 interface ExtractionResult {
   preview: SalaryReceiptPreview;
@@ -28,6 +37,22 @@ export function normalizeSalaryAmount(value: unknown): string {
   }
 }
 
+function cents(value: string): number {
+  return parseSalaryAmountToCents(normalizeSalaryAmount(value));
+}
+
+function findInformationAmount(
+  items: SalaryReceiptItem[],
+  patterns: RegExp[],
+): number | undefined {
+  const item = items.find(
+    (candidate) =>
+      candidate.kind === "information" &&
+      patterns.some((pattern) => pattern.test(candidate.label)),
+  );
+  return item ? cents(item.amount) : undefined;
+}
+
 export function recalculateSalaryReceiptPreview(
   preview: SalaryReceiptPreview,
 ): SalaryReceiptPreview {
@@ -36,12 +61,39 @@ export function recalculateSalaryReceiptPreview(
     displayOrder: index + 1,
     amount: normalizeSalaryAmount(item.amount),
   }));
-  const grossCents = items
-    .filter((item) => item.kind === "earning")
-    .reduce((total, item) => total + parseSalaryAmountToCents(item.amount), 0);
-  const deductionsCents = items
-    .filter((item) => item.kind === "deduction")
-    .reduce((total, item) => total + parseSalaryAmountToCents(item.amount), 0);
+  const earnings = items.filter((item) => item.kind === "earning");
+  const deductions = items.filter((item) => item.kind === "deduction");
+  const hasDetailedBreakdown = earnings.length > 0 || deductions.length > 0;
+
+  let grossCents: number;
+  let deductionsCents: number;
+  let netCents: number;
+
+  if (hasDetailedBreakdown) {
+    grossCents = earnings.reduce((total, item) => total + cents(item.amount), 0);
+    deductionsCents = deductions.reduce(
+      (total, item) => total + cents(item.amount),
+      0,
+    );
+    netCents = grossCents - deductionsCents;
+  } else {
+    grossCents =
+      findInformationAmount(items, [
+        /^total haberes informado$/i,
+        /^total (?:haberes|remuneraci[oó]n|bruto)/i,
+      ]) ?? cents(preview.summary.grossAmount);
+    deductionsCents =
+      findInformationAmount(items, [
+        /^total descuentos informado$/i,
+        /^total (?:descuentos|retenciones)/i,
+      ]) ?? cents(preview.summary.deductionsAmount);
+    netCents =
+      findInformationAmount(items, [
+        /^neto en mano$/i,
+        /^neto a cobrar$/i,
+        /^total neto$/i,
+      ]) ?? cents(preview.summary.netAmount);
+  }
 
   return {
     ...preview,
@@ -49,7 +101,7 @@ export function recalculateSalaryReceiptPreview(
     summary: {
       grossAmount: formatSalaryAmountFromCents(grossCents),
       deductionsAmount: formatSalaryAmountFromCents(deductionsCents),
-      netAmount: formatSalaryAmountFromCents(grossCents - deductionsCents),
+      netAmount: formatSalaryAmountFromCents(netCents),
     },
   };
 }

@@ -1,0 +1,21 @@
+# Backend Build - Gate B1
+
+**Fecha:** 2026-07-29 23:05  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npm run build
+```
+
+## Exit code: 0
+
+## stdout
+```
+> cajaapp-v3-backend@1.0.0 build
+> tsc -p tsconfig.json
+```
+
+## Duración: ~5 segundos
+
+## Veredicto: PASS

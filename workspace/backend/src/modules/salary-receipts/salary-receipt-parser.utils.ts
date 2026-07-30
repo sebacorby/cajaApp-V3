@@ -1,5 +1,5 @@
-const ARGENTINE_AMOUNT_PATTERN = /^-?(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d{1,2})?$/;
-const DECIMAL_AMOUNT_PATTERN = /^-?\d+(?:\.\d{1,2})?$/;
+const ARGENTINE_AMOUNT_PATTERN = /^-?(?:(?:\d{1,3}(?:\.\d{3})+)|\d+)(?:,\d{1,2})?$/;
+const INTERNATIONAL_AMOUNT_PATTERN = /^-?(?:(?:\d{1,3}(?:,\d{3})+)|\d+)(?:\.\d{1,2})?$/;
 
 export function normalizeSalaryReceiptText(rawText: string): string {
   return rawText
@@ -26,8 +26,8 @@ export function parseSalaryAmountToCents(value: string): number {
   let normalized: string;
   if (ARGENTINE_AMOUNT_PATTERN.test(compact)) {
     normalized = compact.replace(/\./g, "").replace(",", ".");
-  } else if (DECIMAL_AMOUNT_PATTERN.test(compact)) {
-    normalized = compact;
+  } else if (INTERNATIONAL_AMOUNT_PATTERN.test(compact)) {
+    normalized = compact.replace(/,/g, "");
   } else {
     throw new Error(`Importe no reconocido: ${value}`);
   }

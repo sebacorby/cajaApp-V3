@@ -1,0 +1,21 @@
+# Static Inspection Results
+
+**Fecha:** 2026-07-29 21:07  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando
+```powershell
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'modules/ai|\.\./ai/'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiExtractionRun\.create'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts' -Pattern 'aiRunId:\s*null'
+```
+
+## Resultados
+
+| Patrón | Resultado |
+|--------|-----------|
+| modules/ai o ../ai/ | Sin coincidencias ✓ |
+| aiExtractionRun.create | Sin coincidencias ✓ |
+| aiRunId: null | 1 coincidencia (línea 79) ✓ |
+
+## Veredicto: PASS

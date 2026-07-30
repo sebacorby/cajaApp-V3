@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client";
 import { env } from "../../config/env.js";
 import { prisma } from "../../db/prisma.js";
 import {
-  AppError,
   FileRequiredError,
   FileTooLargeError,
   UnsupportedMediaTypeError,
@@ -32,47 +31,60 @@ export class SalaryReceiptsService extends BaseSalaryReceiptsService {
 
     const buffer = Buffer.isBuffer(file.file) ? file.file : Buffer.from(file.file);
     const sha256 = createHash("sha256").update(buffer).digest("hex");
-    const duplicate = await prisma.uploadedDocument.findFirst({
-      where: {
-        sha256,
-        OR: [
-          {
-            salaryReceiptDrafts: {
-              some: { status: { in: ["processing", "preview_ready", "accepted"] } },
-            },
-          },
-          {
-            salaryReceipts: {
-              some: { status: { in: ["accepted", "superseded"] } },
-            },
-          },
-        ],
+    const previousDocuments = await prisma.uploadedDocument.findMany({
+      where: { sha256 },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        storagePath: true,
       },
-      select: { fileName: true },
     });
-    if (duplicate) {
-      throw new AppError(
-        "SALARY_RECEIPT_DUPLICATE",
-        `Este recibo ya fue importado (${duplicate.fileName}).`,
-        409,
-      );
-    }
+    const reusableDocument = previousDocuments[0] ?? null;
 
     const storageDir = path.resolve(env.STORAGE_DIR, "salary-receipts");
     await fs.mkdir(storageDir, { recursive: true });
     const safeFilename = file.filename.replace(/[^a-zA-Z0-9._-]+/g, "-");
-    const storagePath = path.join(storageDir, `${sha256}_${safeFilename}`);
+    const storagePath =
+      reusableDocument?.storagePath ?? path.join(storageDir, `${sha256}_${safeFilename}`);
     await fs.writeFile(storagePath, buffer);
 
-    const document = await prisma.uploadedDocument.create({
-      data: {
-        fileName: file.filename,
-        mimeType: file.mimetype,
-        sizeBytes: buffer.length,
-        sha256,
-        storagePath,
+    const document = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const previousDocumentIds = previousDocuments.map(({ id }) => id);
+        if (previousDocumentIds.length > 0) {
+          await tx.salaryReceiptDraft.deleteMany({
+            where: {
+              documentId: { in: previousDocumentIds },
+              acceptedReceipt: null,
+            },
+          });
+        }
+
+        if (reusableDocument) {
+          return tx.uploadedDocument.update({
+            where: { id: reusableDocument.id },
+            data: {
+              fileName: file.filename,
+              mimeType: file.mimetype,
+              sizeBytes: buffer.length,
+              storagePath,
+              pageCount: null,
+            },
+          });
+        }
+
+        return tx.uploadedDocument.create({
+          data: {
+            fileName: file.filename,
+            mimeType: file.mimetype,
+            sizeBytes: buffer.length,
+            sha256,
+            storagePath,
+          },
+        });
       },
-    });
+    );
+
     const draft = await prisma.salaryReceiptDraft.create({
       data: {
         documentId: document.id,
@@ -116,6 +128,7 @@ export class SalaryReceiptsService extends BaseSalaryReceiptsService {
           parser: result.model,
           rawResponseHash: result.rawResponseHash,
           durationMs: result.durationMs,
+          replacedPreviousUpload: Boolean(reusableDocument),
         },
         "Deterministic salary receipt preview ready",
       );

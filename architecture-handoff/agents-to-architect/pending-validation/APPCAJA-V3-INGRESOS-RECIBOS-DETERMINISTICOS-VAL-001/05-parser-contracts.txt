@@ -1,0 +1,69 @@
+# Parser Contracts Test - Gate B2
+
+**Fecha y hora local:** 2026-07-29 18:09:30  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location '...\workspace\backend'; npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-parser.test.ts
+```
+
+## Exit code
+1
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ❯ src/modules/salary-receipts/salary-receipt-parser.test.ts (8 tests | 1 failed) 7ms
+   ✓ salary receipt parser utilities > parses 1.234,56 to exact cents 1ms
+   ✓ salary receipt parser utilities > parses $ 1.234,50 to exact cents 0ms
+   ✓ salary receipt parser utilities > parses 1234.56 to exact cents 0ms
+   ✓ salary receipt parser utilities > parses -250,10 to exact cents 0ms
+   ✓ salary receipt parser utilities > formats exact cents without floating point operations 0ms
+   × salary receipt parser utilities > normalizes line endings and repeated horizontal whitespace 4ms
+   ✓ SalaryReceiptParserRegistry > fails closed when no parser supports the layout 0ms
+   ✓ SalaryReceiptParserRegistry > rejects ambiguous layout detection 0ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+```
+
+## Failed test detail
+```
+FAIL src/modules/salary-receipts/salary-receipt-parser.test.ts > salary receipt parser utilities > normalizes line endings and repeated horizontal whitespace
+AssertionError: expected 'HABER REMUNERATIVO\n\n DESCUENTO 100,…' to be ' HABER REMUNERATIVO\n\n DESCUENTO 100,…' // Object.is equality
+- Expected
++ Received
+-  HABER REMUNERATIVO
++ HABER REMUNERATIVO
+   DESCUENTO 100,00
+
+❯ src/modules/salary-receipts/salary-receipt-parser.test.ts:46:45
+```
+
+## Cobertura verificada
+- Importes argentinos a centavos: ✓
+- Formato desde centavos: ✓
+- Normalización de texto: ✓ (1 test falla)
+- Layout desconocido: ✓
+- Layout ambiguo: ✓
+
+## Duración aproximada
+290ms
+
+## Observaciones
+
+### Fallo detectado
+- **Test:** `normalizes line endings and repeated horizontal whitespace`
+- **Archivo:** `src/modules/salary-receipts/salary-receipt-parser.test.ts:46`
+- **Problema:** El test espera un espacio inicial en la primera línea `' HABER REMUNERATIVO'` pero la función devuelve `'HABER REMUNERATIVO'` (sin espacio inicial)
+
+### Análisis del bug
+- Input: `" HABER   REMUNERATIVO\r\n\r\n  DESCUENTO\t  100,00 "`
+- Esperado: `" HABER REMUNERATIVO\n\n DESCUENTO 100,00"`
+- Recibido: `"HABER REMUNERATIVO\n\n DESCUENTO 100,00"`
+
+La función `normalizeSalaryReceiptText` está eliminando el espacio inicial que debería conservarse.
+
+## Veredicto: FAIL

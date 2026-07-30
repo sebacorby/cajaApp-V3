@@ -1,0 +1,57 @@
+# E2E Not Executed Confirmation
+
+**Fecha de generación:** 2026-07-29 18:10:20  
+**Agente:** opencode (validación técnica)  
+**Sesión:** APPCAJA-V3-INGRESOS-RECIBOS-DETERMINISTICOS-VAL-001
+
+---
+
+## Confirmación explícita
+
+```
+NO SE EJECUTÓ PLAYWRIGHT, CYPRESS NI NINGUNA SUITE E2E.
+```
+
+---
+
+## Detalle de gates ejecutados
+
+| Gate | Tipo | ¿E2E? |
+|------|------|--------|
+| B1 | Build TypeScript | NO |
+| B2 | Test unitario (vitest) | NO |
+| B3 | Test unitario (vitest) | NO |
+| B4 | Test unitario (vitest) | NO |
+| B5 | Test unitario (vitest) | NO |
+| B6 | Test unitario (vitest) | NO |
+| B7 | Test unitario (vitest) | NO |
+| F1 | Typecheck | NO |
+| F2 | Build producción | NO |
+| Static | Inspección código | NO |
+
+---
+
+## Restricciones respetadas
+
+- No se inició backend para tests E2E
+- No se usó Playwright, Cypress ni ninguna suite E2E
+- No se usó Ollama ni APIs compatibles con OpenAI
+- No se ejecutó ninguna prueba contra servicios externos
+
+---
+
+## Confirmación
+
+Yo, agente de validación técnica, confirmo que durante esta sesión de validación:
+
+1. ✅ NO ejecuté Playwright
+2. ✅ NO ejecuté Cypress
+3. ✅ NO ejecuté ninguna suite E2E
+4. ✅ NO usé proveedores IA para validar recibos
+5. ✅ NO modifiqué código fuente
+6. ✅ NO instalé dependencias
+
+---
+
+**Firma:** Agente de validación opencode  
+**Fecha:** 2026-07-29

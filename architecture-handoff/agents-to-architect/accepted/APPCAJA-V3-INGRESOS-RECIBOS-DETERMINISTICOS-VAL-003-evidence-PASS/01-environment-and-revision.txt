@@ -1,0 +1,22 @@
+# Environment and Revision Check
+
+**Fecha:** 2026-07-29 21:07  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Entorno
+
+| Variable | Valor |
+|----------|-------|
+| node | v24.18.0 |
+| npm | 11.16.0 |
+
+## Git
+
+| Check | Valor | Pass |
+|-------|-------|------|
+| Rama actual | feat/ingresos | ✓ |
+| HEAD | d3457dade0d1f8879905c607323e89a4591b7a4d | ✓ |
+| origin/feat/ingresos | d3457dade0d1f8879905c607323e89a4591b7a4d | ✓ |
+| Worktree | limpio | ✓ |
+
+## Veredicto: PASS

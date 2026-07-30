@@ -1,0 +1,30 @@
+# Net Preservation Test - Gate B2
+
+**Fecha:** 2026-07-29 23:05  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts (3 tests) 4ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+```
+
+## Cobertura
+- servicio activo no importa módulos IA ✓
+- servicio activo no crea AiExtractionRun ✓
+- nuevos borradores usan aiRunId: null ✓
+
+## Duración: 452ms
+
+## Veredicto: PASS

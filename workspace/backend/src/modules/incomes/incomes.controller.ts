@@ -11,6 +11,7 @@ import {
   type UpdateIncomeSourceInput,
 } from "./incomes.schemas.js";
 import { incomesService } from "./incomes.service.js";
+import { deleteIncomeSourceCascade } from "./income-source-cascade-delete.service.js";
 
 export const incomesController: FastifyPluginAsync = async (app: FastifyInstance) => {
   app.get("/overview", async (request, reply) => {
@@ -41,7 +42,7 @@ export const incomesController: FastifyPluginAsync = async (app: FastifyInstance
   app.delete("/sources/:sourceId", async (request, reply) => {
     const params = request.params as { sourceId: string };
     const sourceId = validateData(incomeEntityIdSchema, params.sourceId);
-    return reply.send(await incomesService.deleteSource(sourceId));
+    return reply.send(await deleteIncomeSourceCascade(sourceId));
   });
 
   app.post("/events", async (request, reply) => {

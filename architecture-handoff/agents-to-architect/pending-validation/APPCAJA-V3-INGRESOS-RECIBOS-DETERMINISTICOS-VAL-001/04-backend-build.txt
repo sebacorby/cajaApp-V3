@@ -1,0 +1,45 @@
+# Backend Build - Gate B1
+
+**Fecha y hora local:** 2026-07-29 18:09:20  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location 'C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend'; npm run build
+```
+
+## Exit code
+1
+
+## stdout
+```
+> cajaapp-v3-backend@1.0.0 build
+> tsc -p tsconfig.json
+
+src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts(11,59): error TS1470: The 'import.meta' meta-property is not allowed in files which will build into CommonJS output.
+src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts(12,59): error TS1470: The 'import.meta' meta-property is not allowed in files which will build into CommonJS output.
+```
+
+## stderr
+(ninguno adicional - los errores van a stdout)
+
+## Duración aproximada
+~5 segundos
+
+## Observaciones
+
+### Error detectado
+- **Archivo:** `src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts`
+- **Líneas:** 11 y 12
+- **Error TS1470:** `import.meta` no está permitido en archivos que se compilarán a CommonJS
+- **Causa probable:** El archivo usa `import.meta.url` o similar, pero tsconfig.json está configurado para output CommonJS
+
+### Detalle del error
+```
+error TS1470: The 'import.meta' meta-property is not allowed in files which will build into CommonJS output.
+```
+
+### Análisis
+Este es un error de configuración de TypeScript. El archivo de test usa `import.meta` (ESM) pero el proyecto está configurado para compilar a CommonJS.
+
+## Veredicto: FAIL

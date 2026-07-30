@@ -1,0 +1,53 @@
+# Historical Integration Test - Gate B6
+
+**Fecha:** 2026-07-29 20:51  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism tests/salary-receipts/salary-receipts.test.ts
+```
+
+## Exit code: 1
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ❯ tests/salary-receipts/salary-receipts.test.ts (5 tests | 1 failed) 10ms
+   × salary receipt normalization > normalizes Argentine and international decimal amounts 7ms
+     → expected '0.00' to be '1234.56' // Object.is equality
+   ✓ salary receipt normalization > recognizes salary receipt vocabulary 1ms
+   ✓ salary receipt normalization > preserves concept order and calculates authoritative totals 0ms
+   ✓ salary receipt normalization > recalculates the draft after user edits 0ms
+   ✓ salary receipt normalization > builds a stable employer-employee-period identity 0ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+```
+
+## Fallo
+```
+FAIL tests/salary-receipts/salary-receipts.test.ts > salary receipt normalization > normalizes Argentine and international decimal amounts
+AssertionError: expected '0.00' to be '1234.56' // Object.is equality
+Expected: "1234.56"
+Received: "0.00"
+
+❯ tests/salary-receipts/salary-receipts.test.ts:31:47
+   29|   it("normalizes Argentine and international decimal amounts", () => {
+   30|       expect(normalizeSalaryAmount("$ 1.234.567,89")).toBe("1234567.89");
+   31|       expect(normalizeSalaryAmount("1,234.56")).toBe("1234.56");
+   32|       expect(normalizeSalaryAmount("250000")).toBe("250000.00");
+   33|   });
+```
+
+## Análisis
+- `normalizeSalaryAmount("$ 1.234.567,89")` → "1234567.89" ✓
+- `normalizeSalaryAmount("1,234.56")` → "0.00" ✗ (esperado "1234.56")
+- `normalizeSalaryAmount("250000")` → "250000.00" ✓
+
+El test espera que `1,234.56` (formato internacional con coma como separador de miles) se convierta a `"1234.56"`. Pero la función retorna `"0.00"`.
+
+## Duración: 478ms
+
+## Veredicto: FAIL

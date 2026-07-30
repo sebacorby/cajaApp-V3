@@ -1,0 +1,30 @@
+# Real Layouts Test - Gate B3
+
+**Fecha:** 2026-07-29 23:05  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/salary-receipts/real-salary-receipt-layouts.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/real-salary-receipt-layouts.test.ts (3 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+```
+
+## Cobertura
+- Preview consolidado con conceptos `information` conserva `grossAmount`, `deductionsAmount` y `netAmount` ✓
+- FluxIt conserva neto `4472530.00` ✓
+- NTT Data conserva neto `5866997.00` ✓
+
+## Duración: 297ms
+
+## Veredicto: PASS

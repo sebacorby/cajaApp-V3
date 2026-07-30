@@ -1,0 +1,43 @@
+# Deterministic Import Service Test - Gate B4
+
+**Fecha y hora local:** 2026-07-29 18:09:40  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location '...\workspace\backend'; npx vitest run --no-file-parallelism src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts
+```
+
+## Exit code
+0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts (4 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+```
+
+## Cobertura verificada
+- Extracción local: ✓
+- Normalización previa al parser: ✓
+- PDF sin texto utilizable: ✓
+- Líneas monetarias no explicadas: ✓
+- Preview inválido frente al schema canónico: ✓
+
+## Duración aproximada
+318ms
+
+## Observaciones
+
+Todos los tests del servicio de importación determinística pasaron exitosamente. El servicio:
+- Utiliza extracción PDF local (no IA)
+- Realiza normalización antes del parsing
+- Maneja correctamente PDFs sin texto
+- Detecta líneas monetarias no explicadas
+- Valida preview contra schema canónico
+
+## Veredicto: PASS

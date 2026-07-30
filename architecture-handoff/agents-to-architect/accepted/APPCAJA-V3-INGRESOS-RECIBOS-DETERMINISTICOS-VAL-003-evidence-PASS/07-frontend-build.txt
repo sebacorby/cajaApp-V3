@@ -1,0 +1,46 @@
+# Frontend Build - Gate F2
+
+**Fecha:** 2026-07-29 21:07  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\frontend
+
+## Comando
+```powershell
+npm run build
+```
+
+## Exit code: 0
+
+## stdout
+```
+> nextjs_tailwind_shadcn_ts@0.2.0 build
+> npm run typecheck && next build && node -e "..."
+
+> nextjs_tailwind_shadcn_ts@0.2.0 typecheck
+> tsc --noEmit
+
+▲ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1908ms
+  Running TypeScript ...
+  Finished TypeScript in 5.7s ...
+  Collecting page data using 6 workers ...
+  Generating static pages using 6 workers (0/5) ...
+  Generating static pages using 6 workers (5/5) in 460ms
+✓ Generating static pages using 5/5) in 460ms
+ Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/client-log
+└ ○ /test/future-debt
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)   server-rendered on demand
+```
+
+## Duración: ~15 segundos
+
+## Veredicto: PASS

@@ -1,0 +1,46 @@
+# Required Files Materialization Check
+
+**Fecha y hora local:** 2026-07-29 18:09:15  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando exacto
+```powershell
+foreach ($f in $files) { $path = "C:\Users\javie\...\cajaApp-V3\$f"; Write-Host "$f : $(Test-Path $path)" }
+```
+
+## Resultados por archivo
+
+| Archivo | Existencia |
+|---------|------------|
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parser.types.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parser.errors.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parser.utils.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parser.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parsers.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/generic-argentina.salary-receipt.parser.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/deterministic-salary-receipt-import.service.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.base.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipts.service.base.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-parser.test.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/generic-argentina.salary-receipt.parser.test.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/deterministic-salary-receipt-import.service.test.ts | TRUE |
+| workspace/backend/src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts | TRUE |
+| workspace/tests/salary-receipts/salary-receipts.test.ts | **FALSE** |
+
+## Archivo encontrado en ubicación alternativa
+```
+C:\Users\javie\...\cajaApp-V3\workspace\backend\tests\salary-receipts\salary-receipts.test.ts
+```
+
+## Observaciones
+
+- 15 de 16 archivos existen en la ubicación especificada
+- El archivo `workspace/tests/salary-receipts/salary-receipts.test.ts` NO existe
+- El archivo existe en `workspace/backend/tests/salary-receipts/salary-receipts.test.ts`
+- Discrepancia de ruta: la instrucción indica `workspace/tests/` pero el código está en `workspace/backend/tests/`
+
+## Conclusión
+
+**BLOCKED_MATERIALIZATION parcial**: 1 archivo no existe en la ubicación especificada. No se reconstruyeron archivos faltantes.

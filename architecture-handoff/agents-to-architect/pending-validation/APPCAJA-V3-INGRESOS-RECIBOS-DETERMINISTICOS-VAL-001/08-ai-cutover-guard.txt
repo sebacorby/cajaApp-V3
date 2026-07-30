@@ -1,0 +1,41 @@
+# AI Cutover Guard Test - Gate B5
+
+**Fecha y hora local:** 2026-07-29 18:09:45  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando exacto
+```powershell
+Set-Location '...\workspace\backend'; npx vitest run --no-file-parallelism src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts
+```
+
+## Exit code
+0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/salary-receipts/salary-receipt-deterministic-cutover.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+```
+
+## Cobertura verificada
+- El servicio activo de extracción no importa módulos IA: ✓
+- El servicio activo no crea AiExtractionRun: ✓
+- Los nuevos borradores usan aiRunId: null: ✓
+- El recálculo conserva exactitud monetaria: ✓
+
+## Duración aproximada
+314ms
+
+## Observaciones
+
+Todos los tests de guarda de corte IA pasaron exitosamente. El sistema:
+- No utiliza módulos de IA para extracción
+- No crea registros AiExtractionRun
+- Usa aiRunId: null para nuevos borradores
+- Mantiene exactitud monetaria en recálculos
+
+## Veredicto: PASS
