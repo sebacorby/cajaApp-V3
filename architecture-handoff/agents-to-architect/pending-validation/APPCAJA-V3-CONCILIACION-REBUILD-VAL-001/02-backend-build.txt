@@ -1,6 +1,6 @@
-# Backend Build - Gate B1
+# Backend Build - Gate B1 (RETEST)
 
-**Fecha:** 2026-07-30 06:21  
+**Fecha:** 2026-07-30 06:29  
 **Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
 
 ## Comando
@@ -8,29 +8,17 @@
 npm run build
 ```
 
-## Exit code: 1
+## Exit code: 0
 
 ## stdout
 ```
 > cajaapp-v3-backend@1.0.0 build
 > tsc -p tsconfig.json
-
-src/modules/incomes/incomes.service.ts(124,18): error TS2416: Property 'getOverview' in type 'SacAwareIncomesService' is not assignable to the same property in base type 'IncomesService'.
-  Type '(from: string, to: string) => Promise<IncomeOverviewShape>' is not assignable to type '(from: string, to: string) => Promise<{ range: { from: string; to: string; }; currentMonthKey: string; summary: { totalArs: string; totalUsd: string; recurringArs: string; recurringUsd: string; oneOffArs: string; oneOffUsd: string; recurringSources: number; oneOffCount: number; }; sources: { ...; }[]; months: { ...; }[]; }>'.
-    Type 'Promise<IncomeOverviewShape>' is not assignable to type 'Promise<{ range: { from: string; to: string; }; currentMonthKey: string; summary: { totalArs: string; totalUsd: string; recurringArs: string; recurringUsd: string; oneOffArs: string; oneOffUsd: string; recurringSources: number; oneOffCount: number; }; sources: { ...; }[]; months: { ...; }[]; }>'.
-      Type 'IncomeOverviewShape' is not assignable to type '{ range: { from: string; to: string; }; currentMonthKey: string; summary: { totalArs: string; totalUsd: string; recurringArs: string; recurringUsd: string; oneOffArs: string; oneOffUsd: string; recurringSources: number; oneOffCount: number; }; sources: { ...; }[]; months: { ...; }[]; }'.
-        Types of property 'sources' are incompatible.
 ```
 
-## Error detail
-```
-src/modules/incomes/incomes.service.ts(124,18): error TS2416:
-Property 'getOverview' in type 'SacAwareIncomesService' is not assignable to the same property in base type 'IncomesService'.
-```
-
-## Causa
-`SacAwareIncomesService.getOverview()` retorna `Promise<IncomeOverviewShape>` pero la interfaz base espera `Promise<IncomesOverview>` con estructuras de `sources` incompatibles.
+## Nota
+Corrección aplicada: `SacAwareIncomesService.getOverview()` ahora usa `BaseIncomeOverview` tipo inferido del servicio base.
 
 ## Duración: ~5 segundos
 
-## Veredicto: FAIL
+## Veredicto: PASS
