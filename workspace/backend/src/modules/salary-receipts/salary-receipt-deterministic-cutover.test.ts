@@ -72,4 +72,67 @@ describe("deterministic salary receipt cutover", () => {
     expect(preview.items.map((item) => item.displayOrder)).toEqual([1, 2]);
     expect(normalizeSalaryAmount("$ 1.234,56")).toBe("1234.56");
   });
+
+  it("preserves consolidated net pay when detailed concepts are informational", () => {
+    const preview = recalculateSalaryReceiptPreview({
+      version: "salary-receipt-v1",
+      documentType: "salary_receipt_pdf",
+      source: {
+        employerName: "FLUXIT",
+        employerTaxId: null,
+        employeeName: "Persona Prueba",
+        employeeTaxId: null,
+        periodMonthKey: "2026-02",
+        payDate: "2026-03-05",
+        currency: "ARS",
+      },
+      summary: {
+        grossAmount: "5635933.17",
+        deductionsAmount: "1163403.17",
+        netAmount: "4472530.00",
+      },
+      items: [
+        {
+          id: "gross",
+          displayOrder: 1,
+          kind: "information",
+          code: null,
+          label: "Total haberes informado",
+          amount: "5635933.17",
+          sourcePage: 1,
+          originalText: "Totales",
+          confidence: null,
+        },
+        {
+          id: "deductions",
+          displayOrder: 2,
+          kind: "information",
+          code: null,
+          label: "Total descuentos informado",
+          amount: "1163403.17",
+          sourcePage: 1,
+          originalText: "Totales",
+          confidence: null,
+        },
+        {
+          id: "net",
+          displayOrder: 3,
+          kind: "information",
+          code: null,
+          label: "Neto en mano",
+          amount: "4472530.00",
+          sourcePage: 1,
+          originalText: "Neto 4472530.00",
+          confidence: null,
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(preview.summary).toEqual({
+      grossAmount: "5635933.17",
+      deductionsAmount: "1163403.17",
+      netAmount: "4472530.00",
+    });
+  });
 });
