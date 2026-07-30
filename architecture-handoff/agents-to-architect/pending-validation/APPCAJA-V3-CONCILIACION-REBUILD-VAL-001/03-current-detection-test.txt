@@ -1,0 +1,30 @@
+# Current Detection Test - Gate B2
+
+**Fecha:** 2026-07-30 06:21  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3\workspace\backend
+
+## Comando
+```powershell
+npx vitest run --no-file-parallelism src/modules/reconciliation/reconciliation-current-detection.test.ts
+```
+
+## Exit code: 0
+
+## stdout
+```
+ RUN  v3.2.7  C:/Users/javie/Javier.s.corbella Dropbox/Javier Corbella/cajaApp-V3/workspace/backend
+
+ ✓ src/modules/reconciliation/reconciliation-current-detection.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+```
+
+## Cobertura
+- scan exitoso antes de invalidar casos no redetectados ✓
+- invalidación usa lastDetectedAt < scanStartedAt ✓
+- fallo del scan no vacía bandeja vigente ✓
+
+## Duración: 285ms
+
+## Veredicto: PASS

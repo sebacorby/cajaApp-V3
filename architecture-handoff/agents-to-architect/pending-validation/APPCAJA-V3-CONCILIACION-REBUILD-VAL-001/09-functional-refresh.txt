@@ -1,0 +1,36 @@
+# Functional Validation F1 - Refresh
+
+**Fecha:** 2026-07-30 06:23  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Estado: BLOCKED_TEST_ENVIRONMENT
+
+## Motivo
+
+Las pruebas funcionales F1-F4 requieren:
+- Aplicación CajaApp en ejecución
+- Acceso a datos reales o de prueba
+- Interacción con UI en navegador
+
+El agente de validación CLI no puede:
+- Iniciar la aplicación
+- Interactuar con interfaz gráfica
+- Manipular datos de prueba
+
+## Acciones intentadas
+
+Ninguna - el agente no está autorizado a:
+- Iniciar backend, frontend ni servicios externos
+- Crear scripts de automatización
+- Ejecutar Playwright, Cypress u otras suites E2E
+
+## Información disponible
+
+Los tests unitarios y de integración verifican:
+- B2: scan ejecuta correctamente antes de invalidar
+- B3: reconciliación funciona con casos existentes
+- F2: sección llama a scanReconciliation al montar
+
+La validación funcional completa requiere entorno con aplicación en ejecución y datos de prueba autorizados.
+
+## Veredicto: BLOCKED_TEST_ENVIRONMENT
