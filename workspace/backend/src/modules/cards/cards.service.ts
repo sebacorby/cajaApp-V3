@@ -1,4 +1,6 @@
 import { prisma } from "../../db/prisma.js";
+import { NotFoundError } from "../../shared/errors.js";
+import { CardStatementDeleteConflictError } from "./card-statement-delete.errors.js";
 import type { AcceptResult, CardStatementPreview } from "./cards.types.js";
 import { CardsService as BaseCardsService } from "./cards.service.base.js";
 import {
@@ -20,6 +22,15 @@ type RelatedStatement = CardStatementIdentityInput & {
   status: string;
   archivedAt: Date | null;
   createdAt: Date;
+};
+
+export type DeleteStatementResult = {
+  success: true;
+  deletedId: string;
+  deletedStatementId: string;
+  deletedDocumentId: string | null;
+  promotedStatementId: string | null;
+  historyKey: string | null;
 };
 
 function cleanAccountNumber(value: string | null | undefined): string | null {
@@ -45,11 +56,6 @@ export class CardsService extends BaseCardsService {
     draftId: string,
     preview: CardStatementPreview,
   ): Promise<AcceptResult> {
-    // Snapshot every persisted, non-archived statement that is currently part of
-    // the accepted history BEFORE invoking the legacy acceptance path. The base
-    // service still owns persistence of rows/projections, but its historical
-    // period activation rules must not be allowed to make another card account
-    // disappear when a different statement is accepted.
     const preExisting = await prisma.cardStatement.findMany({
       where: {
         archivedAt: null,
@@ -61,7 +67,6 @@ export class CardsService extends BaseCardsService {
     const result = await super.acceptDraft(draftId, preview);
     const enriched = preview as PreviewWithAccountIdentity;
     const accountNumber = cleanAccountNumber(enriched.source.accountNumber);
-
     const current = await prisma.cardStatement.findUnique({
       where: { id: result.statementId },
       select: {
@@ -82,15 +87,9 @@ export class CardsService extends BaseCardsService {
     });
     if (!current) return result;
 
-    // Re-canonicalize the complete accepted history, not only the statement that
-    // was just imported. This is the critical distinction for multi-card:
-    // Visa and Mastercard are separate summary groups and therefore both remain
-    // accepted. Only true duplicates of the SAME canonical summary are versioned
-    // old -> superseded / newest -> accepted.
     const candidateIds = [
       ...new Set([...preExisting.map((statement) => statement.id), current.id]),
     ];
-
     const candidates = await prisma.cardStatement.findMany({
       where: { id: { in: candidateIds } },
       select: {
@@ -118,8 +117,6 @@ export class CardsService extends BaseCardsService {
     const groups = groupByCanonicalSummary(normalizedCandidates);
 
     await prisma.$transaction(async (tx) => {
-      // Break any legacy history-key/version collisions first. Each statement gets
-      // a temporary unique history namespace before canonical keys are assigned.
       for (const statement of normalizedCandidates) {
         await tx.cardStatement.update({
           where: { id: statement.id },
@@ -158,6 +155,90 @@ export class CardsService extends BaseCardsService {
       }
     });
 
+    return result;
+  }
+
+  override async deleteStatement(statementId: string): Promise<DeleteStatementResult> {
+    const result = await prisma.$transaction(async (tx) => {
+      const target = await tx.cardStatement.findUnique({
+        where: { id: statementId },
+        select: {
+          id: true,
+          documentId: true,
+          historyKey: true,
+          version: true,
+          status: true,
+          isActiveForPeriod: true,
+        },
+      });
+
+      if (!target) return null;
+      if (!["accepted", "superseded", "archived"].includes(target.status)) {
+        throw new CardStatementDeleteConflictError(target.status);
+      }
+
+      const replacement =
+        target.isActiveForPeriod && target.historyKey
+          ? await tx.cardStatement.findFirst({
+              where: {
+                historyKey: target.historyKey,
+                id: { not: target.id },
+                status: { in: ["accepted", "superseded", "archived"] },
+              },
+              orderBy: [
+                { version: "desc" },
+                { createdAt: "desc" },
+                { id: "desc" },
+              ],
+              select: { id: true },
+            })
+          : null;
+
+      if (replacement) {
+        await tx.manualCardPurchase.updateMany({
+          where: { statementId: target.id },
+          data: { statementId: replacement.id },
+        });
+        await tx.cardInstallmentProjection.updateMany({
+          where: { statementId: target.id, isManual: true },
+          data: { statementId: replacement.id },
+        });
+      }
+
+      await tx.cardStatement.delete({ where: { id: target.id } });
+
+      if (replacement) {
+        await tx.cardStatement.update({
+          where: { id: replacement.id },
+          data: {
+            status: "accepted",
+            isActiveForPeriod: true,
+            archivedAt: null,
+            archivedReason: null,
+          },
+        });
+      }
+
+      const [otherStatements, salaryReceipts] = await Promise.all([
+        tx.cardStatement.count({ where: { documentId: target.documentId } }),
+        tx.salaryReceipt.count({ where: { documentId: target.documentId } }),
+      ]);
+      const canDeleteDocument = otherStatements === 0 && salaryReceipts === 0;
+      if (canDeleteDocument) {
+        await tx.uploadedDocument.delete({ where: { id: target.documentId } });
+      }
+
+      return {
+        success: true as const,
+        deletedId: target.id,
+        deletedStatementId: target.id,
+        deletedDocumentId: canDeleteDocument ? target.documentId : null,
+        promotedStatementId: replacement?.id ?? null,
+        historyKey: target.historyKey,
+      };
+    });
+
+    if (!result) throw new NotFoundError("Statement");
     return result;
   }
 }
