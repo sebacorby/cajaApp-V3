@@ -5,7 +5,19 @@ import type {
 } from "./incomes-api";
 
 function amount(value: string | null | undefined): number {
-  const normalized = String(value ?? "0").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  const compact = String(value ?? "0").replace(/\s/g, "").replace(/[^\d,.-]/g, "");
+  if (!compact) return 0;
+  const comma = compact.lastIndexOf(",");
+  const dot = compact.lastIndexOf(".");
+  const decimalIndex = Math.max(comma, dot);
+  let normalized: string;
+  if (decimalIndex >= 0 && compact.length - decimalIndex - 1 <= 2) {
+    normalized = `${compact.slice(0, decimalIndex).replace(/[.,]/g, "")}.${compact
+      .slice(decimalIndex + 1)
+      .replace(/[.,]/g, "")}`;
+  } else {
+    normalized = compact.replace(/[.,]/g, "");
+  }
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -22,6 +34,16 @@ export interface IncomeSourcePresentation {
   hasAutomaticIncrease: boolean;
 }
 
+export interface IncomeExtraPresentation {
+  id: string;
+  kind: string;
+  label: string;
+  amount: string;
+  currency: "ARS" | "USD";
+  status: "actual" | "projected";
+  notes: string | null;
+}
+
 export interface IncomeMonthPresentation {
   monthKey: string;
   label: string;
@@ -30,6 +52,7 @@ export interface IncomeMonthPresentation {
   realArs: string;
   estimatedArs: string;
   sourceCount: number;
+  extras: IncomeExtraPresentation[];
 }
 
 export interface IncomeDashboardPresentation {
@@ -77,23 +100,29 @@ function sourcePresentation(
 }
 
 function monthPresentation(month: IncomeMonthProjection): IncomeMonthPresentation | null {
-  const actualItems = month.recurring.filter(
+  const actualRecurring = month.recurring.filter(
     (item) => item.status === "actual" && amount(item.amount) > 0,
   );
-  const estimatedItems = month.recurring.filter(
+  const projectedRecurring = month.recurring.filter(
     (item) => item.status !== "actual" && amount(item.amount) > 0,
   );
-  const realArs = actualItems
+  const actualOneOffs = month.oneOffs.filter(
+    (item) => item.status === "actual" && amount(item.amount) > 0,
+  );
+  const projectedOneOffs = month.oneOffs.filter(
+    (item) => item.status !== "actual" && amount(item.amount) > 0,
+  );
+
+  const realArs = [...actualRecurring, ...actualOneOffs]
     .filter((item) => item.currency === "ARS")
     .reduce((total, item) => total + amount(item.amount), 0);
-  const estimatedArs = estimatedItems
+  const estimatedArs = [...projectedRecurring, ...projectedOneOffs]
     .filter((item) => item.currency === "ARS")
     .reduce((total, item) => total + amount(item.amount), 0);
 
   if (
     realArs === 0 &&
     estimatedArs === 0 &&
-    amount(month.oneOffArs) === 0 &&
     amount(month.totalUsd) === 0
   ) {
     return null;
@@ -106,7 +135,20 @@ function monthPresentation(month: IncomeMonthProjection): IncomeMonthPresentatio
     totalUsd: month.totalUsd,
     realArs: realArs.toFixed(2),
     estimatedArs: estimatedArs.toFixed(2),
-    sourceCount: month.recurring.filter((item) => amount(item.amount) > 0).length,
+    sourceCount:
+      month.recurring.filter((item) => amount(item.amount) > 0).length +
+      month.oneOffs.filter((item) => amount(item.amount) > 0).length,
+    extras: month.oneOffs
+      .filter((item) => amount(item.amount) > 0)
+      .map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        label: item.label,
+        amount: item.amount,
+        currency: item.currency,
+        status: item.status,
+        notes: item.notes,
+      })),
   };
 }
 
@@ -121,14 +163,20 @@ export function buildIncomeDashboardPresentation(
   );
 
   const currentRealArs = currentMonth
-    ? currentMonth.recurring
-        .filter((item) => item.currency === "ARS" && item.status === "actual")
+    ? [
+        ...currentMonth.recurring.filter((item) => item.status === "actual"),
+        ...currentMonth.oneOffs.filter((item) => item.status === "actual"),
+      ]
+        .filter((item) => item.currency === "ARS")
         .reduce((total, item) => total + amount(item.amount), 0)
         .toFixed(2)
     : "0.00";
   const nextEstimatedArs = nextMonth
-    ? nextMonth.recurring
-        .filter((item) => item.currency === "ARS" && item.status !== "actual")
+    ? [
+        ...nextMonth.recurring.filter((item) => item.status !== "actual"),
+        ...nextMonth.oneOffs.filter((item) => item.status !== "actual"),
+      ]
+        .filter((item) => item.currency === "ARS")
         .reduce((total, item) => total + amount(item.amount), 0)
         .toFixed(2)
     : "0.00";

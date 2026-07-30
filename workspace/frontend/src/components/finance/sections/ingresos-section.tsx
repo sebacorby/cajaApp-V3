@@ -106,7 +106,7 @@ export function IngresosSection() {
             Sueldos e ingresos
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Cada sueldo aparece una sola vez. El importe principal es siempre el último neto real confirmado.
+            Cada sueldo aparece una sola vez. Los extras semestrales se muestran separados del neto mensual.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ export function IngresosSection() {
               icon={CalendarDays}
               label="Próximo estimado"
               value={money(view.nextEstimatedArs)}
-              detail="Sólo proyecciones con valor"
+              detail="Incluye extras sólo cuando corresponden"
             />
             <MetricCard
               icon={WalletCards}
@@ -238,7 +238,7 @@ export function IngresosSection() {
                         {source.nextEstimatedAmount ? (
                           <div className="rounded-xl border border-border/70 bg-background/40 px-3 py-2 text-right">
                             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                              Próximo estimado
+                              Próximo sueldo estimado
                             </p>
                             <p className="mt-1 font-semibold tabular-nums">
                               {money(source.nextEstimatedAmount, source.currency)}
@@ -274,22 +274,35 @@ export function IngresosSection() {
                   Próximos ingresos
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Sólo aparecen meses con importes distintos de cero. Real y estimado se muestran una vez.
+                  El sueldo mensual y los extras como el SAC se muestran por separado.
                 </p>
               </CardHeader>
               <CardContent className="p-5 pt-0">
                 {view.months.length > 0 ? (
                   <div className="divide-y divide-border/60">
-                    {view.months.slice(0, 8).map((month) => (
+                    {view.months.slice(0, 12).map((month) => (
                       <div
                         key={month.monthKey}
-                        className="grid gap-2 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-6"
+                        className="grid gap-3 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-6"
                       >
                         <div>
                           <p className="font-medium capitalize">{month.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            {month.sourceCount} {month.sourceCount === 1 ? "fuente" : "fuentes"}
+                            {month.sourceCount} {month.sourceCount === 1 ? "componente" : "componentes"}
                           </p>
+                          {month.extras.length > 0 ? (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {month.extras.map((extra) => (
+                                <span
+                                  key={extra.id}
+                                  className="rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-xs text-emerald-200"
+                                  title={extra.notes ?? undefined}
+                                >
+                                  {extra.label}: {money(extra.amount, extra.currency)} · {extra.status === "actual" ? "real" : "estimado"}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
                         </div>
                         <div className="text-sm sm:text-right">
                           {Number(month.realArs) > 0 ? (

@@ -5,6 +5,14 @@ import type {
 import { formatSalaryAmountFromCents } from "./salary-receipt-parser.utils.js";
 import type { SalaryReceiptItem } from "./salary-receipts.types.js";
 
+export interface NetOnlySalaryReceiptExtraItem {
+  id: string;
+  label: string;
+  amountCents: number;
+  originalText: string;
+  code?: string | null;
+}
+
 export interface NetOnlySalaryReceiptData {
   parserId: string;
   parserVersion: string;
@@ -22,6 +30,7 @@ export interface NetOnlySalaryReceiptData {
   durationMs: number;
   warnings?: string[];
   netOriginalText: string;
+  extraItems?: NetOnlySalaryReceiptExtraItem[];
 }
 
 function informationItem(
@@ -30,12 +39,13 @@ function informationItem(
   label: string,
   cents: number,
   originalText: string,
+  code: string | null = null,
 ): SalaryReceiptItem {
   return {
     id,
     displayOrder,
     kind: "information",
-    code: null,
+    code,
     label,
     amount: formatSalaryAmountFromCents(cents),
     sourcePage: 1,
@@ -74,6 +84,18 @@ export function buildNetOnlySalaryReceiptResult(
       ),
     );
   }
+  for (const extra of data.extraItems ?? []) {
+    items.push(
+      informationItem(
+        extra.id,
+        items.length + 1,
+        extra.label,
+        extra.amountCents,
+        extra.originalText,
+        extra.code ?? null,
+      ),
+    );
+  }
   items.push(
     informationItem(
       `${data.parserId}-net`,
@@ -86,7 +108,7 @@ export function buildNetOnlySalaryReceiptResult(
 
   if (data.grossCents === undefined || data.deductionsCents === undefined) {
     warnings.push(
-      "El recibo se importó por neto en mano. El detalle de haberes y descuentos quedó pendiente para una evolución futura del parser.",
+      "El recibo se importó por neto en mano. El detalle completo quedó preservado en el PDF para una evolución futura del parser.",
     );
   }
 

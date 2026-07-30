@@ -3,11 +3,15 @@ import type {
   SalaryReceiptParser,
   SalaryReceiptParserInput,
 } from "./salary-receipt-parser.types.js";
-import { parseSalaryAmountToCents, splitSalaryReceiptLines } from "./salary-receipt-parser.utils.js";
+import {
+  parseSalaryAmountToCents,
+  splitSalaryReceiptLines,
+} from "./salary-receipt-parser.utils.js";
 import {
   buildNetOnlySalaryReceiptResult,
   localDateToIso,
   normalizeReceiptTaxId,
+  type NetOnlySalaryReceiptExtraItem,
 } from "./salary-receipt-net-only.js";
 
 function findLine(lines: string[], pattern: RegExp): string | null {
@@ -19,9 +23,15 @@ function capture(line: string | null, pattern: RegExp): string | null {
   return line.match(pattern)?.[1]?.trim() ?? null;
 }
 
+function lastMonetaryValue(line: string | null): string | null {
+  if (!line) return null;
+  const values = line.match(/-?(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d{1,2}|\.\d{1,2})/g);
+  return values?.at(-1) ?? null;
+}
+
 export class NttDataSalaryReceiptParser implements SalaryReceiptParser {
   readonly id = "ntt-data-argentina-v1";
-  readonly version = "1.0.0";
+  readonly version = "1.1.0";
 
   supports(input: SalaryReceiptParserInput): boolean {
     const text = input.rawText.toUpperCase().replace(/\s+/g, " ");
@@ -80,6 +90,23 @@ export class NttDataSalaryReceiptParser implements SalaryReceiptParser {
         : undefined;
     const deductionsCents = totals ? parseSalaryAmountToCents(totals[3]) : undefined;
 
+    const sacLine = findLine(
+      lines,
+      /\b(?:S\.?\s*A\.?\s*C\.?|SUELDO\s+ANUAL\s+COMPLEMENTARIO|AGUINALDO)\b/i,
+    );
+    const sacValue = lastMonetaryValue(sacLine);
+    const extraItems: NetOnlySalaryReceiptExtraItem[] = sacValue
+      ? [
+          {
+            id: `${this.id}-sac`,
+            code: "SAC",
+            label: "Sueldo anual complementario (SAC)",
+            amountCents: parseSalaryAmountToCents(sacValue),
+            originalText: sacLine ?? `SAC ${sacValue}`,
+          },
+        ]
+      : [];
+
     return buildNetOnlySalaryReceiptResult({
       parserId: this.id,
       parserVersion: this.version,
@@ -96,6 +123,7 @@ export class NttDataSalaryReceiptParser implements SalaryReceiptParser {
       sourceLineCount: lines.length,
       durationMs: Date.now() - startedAt,
       netOriginalText: netLine ?? `NETO A COBRAR ${netValue}`,
+      extraItems,
       warnings: [
         "El PDF original se conserva como fuente para futuros cálculos y parsers de conceptos detallados.",
       ],
