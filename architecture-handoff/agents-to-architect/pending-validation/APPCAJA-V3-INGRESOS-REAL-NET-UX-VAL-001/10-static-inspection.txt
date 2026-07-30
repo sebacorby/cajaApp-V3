@@ -1,0 +1,30 @@
+# Static Inspection Results
+
+**Fecha:** 2026-07-29 23:06  
+**Working directory:** C:\Users\javie\Javier.s.corbella Dropbox\Javier Corbella\cajaApp-V3
+
+## Comando
+```powershell
+Select-String -Path 'workspace/frontend/src/components/finance/sections/ingresos-section.tsx' -Pattern 'incomes-redesigned-section'
+Select-String -Path 'workspace/frontend/src/components/finance/sections/ingresos-section.tsx' -Pattern 'Administrar fuentes, importaciones y ajustes'
+Select-String -Path 'workspace/frontend/src/components/finance/sections/ingresos-section.tsx' -Pattern 'ingresos-section.base'
+Select-String -Path 'workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts' -Pattern 'Neto en mano'
+```
+
+## Resultados
+
+| Patrón | Archivo | Resultado |
+|--------|---------|-----------|
+| incomes-redesigned-section | ingresos-section.tsx:53 | ✓ |
+| Administrar fuentes, importaciones y ajustes | ingresos-section.tsx:195 | ✓ |
+| ingresos-section.base | ingresos-section.tsx:10 (import) | ✓ |
+| Neto en mano | salary-receipt-extraction.service.ts:92 | ✓ |
+
+## Análisis
+
+- Vista principal usa `incomes-redesigned-section` ✓
+- Texto "Administrar fuentes, importaciones y ajustes" presente ✓
+- Administración previa disponible via `ingresos-section.base.tsx` ✓
+- Patrón "neto en mano" reconocido en servicio de extracción ✓
+
+## Veredicto: PASS
