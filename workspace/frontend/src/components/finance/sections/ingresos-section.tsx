@@ -1,13 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Banknote, CalendarDays, ChevronDown, RefreshCw, WalletCards } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Banknote,
+  CalendarDays,
+  FileUp,
+  RefreshCw,
+  Trash2,
+  WalletCards,
+  X,
+} from "lucide-react";
+import { SalaryReceiptsPanel } from "@/components/finance/imports/salary-receipts-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFinancialAmount } from "@/lib/finance/financial-amount";
-import { getIncomeOverview, type IncomeOverview } from "@/lib/finance/incomes-api";
+import {
+  deleteIncomeSource,
+  getIncomeOverview,
+  type IncomeOverview,
+} from "@/lib/finance/incomes-api";
 import { buildIncomeDashboardPresentation } from "@/lib/finance/income-presentation";
-import { IngresosSection as IngresosSectionBase } from "./ingresos-section.base";
 
 function monthKeyWithOffset(offset: number): string {
   const now = new Date();
@@ -23,60 +35,127 @@ export function IngresosSection() {
   const [overview, setOverview] = useState<IncomeOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setOverview(await getIncomeOverview(monthKeyWithOffset(-3), monthKeyWithOffset(12)));
+      setOverview(
+        await getIncomeOverview(monthKeyWithOffset(-6), monthKeyWithOffset(12)),
+      );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudieron cargar los ingresos.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "No se pudieron cargar los ingresos.",
+      );
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   const view = useMemo(
     () => (overview ? buildIncomeDashboardPresentation(overview) : null),
     [overview],
   );
 
+  async function removeSource(sourceId: string, sourceName: string) {
+    const confirmed = window.confirm(
+      `¿Eliminar “${sourceName}”? Se eliminarán también sus recibos, valores reales, proyecciones y archivos asociados.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(sourceId);
+    setError(null);
+    try {
+      await deleteIncomeSource(sourceId);
+      await load();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "No se pudo eliminar el ingreso.",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (loading && !view) {
-    return <div className="py-16 text-center text-sm text-muted-foreground">Cargando ingresos…</div>;
+    return (
+      <div className="py-16 text-center text-sm text-muted-foreground">
+        Cargando ingresos…
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6" data-testid="incomes-redesigned-section">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-6" data-testid="incomes-single-view">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-400/80">Ingresos</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Tu dinero, ordenado por realidad</h1>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-400/80">
+            Ingresos
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">
+            Sueldos e ingresos
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Primero ves lo que realmente cobraste. Las estimaciones y ajustes quedan en segundo plano.
+            Cada sueldo aparece una sola vez. El importe principal es siempre el último neto real confirmado.
           </p>
         </div>
-        <Button variant="outline" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
-          Actualizar
-        </Button>
-      </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </Button>
+          <Button onClick={() => setImporting((current) => !current)}>
+            {importing ? <X className="mr-2 size-4" /> : <FileUp className="mr-2 size-4" />}
+            {importing ? "Cerrar carga" : "Cargar o reemplazar recibo"}
+          </Button>
+        </div>
+      </header>
 
       {error ? (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {error}
         </div>
       ) : null}
 
+      {importing ? (
+        <Card className="border-emerald-500/20 bg-card/90 shadow-sm">
+          <CardHeader className="border-b border-border/60">
+            <CardTitle className="text-lg">Cargar recibo de sueldo</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Una nueva carga reemplaza el valor del mismo período y recalcula la fuente asociada.
+            </p>
+          </CardHeader>
+          <CardContent className="p-5">
+            <SalaryReceiptsPanel
+              sources={overview?.sources ?? []}
+              onAccepted={() => {
+                setImporting(false);
+                void load();
+              }}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
       {view ? (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 md:grid-cols-3" aria-label="Resumen de ingresos">
             <MetricCard
               icon={Banknote}
-              label="Ingreso real del mes"
+              label="Cobrado este mes"
               value={money(view.currentRealArs)}
               detail={view.currentMonthKey}
             />
@@ -84,121 +163,168 @@ export function IngresosSection() {
               icon={CalendarDays}
               label="Próximo estimado"
               value={money(view.nextEstimatedArs)}
-              detail="Sólo si existe una proyección distinta de cero"
+              detail="Sólo proyecciones con valor"
             />
             <MetricCard
               icon={WalletCards}
-              label="Fuentes activas"
+              label="Sueldos activos"
               value={String(view.activeSources)}
-              detail="Sueldos y otros ingresos recurrentes"
+              detail="Una tarjeta por fuente"
             />
-          </div>
+          </section>
 
-          <Card className="overflow-hidden border-emerald-500/10 bg-card/80 shadow-sm">
-            <CardHeader className="border-b border-border/60">
-              <CardTitle className="text-lg">Fuentes de ingreso</CardTitle>
-              <p className="text-sm text-muted-foreground">Cada fuente muestra su último neto real confirmado.</p>
-            </CardHeader>
-            <CardContent className="grid gap-4 p-5 lg:grid-cols-2">
-              {view.sources.map((source) => (
-                <div key={source.id} className="rounded-2xl border border-border/70 bg-background/40 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{source.name}</h3>
-                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
-                          {source.active ? "Activa" : "Pausada"}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{source.employer}</p>
-                    </div>
-                    <span className="rounded-xl bg-emerald-500/10 p-2 text-emerald-300">
-                      <Banknote className="size-5" />
-                    </span>
-                  </div>
-
-                  <div className="mt-5">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Último neto real</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums">
-                      {source.lastRealAmount ? money(source.lastRealAmount, source.currency) : "Sin valor real"}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {source.lastRealMonthKey ? `Período ${source.lastRealMonthKey}` : "Todavía no hay un recibo aceptado"}
-                    </p>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full border px-2 py-1">
-                      {source.hasAutomaticIncrease ? "Con aumento automático" : "Sin aumento automático"}
-                    </span>
-                    {source.nextEstimatedAmount ? (
-                      <span className="rounded-full border px-2 py-1">
-                        Próximo: {money(source.nextEstimatedAmount, source.currency)}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-emerald-500/10 bg-card/80 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Calendario de ingresos</CardTitle>
+          <section className="space-y-3" aria-labelledby="salary-sources-title">
+            <div>
+              <h2 id="salary-sources-title" className="text-lg font-semibold">
+                Tus sueldos
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Se muestran únicamente meses con importes reales o estimados distintos de cero.
+                El último recibo aceptado define el valor real de cada fuente.
               </p>
-            </CardHeader>
-            <CardContent className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-              {view.months.length > 0 ? (
-                view.months.map((month) => (
-                  <div key={month.monthKey} className="rounded-2xl border border-border/70 bg-background/40 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">{month.monthKey}</p>
-                        <h3 className="mt-1 font-semibold capitalize">{month.label}</h3>
-                      </div>
-                      <p className="font-semibold tabular-nums">{money(month.totalArs)}</p>
-                    </div>
-                    <div className="mt-4 space-y-2 text-sm">
-                      {Number(month.realArs) > 0 ? (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Real</span>
-                          <span className="tabular-nums text-emerald-300">{money(month.realArs)}</span>
+            </div>
+
+            {view.sources.length > 0 ? (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {view.sources.map((source) => (
+                  <Card
+                    key={source.id}
+                    className="border-emerald-500/10 bg-card/80 shadow-sm"
+                    data-testid={`income-source-${source.id}`}
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-lg font-semibold">{source.name}</h3>
+                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
+                              {source.active ? "Activa" : "Pausada"}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {source.employer}
+                          </p>
                         </div>
-                      ) : null}
-                      {Number(month.estimatedArs) > 0 ? (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Estimado</span>
-                          <span className="tabular-nums">{money(month.estimatedArs)}</span>
-                        </div>
-                      ) : null}
-                      <div className="flex justify-between gap-3 border-t pt-2 text-xs text-muted-foreground">
-                        <span>Fuentes con valor</span>
-                        <span>{month.sourceCount}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => void removeSource(source.id, source.name)}
+                          disabled={deletingId === source.id}
+                          aria-label={`Eliminar ${source.name}`}
+                        >
+                          {deletingId === source.id ? (
+                            <RefreshCw className="size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
+                        </Button>
                       </div>
-                    </div>
+
+                      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Último neto real
+                          </p>
+                          <p className="mt-1 text-3xl font-bold tabular-nums">
+                            {source.lastRealAmount
+                              ? money(source.lastRealAmount, source.currency)
+                              : "Sin recibo aceptado"}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {source.lastRealMonthKey
+                              ? `Período ${source.lastRealMonthKey}`
+                              : "Cargá un recibo para establecer el valor real"}
+                          </p>
+                        </div>
+                        {source.nextEstimatedAmount ? (
+                          <div className="rounded-xl border border-border/70 bg-background/40 px-3 py-2 text-right">
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                              Próximo estimado
+                            </p>
+                            <p className="mt-1 font-semibold tabular-nums">
+                              {money(source.nextEstimatedAmount, source.currency)}
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed bg-card/50">
+                <CardContent className="flex flex-col items-center px-6 py-12 text-center">
+                  <Banknote className="size-10 text-muted-foreground" />
+                  <h3 className="mt-4 font-semibold">Todavía no hay sueldos cargados</h3>
+                  <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                    Cargá un recibo y CajaApp creará una única fuente con su neto real.
+                  </p>
+                  <Button className="mt-5" onClick={() => setImporting(true)}>
+                    <FileUp className="mr-2 size-4" />
+                    Cargar primer recibo
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+
+          <section aria-labelledby="income-calendar-title">
+            <Card className="border-emerald-500/10 bg-card/80 shadow-sm">
+              <CardHeader>
+                <CardTitle id="income-calendar-title" className="text-lg">
+                  Próximos ingresos
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Sólo aparecen meses con importes distintos de cero. Real y estimado se muestran una vez.
+                </p>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                {view.months.length > 0 ? (
+                  <div className="divide-y divide-border/60">
+                    {view.months.slice(0, 8).map((month) => (
+                      <div
+                        key={month.monthKey}
+                        className="grid gap-2 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-6"
+                      >
+                        <div>
+                          <p className="font-medium capitalize">{month.label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {month.sourceCount} {month.sourceCount === 1 ? "fuente" : "fuentes"}
+                          </p>
+                        </div>
+                        <div className="text-sm sm:text-right">
+                          {Number(month.realArs) > 0 ? (
+                            <p>
+                              <span className="text-muted-foreground">Real </span>
+                              <span className="font-medium tabular-nums text-emerald-300">
+                                {money(month.realArs)}
+                              </span>
+                            </p>
+                          ) : null}
+                          {Number(month.estimatedArs) > 0 ? (
+                            <p>
+                              <span className="text-muted-foreground">Estimado </span>
+                              <span className="font-medium tabular-nums">
+                                {money(month.estimatedArs)}
+                              </span>
+                            </p>
+                          ) : null}
+                        </div>
+                        <p className="text-lg font-semibold tabular-nums sm:min-w-40 sm:text-right">
+                          {money(month.totalArs)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                  Todavía no hay meses con importes relevantes.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className="rounded-2xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+                    No hay ingresos reales o estimados para mostrar.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
         </>
       ) : null}
-
-      <details className="group rounded-2xl border border-border/70 bg-card/60">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 font-medium">
-          Administrar fuentes, importaciones y ajustes
-          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="border-t border-border/60 p-4">
-          <IngresosSectionBase />
-        </div>
-      </details>
     </div>
   );
 }
@@ -219,7 +345,9 @@ function MetricCard({
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {label}
+            </p>
             <p className="mt-2 text-2xl font-bold tabular-nums">{value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
           </div>
