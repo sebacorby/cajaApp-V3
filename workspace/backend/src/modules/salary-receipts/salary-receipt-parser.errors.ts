@@ -5,7 +5,7 @@ export class UnsupportedSalaryReceiptLayoutError extends AppError {
   constructor() {
     super(
       "SALARY_RECEIPT_LAYOUT_UNSUPPORTED",
-      "El formato de este recibo todavía no está soportado.",
+      "El formato de este recibo todavía no está soportado por el parser determinístico. Eliminá el borrador fallido desde Importaciones y conservá un RAW anonimizado de pdfplumber para agregar este layout sin exponer datos personales.",
       422,
     );
     this.name = "UnsupportedSalaryReceiptLayoutError";
@@ -16,7 +16,7 @@ export class AmbiguousSalaryReceiptLayoutError extends AppError {
   constructor(public readonly parserIds: string[]) {
     super(
       "SALARY_RECEIPT_LAYOUT_AMBIGUOUS",
-      `Más de un parser reconoce el recibo: ${parserIds.join(", ")}.`,
+      `Más de un parser reconoce el recibo: ${parserIds.join(", ")}. No se importó ningún dato.`,
       422,
     );
     this.name = "AmbiguousSalaryReceiptLayoutError";
@@ -27,7 +27,7 @@ export class SalaryReceiptTextExtractionEmptyError extends AppError {
   constructor() {
     super(
       "SALARY_RECEIPT_TEXT_EXTRACTION_EMPTY",
-      "El PDF no contiene texto utilizable para interpretar el recibo.",
+      "El PDF no contiene texto utilizable. Puede ser un documento escaneado; OCR no está habilitado y no se usará IA como fallback.",
       422,
     );
     this.name = "SalaryReceiptTextExtractionEmptyError";
@@ -47,9 +47,12 @@ export class SalaryReceiptPreviewValidationError extends AppError {
 
 export class SalaryReceiptParserIncompleteError extends AppError {
   constructor(public readonly diagnostics: SalaryReceiptParseDiagnostics) {
+    const missing = diagnostics.requiredFieldsMissing.length
+      ? diagnostics.requiredFieldsMissing.join(", ")
+      : "ninguno";
     super(
       "SALARY_RECEIPT_PARSER_INCOMPLETE",
-      "El parser no pudo interpretar todas las líneas monetarias relevantes.",
+      `El parser ${diagnostics.parserId}@${diagnostics.parserVersion} no pudo completar el recibo. Campos faltantes: ${missing}. Líneas monetarias sin explicar: ${diagnostics.unexplainedMonetaryLineCount}. No se importó ningún dato.`,
       422,
     );
     this.name = "SalaryReceiptParserIncompleteError";
@@ -64,7 +67,7 @@ export class SalaryReceiptTotalsMismatchError extends AppError {
   ) {
     super(
       "SALARY_RECEIPT_TOTALS_MISMATCH",
-      `El total ${field} impreso no coincide con el total calculado.`,
+      `El total ${field} impreso (${printedCents} centavos) no coincide con el total calculado (${calculatedCents} centavos). No se importó ningún dato.`,
       422,
     );
     this.name = "SalaryReceiptTotalsMismatchError";
