@@ -8,11 +8,11 @@
 
 **Purpose**: fijar contratos de prompt/configuración y tipos compartidos sin tocar todavía dominio financiero.
 
-- [ ] T001 Crear prompt contractual versionado del agente en `contracts/prompts/agent/01-agent-system.md` con reglas PRD §26 y sin secretos/rutas físicas.
-- [ ] T002 Agregar configuración `AGENT_*` y `AGENT_PROMPTS_DIR` con defaults del PRD en `workspace/backend/src/config/env.ts` y documentarla en `workspace/backend/.env.example`.
-- [ ] T003 Crear contrato `AgentChatProvider` y tipos de mensajes/tool calls/stream en `workspace/backend/src/modules/ai/agent/agent-chat-provider.ts`.
-- [ ] T004 Crear tipos transversales de run, eventos, riesgo y referencias en `workspace/backend/src/modules/agent-chat/agent-types.ts`.
-- [ ] T005 Crear schemas Zod base de IDs, conversación, mensaje, run y approval en `workspace/backend/src/modules/agent-chat/agent-chat.schemas.ts`.
+- [X] T001 Crear prompt contractual versionado del agente en `contracts/prompts/agent/01-agent-system.md` con reglas PRD §26 y sin secretos/rutas físicas.
+- [X] T002 Agregar configuración `AGENT_*` y `AGENT_PROMPTS_DIR` con defaults del PRD en `workspace/backend/src/config/env.ts` y documentarla en `workspace/backend/.env.example`.
+- [X] T003 Crear contrato `AgentChatProvider` y tipos de mensajes/tool calls/stream en `workspace/backend/src/modules/ai/agent/agent-chat-provider.ts`.
+- [X] T004 Crear tipos transversales de run, eventos, riesgo y referencias en `workspace/backend/src/modules/agent-chat/agent-types.ts`.
+- [X] T005 Crear schemas Zod base de IDs, conversación, mensaje, run y approval en `workspace/backend/src/modules/agent-chat/agent-chat.schemas.ts`.
 
 **Checkpoint**: contratos base compilables y sin dependencia nueva.
 

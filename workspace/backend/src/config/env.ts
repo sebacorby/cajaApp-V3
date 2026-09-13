@@ -220,6 +220,14 @@ const envSchema = z.object({
   AI_ADVISOR_MAX_CONTEXT_CHARACTERS: z.coerce.number().int().min(10_000).max(500_000).default(80_000),
 
 
+  AGENT_PROMPTS_DIR: z.string().default("../../contracts/prompts/agent"),
+  AGENT_MAX_CONTEXT_CHARACTERS: z.coerce.number().int().min(10_000).max(1_000_000).default(200_000),
+  AGENT_MAX_TOOL_RESULT_CHARACTERS: z.coerce.number().int().min(1_000).max(500_000).default(50_000),
+  AGENT_RECENT_MESSAGES: z.coerce.number().int().min(1).max(500).default(40),
+  AGENT_MAX_STEPS_PER_RUN: z.coerce.number().int().min(1).max(128).default(32),
+  AGENT_STREAM_HEARTBEAT_MS: z.coerce.number().int().min(1_000).max(30_000).default(5_000),
+
+
   CARD_STATEMENT_PROMPTS_DIR: z.string().default("../../contracts/prompts/cards"),
   CARD_STATEMENT_SCHEMAS_DIR: z.string().default("../../contracts/schemas/cards"),
   SALARY_RECEIPT_PROMPTS_DIR: z.string().default("../../contracts/prompts/salary-receipts"),
