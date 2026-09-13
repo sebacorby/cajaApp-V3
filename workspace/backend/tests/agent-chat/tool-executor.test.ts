@@ -6,6 +6,7 @@ import {
   type AgentToolRegistryEntry,
 } from "../../src/modules/agent-chat/agent-tool-registry.js";
 import { AgentToolExecutor } from "../../src/modules/agent-chat/agent-tool-executor.js";
+import { computeArgumentsHash } from "../../src/modules/agent-chat/agent-approval.service.js";
 
 function readTool(overrides: Partial<AgentToolRegistryEntry> = {}): AgentToolRegistryEntry {
   return {
@@ -144,5 +145,109 @@ describe("AgentToolExecutor", () => {
     expect(executed.result).toEqual({ id: "created-1", ok: true });
     expect(handler).not.toHaveBeenCalled();
     expect(store.markSucceeded).not.toHaveBeenCalled();
+  });
+});
+
+function criticalTool(riskClass: "R3" | "R4" = "R3", overrides: Partial<AgentToolRegistryEntry> = {}): AgentToolRegistryEntry {
+  return readTool({
+    name: riskClass === "R4" ? "test.restore" : "test.critical",
+    riskClass,
+    parallelSafe: false,
+    requiresExplicitIntent: false,
+    ...overrides,
+  });
+}
+
+describe("AgentToolExecutor US4 R3/R4 approval gate", () => {
+  it("rechaza una R3 sin approval aunque explicitIntent sea true", async () => {
+    const handler = vi.fn(async () => ({ ok: true }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]));
+    await expect(executor.execute({
+      name: "test.critical", arguments: { value: "x" }, explicitIntent: true,
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+    })).rejects.toMatchObject({ code: "APPROVAL_REQUIRED" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una R4 sin approval", async () => {
+    const handler = vi.fn(async () => ({ ok: true }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R4", { handler })]));
+    await expect(executor.execute({
+      name: "test.restore", arguments: { value: "x" },
+    })).rejects.toMatchObject({ code: "APPROVAL_REQUIRED" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("exige idempotency metadata durable para R3 aunque la approval sea válida", async () => {
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool()]));
+    await expect(executor.execute({
+      name: "test.critical", arguments: { value: "x" },
+      approval: { status: "approved", argumentsHash: computeArgumentsHash("test.critical", { value: "x" }) },
+    })).rejects.toMatchObject({ code: "IDEMPOTENCY_KEY_REQUIRED" });
+  });
+
+  it("ejecuta una R3 sólo con approval válida ligada al hash exacto de argumentos", async () => {
+    const handler = vi.fn(async () => ({ id: "crit-1", ok: true }));
+    const markSucceeded = vi.fn(async () => undefined);
+    const store = { findSucceeded: vi.fn(async () => null), markSucceeded };
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]), store as never);
+    const executed = await executor.execute({
+      name: "test.critical", arguments: { value: "x" },
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+      approval: { status: "approved", argumentsHash: computeArgumentsHash("test.critical", { value: "x" }) },
+    });
+    expect(executed.result).toEqual({ id: "crit-1", ok: true });
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(markSucceeded).toHaveBeenCalledWith("tool-call-1", "run-1:call-1", JSON.stringify(executed.result));
+  });
+
+  it("no acepta una approval aprobada si cambian los argumentos de la tool call", async () => {
+    const handler = vi.fn(async () => ({ ok: true }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]));
+    await expect(executor.execute({
+      name: "test.critical", arguments: { value: "MUTADO" },
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+      approval: { status: "approved", argumentsHash: computeArgumentsHash("test.critical", { value: "x" }) },
+    })).rejects.toMatchObject({ code: "APPROVAL_ARGUMENTS_MISMATCH" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("no acepta una approval emitida para otra tool (no puede bypassearse)", async () => {
+    const handler = vi.fn(async () => ({ ok: true }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]));
+    await expect(executor.execute({
+      name: "test.critical", arguments: { value: "x" },
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+      approval: { status: "approved", argumentsHash: computeArgumentsHash("test.otra_tool", { value: "x" }) },
+    })).rejects.toMatchObject({ code: "APPROVAL_ARGUMENTS_MISMATCH" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("reutiliza una R3 ya succeeded por idempotencyKey sin re-ejecutar ni pedir nueva approval", async () => {
+    const handler = vi.fn(async () => ({ id: "duplicate" }));
+    const store = {
+      findSucceeded: vi.fn(async () => ({ resultJson: JSON.stringify({ id: "crit-1", ok: true }) })),
+      markSucceeded: vi.fn(async () => undefined),
+    };
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]), store as never);
+    const executed = await executor.execute({
+      name: "test.critical", arguments: { value: "x" },
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+      approval: { status: "approved", argumentsHash: computeArgumentsHash("test.critical", { value: "x" }) },
+    });
+    expect(executed.result).toEqual({ id: "crit-1", ok: true });
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.markSucceeded).not.toHaveBeenCalled();
+  });
+
+  it("no puede bypassearse declarando una risk class inventada en el request", async () => {
+    const handler = vi.fn(async () => ({ ok: true }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([criticalTool("R3", { handler })]));
+    // Aunque el request declare otra cosa, la risk class nace del registry (frozen).
+    await expect(executor.execute({
+      name: "test.critical", arguments: { value: "x" },
+      riskClass: "R0", explicitIntent: true, toolCallId: "tool-call-1", idempotencyKey: "run-1:call-1",
+    } as never)).rejects.toMatchObject({ code: "APPROVAL_REQUIRED" });
+    expect(handler).not.toHaveBeenCalled();
   });
 });

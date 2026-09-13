@@ -2,6 +2,7 @@ import { CheckCircle2, CircleDashed, XCircle } from "lucide-react";
 import type { AgentToolCallView } from "@/lib/finance/agent-api";
 
 function statusLabel(status: string, riskClass: string): string {
+  if (status === "awaiting_approval") return "Aprobación requerida";
   if (status === "succeeded") return riskClass === "R2" ? "Acción ejecutada" : "Completada";
   if (status === "failed") return riskClass === "R2" ? "Acción no ejecutada" : "Falló";
   if (status === "running") return "Ejecutando";

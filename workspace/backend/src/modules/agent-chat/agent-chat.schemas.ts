@@ -81,4 +81,6 @@ export const rejectAgentToolCallBodySchema = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+export const approveAgentToolCallBodySchema = z.object({}).default({});
+
 export const lastEventIdSchema = z.coerce.number().int().min(0);

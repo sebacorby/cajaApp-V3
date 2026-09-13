@@ -27,6 +27,8 @@ function openAiSse(response: import("node:http").ServerResponse, chunks: unknown
 }
 
 let providerServer: Server;
+let r2MovementDescription = "Farmacia E2E Agente";
+let criticalMovementId = "00000000-0000-4000-8000-000000000000";
 test.beforeAll(async () => {
   providerServer = createServer((request, response) => {
     let raw = "";
@@ -49,17 +51,32 @@ test.beforeAll(async () => {
         return;
       }
       if (hasToolResult) {
+        const rejected = toolMessages.some((message) => (message.content ?? "").includes("APPROVAL_REJECTED"));
+        if (rejected) {
+          openAiSse(response, [{ id: "fake-rejected-final", choices: [{ delta: { content: "Entendido, no realicé la acción crítica." }, finish_reason: "stop" }] }]);
+          return;
+        }
         openAiSse(response, [{ id: "fake-final", choices: [{ delta: { content: "Respuesta basada en datos reales de CajaApp." }, finish_reason: "stop" }] }]);
         return;
       }
 
-      const calls = prompt.includes("registrá un gasto")
+      const budgetId = process.env.CAJAAPP_AGENT_E2E_BUDGET_ID ?? "00000000-0000-4000-8000-000000000000";
+      const restoreBackupId = process.env.CAJAAPP_AGENT_E2E_BACKUP_ID ?? "00000000-0000-4000-8000-000000000000";
+      const calls = prompt.includes("aprobación crítica anula el movimiento")
+        ? [["call-r3-void", "movements.void_manual", { movementId: criticalMovementId }]]
+        : prompt.includes("aprobación crítica inicia el cierre")
+          ? [["call-r3-close", "month_close.create", { monthKey: range.monthKey }]]
+        : prompt.includes("aprobación crítica restaura el backup")
+          ? [["call-r4-restore", "backup.restore", { backupId: restoreBackupId }]]
+          : prompt.includes("presupuesto crítico elimina el presupuesto")
+            ? [["call-r3-budget", "budgets.delete", { budgetId }]]
+            : prompt.includes("registrá un gasto")
         ? [["call-r2-movement", "movements.create_manual", {
-            occurredOn: range.today, type: "expense", sourceType: "manual_cash", description: "Farmacia E2E Agente",
+            occurredOn: range.today, type: "expense", sourceType: "manual_cash", description: r2MovementDescription,
             categoryId: null, currency: "ARS", amount: "18500", status: "actual", notes: "agent-e2e-r2",
           }]]
         : prompt.includes("cambiá ese movimiento")
-          ? [["call-ambiguous-search", "movements.list", { from: range.from, to: range.to, page: 1, pageSize: 25, q: "Farmacia E2E Agente" }]]
+          ? [["call-ambiguous-search", "movements.list", { from: range.from, to: range.to, page: 1, pageSize: 25, q: r2MovementDescription }]]
           : prompt.includes("presupuesto")
             ? [
                 ["call-budget", "budgets.get_overview", { from: range.monthKey, to: range.monthKey }],
@@ -172,6 +189,7 @@ test("Agente IA: read tools reales, multi-tool, navegación y tool inválida", a
 test("Agente IA: R2 explícita ejecuta una vez y ambigüedad no muta", async ({ page }) => {
   let conversationId: string | null = null;
   try {
+    r2MovementDescription = `Farmacia E2E Agente ${Date.now()}`;
     await page.goto("/");
     await page.getByRole("button", { name: "Abrir Agente IA" }).click();
     const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
@@ -191,10 +209,10 @@ test("Agente IA: R2 explícita ejecuta una vez y ambigüedad no muta", async ({ 
     await expect(page.getByText("Movimiento registrado una sola vez.", { exact: true })).toBeVisible();
 
     const range = currentRanges();
-    const movements = await page.request.get(`${API_BASE_URL}/api/movements?from=${range.today}&to=${range.today}&page=1&pageSize=100&q=${encodeURIComponent("Farmacia E2E Agente")}`);
+    const movements = await page.request.get(`${API_BASE_URL}/api/movements?from=${range.today}&to=${range.today}&page=1&pageSize=100&q=${encodeURIComponent(r2MovementDescription)}`);
     expect(movements.ok()).toBeTruthy();
     const payload = await movements.json() as { items: Array<{ description?: string }> };
-    expect(payload.items.filter((item) => item.description === "Farmacia E2E Agente")).toHaveLength(1);
+    expect(payload.items.filter((item) => item.description === r2MovementDescription)).toHaveLength(1);
 
     await composer.fill("Cambiá ese movimiento");
     await sendButton.click();
@@ -206,5 +224,66 @@ test("Agente IA: R2 explícita ejecuta una vez y ambigüedad no muta", async ({ 
       const deleted = await page.request.delete(`${API_BASE_URL}/api/agent/conversations/${conversationId}`);
       expect(deleted.status()).toBe(204);
     }
+  }
+});
+
+
+test("Agente IA: Approval Card R3 confirma una vez y cancelar no muta", async ({ page }) => {
+  let conversationId: string | null = null;
+  const range = currentRanges();
+  const runSuffix = Date.now();
+  const approvedDescription = `R3 aprobar E2E ${runSuffix}`;
+  const rejectedDescription = `R3 rechazar E2E ${runSuffix}`;
+  const createMovement = async (description: string) => {
+    const response = await page.request.post(`${API_BASE_URL}/api/movements/manual`, { data: {
+      occurredOn: range.today, type: "expense", sourceType: "manual_cash", description,
+      categoryId: null, currency: "ARS", amount: "12345", status: "actual", notes: "agent-e2e-r3",
+    } });
+    expect(response.status()).toBe(201);
+    return await response.json() as { sourceId: string };
+  };
+  const movementStatus = async (description: string) => {
+    const response = await page.request.get(`${API_BASE_URL}/api/movements?from=${range.today}&to=${range.today}&page=1&pageSize=100&q=${encodeURIComponent(description)}`);
+    expect(response.ok()).toBeTruthy();
+    const payload = await response.json() as { items: Array<{ description: string; status: string }> };
+    return payload.items.find((item) => item.description === description)?.status;
+  };
+
+  try {
+    const approvedMovement = await createMovement(approvedDescription);
+    criticalMovementId = approvedMovement.sourceId;
+    await page.goto("/");
+    await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+    const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
+    const sendButton = page.getByRole("button", { name: "Enviar mensaje" });
+    const createResponse = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/agent/conversations" && response.request().method() === "POST");
+    await composer.fill("Aprobación crítica anula el movimiento");
+    await sendButton.click();
+    conversationId = ((await (await createResponse).json()) as { id: string }).id;
+
+    const approvalCard = page.getByTestId("agent-approval-card");
+    await expect(approvalCard).toBeVisible();
+    await expect(approvalCard).toHaveAttribute("data-risk-class", "R3");
+    expect(await movementStatus(approvedDescription)).toBe("actual");
+    await page.getByTestId("agent-approval-approve").click();
+    await expect(page.getByTestId("agent-tool-card").filter({ hasText: "movements.void_manual" })).toHaveAttribute("data-status", "succeeded");
+    expect(await movementStatus(approvedDescription)).toBeUndefined();
+
+    const rejectedMovement = await createMovement(rejectedDescription);
+    criticalMovementId = rejectedMovement.sourceId;
+    await composer.fill("Aprobación crítica anula el movimiento");
+    await sendButton.click();
+    await expect(approvalCard).toBeVisible();
+    expect(await movementStatus(rejectedDescription)).toBe("actual");
+    await page.getByTestId("agent-approval-reject").click();
+    await expect(page.getByText("Entendido, no realicé la acción crítica.", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("agent-tool-card").filter({ hasText: "movements.void_manual" }).last()).toHaveAttribute("data-status", "rejected");
+    expect(await movementStatus(rejectedDescription)).toBe("actual");
+  } finally {
+    if (conversationId) {
+      const deleted = await page.request.delete(`${API_BASE_URL}/api/agent/conversations/${conversationId}`);
+      expect(deleted.status()).toBe(204);
+    }
+    criticalMovementId = "00000000-0000-4000-8000-000000000000";
   }
 });

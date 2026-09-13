@@ -2,6 +2,7 @@ import type { AgentJsonValue } from "../ai/agent/agent-chat-provider.js";
 import { prisma } from "../../db/prisma.js";
 import type { AgentEntityRef, AgentRiskClass } from "./agent-types.js";
 import { AgentToolRegistry, agentToolRegistry } from "./agent-tool-registry.js";
+import { computeArgumentsHash } from "./agent-approval.service.js";
 
 export interface AgentToolRequest {
   name: string;
@@ -9,6 +10,7 @@ export interface AgentToolRequest {
   explicitIntent?: boolean;
   toolCallId?: string;
   idempotencyKey?: string;
+  approval?: { status: "approved"; argumentsHash: string } | undefined;
 }
 
 export interface AgentToolExecutionStore {
@@ -78,9 +80,41 @@ export class AgentToolExecutor {
       );
     }
     try {
-      if (tool.riskClass === "R2") {
+      const risk = tool.riskClass;
+
+      if (risk === "R3" || risk === "R4") {
+        const replayed = call.idempotencyKey ? await this.store.findSucceeded(call.idempotencyKey) : null;
+        if (replayed) {
+          const result = JSON.parse(replayed.resultJson) as AgentJsonValue;
+          return {
+            name: tool.name,
+            riskClass: tool.riskClass,
+            arguments: parsed.data as AgentJsonValue,
+            result,
+            entityRefs: tool.auditEntityRefs(result, parsed.data),
+          };
+        }
+        if (!call.approval || call.approval.status !== "approved") {
+          throw new AgentToolExecutionError(
+            "APPROVAL_REQUIRED",
+            `Tool ${tool.name} requires an explicit valid approval before execution`,
+          );
+        }
         if (!call.toolCallId || !call.idempotencyKey) {
-          throw new AgentToolExecutionError("IDEMPOTENCY_KEY_REQUIRED", `Tool ${call.name} requires durable idempotency metadata`);
+          throw new AgentToolExecutionError("IDEMPOTENCY_KEY_REQUIRED", `Tool ${tool.name} requires durable idempotency metadata`);
+        }
+        const expectedHash = computeArgumentsHash(tool.name, parsed.data);
+        if (call.approval.argumentsHash !== expectedHash) {
+          throw new AgentToolExecutionError(
+            "APPROVAL_ARGUMENTS_MISMATCH",
+            `Approval is not valid for the current arguments of ${tool.name}`,
+          );
+        }
+      }
+
+      if (risk === "R2") {
+        if (!call.toolCallId || !call.idempotencyKey) {
+          throw new AgentToolExecutionError("IDEMPOTENCY_KEY_REQUIRED", `Tool ${tool.name} requires durable idempotency metadata`);
         }
         const cached = await this.store.findSucceeded(call.idempotencyKey);
         if (cached) {
@@ -104,7 +138,7 @@ export class AgentToolExecutor {
         result,
         entityRefs: tool.auditEntityRefs(raw, parsed.data),
       };
-      if (tool.riskClass === "R2") {
+      if (risk === "R2" || risk === "R3" || risk === "R4") {
         await this.store.markSucceeded(call.toolCallId!, call.idempotencyKey!, JSON.stringify(result));
       }
       return executed;

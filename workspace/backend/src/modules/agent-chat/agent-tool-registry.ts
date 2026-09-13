@@ -17,7 +17,7 @@ import {
   updateMovementCategorySchema,
 } from "../movements/movements.schemas.js";
 import { cardsService } from "../cards/cards.service.js";
-import { exchangeRateUpdateSchema, manualPurchaseSchema } from "../cards/cards.schemas.js";
+import { cardStatementPreviewSchema, exchangeRateUpdateSchema, manualPurchaseSchema } from "../cards/cards.schemas.js";
 import { manualPurchasesService } from "../manual-purchases/manual-purchases.service.js";
 import { importsService } from "../imports/imports.service.js";
 import { importCenterService } from "../import-center/import-center.service.js";
@@ -32,6 +32,7 @@ import { changeGoalStatusSchema, createGoalContributionSchema, createGoalSchema,
 import { futureService } from "../future/future.service.js";
 import { reportsService } from "../reports/reports.service.js";
 import { reconciliationService } from "../reconciliation/reconciliation.service.js";
+import { resolveReconciliationSchema } from "../reconciliation/reconciliation.schemas.js";
 import { financialHealthService } from "../financial-health/financial-health.service.js";
 import { monthCloseService } from "../month-close/month-close.service.js";
 import { backupRestoreService } from "../backup-restore/backup-restore.service.js";
@@ -104,7 +105,34 @@ export const AGENT_R2_TOOL_NAMES = [
   "settings.update",
 ] as const;
 
-export const AGENT_TOOL_NAMES = [...AGENT_READ_TOOL_NAMES, ...AGENT_R2_TOOL_NAMES] as const;
+export const AGENT_R3_TOOL_NAMES = [
+  "card_import.accept_draft",
+  "cards.archive_statement",
+  "cards.activate_statement",
+  "debit_import.accept",
+  "debit_import.delete",
+  "debit_import.reverse",
+  "salary_receipt.accept_draft",
+  "salary_receipt.reverse",
+  "movements.void_manual",
+  "cards.delete_manual_purchase",
+  "categories.archive",
+  "categories.restore",
+  "incomes.delete_source",
+  "incomes.delete_event",
+  "budgets.delete",
+  "goals.delete",
+  "goals.delete_contribution",
+  "reconciliation.resolve",
+  "reconciliation.reopen",
+  "month_close.create",
+  "month_close.reopen",
+  "financial_health.delete_snapshot",
+] as const;
+
+export const AGENT_R4_TOOL_NAMES = ["backup.restore"] as const;
+
+export const AGENT_TOOL_NAMES = [...AGENT_READ_TOOL_NAMES, ...AGENT_R2_TOOL_NAMES, ...AGENT_R3_TOOL_NAMES, ...AGENT_R4_TOOL_NAMES] as const;
 
 export interface AgentToolRegistryEntry {
   name: string;
@@ -116,6 +144,7 @@ export interface AgentToolRegistryEntry {
   handler: (args: unknown) => Promise<unknown>;
   resultProjector: (result: unknown) => AgentJsonValue;
   auditEntityRefs: (result: unknown, args: unknown) => AgentEntityRef[];
+  impactSummary?: (args: unknown) => unknown | Promise<unknown>;
 }
 
 const emptySchema = z.object({});
@@ -127,6 +156,7 @@ const monthRangeSchema = z.object({ from: monthKeySchema, to: monthKeySchema });
 const idSchema = z.object({ id: uuidSchema });
 const statementIdSchema = z.object({ statementId: uuidSchema });
 const draftIdSchema = z.object({ draftId: uuidSchema });
+const restoreSchema = z.object({ backupId: uuidSchema });
 
 const SECRET_KEYS = /(?:api[_-]?key|token|secret|password|storagepath|filepath|promptfilepath|rawresponsepath|databaseurl|authorization|cookie)/i;
 
@@ -250,6 +280,40 @@ function makeWriteTool(
     handler,
     resultProjector: projectAgentResult,
     auditEntityRefs,
+  };
+}
+
+function defaultCriticalImpact(name: string, riskClass: "R3" | "R4") {
+  return (args: unknown) => ({
+    tool: name,
+    riskClass,
+    arguments: projectAgentResult(args),
+    reversible: riskClass === "R3",
+    warning:
+      riskClass === "R4"
+        ? "Restaurar la base de datos reemplaza TODOS los datos actuales por el contenido del backup."
+        : "Acción crítica: materializa, revierte o elimina datos reales de CajaApp.",
+  });
+}
+
+function makeCriticalTool(
+  name: string,
+  description: string,
+  inputSchema: ZodTypeAny,
+  handler: (args: any) => Promise<unknown>,
+  riskClass: "R3" | "R4",
+  auditEntityRefs: AgentToolRegistryEntry["auditEntityRefs"] = refsNone,
+  impactSummary?: AgentToolRegistryEntry["impactSummary"],
+): AgentToolRegistryEntry {
+  return {
+    name, description, inputSchema,
+    riskClass,
+    parallelSafe: false,
+    requiresExplicitIntent: false,
+    handler,
+    resultProjector: projectAgentResult,
+    auditEntityRefs,
+    impactSummary: impactSummary ?? defaultCriticalImpact(name, riskClass),
   };
 }
 
@@ -507,6 +571,70 @@ const entries: AgentToolRegistryEntry[] = [
     (args) => backupRestoreService.create(args.label), refFromResult("backup", "respaldo")),
   makeWriteTool("settings.update", "Actualiza preferencias locales de CajaApp.", updateSettingsSchema,
     (args) => settingsService.updateSettings(args)),
+  makeCriticalTool("card_import.accept_draft", "Acepta definitivamente un borrador de resumen de tarjeta revisado.", z.object({ draftId: uuidSchema, preview: cardStatementPreviewSchema }),
+    (args) => cardsService.acceptDraft(args.draftId, args.preview), "R3", refFromArg("card_statement", "tarjetas", "draftId")),
+  makeCriticalTool("cards.archive_statement", "Archiva un resumen de tarjeta activo.", z.object({ statementId: uuidSchema, reason: z.string().trim().max(500).optional() }),
+    (args) => cardsService.archiveStatement(args.statementId, args.reason), "R3", refFromArg("card_statement", "tarjetas", "statementId")),
+  makeCriticalTool("cards.activate_statement", "Activa un resumen de tarjeta archivado.", z.object({ statementId: uuidSchema }),
+    (args) => cardsService.activateStatement(args.statementId), "R3", refFromArg("card_statement", "tarjetas", "statementId")),
+  makeCriticalTool("debit_import.accept", "Materializa definitivamente una importación débito aceptada.", z.object({ importId: uuidSchema, rowIds: z.array(uuidSchema).max(5000).optional() }),
+    (args) => debitImportsService.acceptImport(args.importId, { rowIds: args.rowIds }), "R3", refFromArg("debit_import", "importaciones", "importId")),
+  makeCriticalTool("debit_import.delete", "Elimina una importación/borrador débito identificado.", z.object({ importId: uuidSchema }),
+    (args) => debitImportsService.deleteDraft(args.importId), "R3", refFromArg("debit_import", "importaciones", "importId")),
+  makeCriticalTool("debit_import.reverse", "Revierte una importación débito ya materializada.", z.object({ importId: uuidSchema }),
+    (args) => debitImportsService.reverseImport(args.importId), "R3", refFromArg("debit_import", "importaciones", "importId")),
+  makeCriticalTool("salary_receipt.accept_draft", "Acepta definitivamente un borrador de recibo de sueldo revisado.", z.object({ draftId: uuidSchema, sourceId: z.string().uuid().optional().nullable(), useAsFutureBase: z.boolean().optional() }),
+    (args) => salaryReceiptsService.acceptDraft(args.draftId, { sourceId: args.sourceId, useAsFutureBase: args.useAsFutureBase }), "R3", refFromArg("salary_receipt", "ingresos", "draftId")),
+  makeCriticalTool("salary_receipt.reverse", "Revierte un recibo de sueldo ya aceptado.", z.object({ receiptId: uuidSchema }),
+    (args) => salaryReceiptsService.reverse(args.receiptId), "R3", refFromArg("salary_receipt", "ingresos", "receiptId")),
+  makeCriticalTool("movements.void_manual", "Anula un movimiento manual identificado.", z.object({ movementId: uuidSchema }),
+    (args) => movementsService.voidManualMovement(args.movementId), "R3", refFromArg("movement", "movimientos", "movementId")),
+  makeCriticalTool("cards.delete_manual_purchase", "Elimina una compra manual de tarjeta identificada.", z.object({ purchaseId: uuidSchema }),
+    (args) => manualPurchasesService.deletePurchase(args.purchaseId), "R3", refFromArg("card_purchase", "tarjetas", "purchaseId")),
+  makeCriticalTool("categories.archive", "Archiva una categoría de movimientos.", z.object({ categoryId: uuidSchema, replacementCategoryId: z.string().uuid().optional().nullable() }),
+    (args) => movementCategoriesService.archiveCategory(args.categoryId, { replacementCategoryId: args.replacementCategoryId }), "R3", refFromArg("movement_category", "movimientos", "categoryId")),
+  makeCriticalTool("categories.restore", "Restaura una categoría archivada.", z.object({ categoryId: uuidSchema }),
+    (args) => movementCategoriesService.restoreCategory(args.categoryId), "R3", refFromArg("movement_category", "movimientos", "categoryId")),
+  makeCriticalTool("incomes.delete_source", "Elimina una fuente de ingreso identificada.", z.object({ sourceId: uuidSchema }),
+    (args) => incomesService.deleteSource(args.sourceId), "R3", refFromArg("income_source", "ingresos", "sourceId")),
+  makeCriticalTool("incomes.delete_event", "Elimina un evento de ingreso identificado.", z.object({ eventId: uuidSchema }),
+    (args) => incomesService.deleteEvent(args.eventId), "R3", refFromArg("income_event", "ingresos", "eventId")),
+  makeCriticalTool("budgets.delete", "Elimina un presupuesto identificado.", z.object({ budgetId: uuidSchema }),
+    (args) => budgetsService.delete(args.budgetId), "R3", refFromArg("budget", "presupuestos", "budgetId")),
+  makeCriticalTool("goals.delete", "Elimina un objetivo de ahorro identificado.", z.object({ goalId: uuidSchema }),
+    (args) => goalsService.deleteGoal(args.goalId), "R3", refFromArg("goal", "objetivos", "goalId")),
+  makeCriticalTool("goals.delete_contribution", "Elimina un aporte de un objetivo identificado.", z.object({ goalId: uuidSchema, contributionId: uuidSchema }),
+    (args) => goalsService.deleteContribution(args.goalId, args.contributionId), "R3", refFromArg("goal", "objetivos", "goalId")),
+  makeCriticalTool("reconciliation.resolve", "Resuelve un caso de conciliación con una acción determinística.", z.object({ caseId: uuidSchema, action: resolveReconciliationSchema.shape.action }),
+    (args) => reconciliationService.resolve(args.caseId, args.action), "R3", refFromArg("reconciliation", "conciliacion", "caseId")),
+  makeCriticalTool("reconciliation.reopen", "Reabre un caso de conciliación resuelto.", z.object({ caseId: uuidSchema }),
+    (args) => reconciliationService.reopen(args.caseId), "R3", refFromArg("reconciliation", "conciliacion", "caseId")),
+  makeCriticalTool("month_close.create", "Crea el cierre mensual de un período.", z.object({ monthKey: monthKeySchema }),
+    (args) => monthCloseService.create(args.monthKey), "R3", refFromArg("month_close", "cierres", "monthKey")),
+  makeCriticalTool("month_close.reopen", "Reabre un cierre mensual identificado.", z.object({ closeId: uuidSchema }),
+    (args) => monthCloseService.reopen(args.closeId), "R3", refFromArg("month_close", "cierres", "closeId")),
+  makeCriticalTool("financial_health.delete_snapshot", "Elimina un snapshot de salud financiera.", z.object({ snapshotId: uuidSchema }),
+    (args) => financialHealthService.deleteSnapshot(args.snapshotId), "R3", refFromArg("financial_health_snapshot", "salud", "snapshotId")),
+  makeCriticalTool("backup.restore", "Restaura la base de datos de CajaApp desde un backup validado; exige validación previa y aprobación explícita.", restoreSchema,
+    (args) => backupRestoreService.restoreStored(args.backupId), "R4", refsNone, async (args) => {
+      const validation = await backupRestoreService.validateStored((args as { backupId: string }).backupId);
+      return {
+        tool: "backup.restore",
+        riskClass: "R4",
+        reversible: false,
+        valid: validation.valid,
+        packageSha256: validation.packageSha256,
+        backup: {
+          createdAt: validation.manifest.createdAt,
+          databaseSha256: validation.manifest.database.sha256,
+          sizeBytes: validation.manifest.database.sizeBytes,
+          integrityCheck: validation.manifest.database.integrityCheck,
+          tables: validation.manifest.database.tables.length,
+          migrations: validation.manifest.database.migrations.length,
+        },
+        warning: "Restaurar reemplaza TODOS los datos actuales por el contenido del backup.",
+      };
+    }),
 ];
 
 export const agentToolRegistry = new AgentToolRegistry(entries);

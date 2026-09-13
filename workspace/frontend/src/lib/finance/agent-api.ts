@@ -19,12 +19,22 @@ export interface AgentToolCallView {
   providerCallId?: string;
   name: string;
   riskClass: string;
-  status: "proposed" | "running" | "succeeded" | "failed" | "rejected" | "cancelled" | string;
+  status: "proposed" | "awaiting_approval" | "running" | "succeeded" | "failed" | "rejected" | "cancelled" | string;
   arguments?: unknown;
   result?: unknown;
   entityRefs?: Array<{ entityType: string; entityId: string; label?: string; section?: string }>;
   errorCode?: string;
   errorMessage?: string;
+}
+
+export interface AgentApprovalView {
+  id: string;
+  toolCallId: string;
+  status: "pending" | "approved" | "rejected" | "expired";
+  argumentsHash: string;
+  impact?: unknown;
+  requestedAt: string;
+  resolvedAt: string | null;
 }
 
 export interface AgentMessage {
@@ -39,13 +49,13 @@ export interface AgentConversation extends AgentConversationSummary {
   messages: AgentMessage[];
 }
 
-export interface AgentEvent {
+export type AgentEvent = {
   runId: string;
   sequence: number;
   timestamp: string;
-  type: "run.started" | "assistant.delta" | "tool.proposed" | "tool.started" | "tool.completed" | "tool.failed" | "ui.navigate" | "assistant.completed" | "run.completed" | "run.cancelled" | "run.failed" | "heartbeat";
+  type: "run.started" | "assistant.delta" | "tool.proposed" | "tool.started" | "tool.completed" | "tool.failed" | "approval.required" | "approval.resolved" | "ui.navigate" | "assistant.completed" | "run.completed" | "run.cancelled" | "run.failed" | "heartbeat";
   payload: Record<string, unknown>;
-}
+};
 
 export class AgentApiError extends Error {
   constructor(message: string, public statusCode: number, public code?: string) {
@@ -103,6 +113,19 @@ export async function cancelAgentRun(runId: string): Promise<void> {
   if (!response.ok) await parseResponse(response);
 }
 
+export async function approveAgentToolCall(toolCallId: string): Promise<AgentApprovalView> {
+  return parseResponse(await fetch(`${API_BASE_URL}/api/agent/tool-calls/${toolCallId}/approve`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}),
+  }));
+}
+
+export async function rejectAgentToolCall(toolCallId: string, reason?: string): Promise<AgentApprovalView> {
+  return parseResponse(await fetch(`${API_BASE_URL}/api/agent/tool-calls/${toolCallId}/reject`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify(reason ? { reason } : {}),
+  }));
+}
+
 export function subscribeAgentRun(
   runId: string,
   onEvent: (event: AgentEvent) => void,
@@ -110,7 +133,8 @@ export function subscribeAgentRun(
 ): () => void {
   const source = new EventSource(`${API_BASE_URL}/api/agent/runs/${runId}/events`);
   const eventTypes: AgentEvent["type"][] = [
-    "run.started", "assistant.delta", "tool.proposed", "tool.started", "tool.completed", "tool.failed", "ui.navigate",
+    "run.started", "assistant.delta", "tool.proposed", "tool.started", "tool.completed", "tool.failed",
+    "approval.required", "approval.resolved", "ui.navigate",
     "assistant.completed", "run.completed", "run.cancelled", "run.failed", "heartbeat",
   ];
   for (const type of eventTypes) {

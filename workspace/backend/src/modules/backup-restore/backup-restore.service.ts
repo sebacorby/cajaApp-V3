@@ -419,6 +419,15 @@ export class BackupRestoreService {
     });
   }
 
+  async restoreStored(backupId: string) {
+    const record = await prisma.backupArchive.findUnique({ where: { id: backupId } });
+    if (!record) throw new NotFoundError("Backup archive");
+    await this.validateStored(backupId);
+    const buffer = await fs.readFile(record.storagePath).catch(() => null);
+    if (!buffer) throw new ValidationError("El archivo físico del backup ya no está disponible.");
+    return this.restore(record.fileName, buffer);
+  }
+
   private async validatePackage(packagePath: string): Promise<ValidationResult> {
     const packageBytes = await fs.readFile(packagePath).catch(() => null);
     if (!packageBytes) throw new ValidationError("No se pudo leer el paquete de backup.");

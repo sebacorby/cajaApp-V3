@@ -3,18 +3,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AgentComposer } from "./agent-composer";
 import { AgentEmptyState } from "./agent-empty-state";
+import { ApprovalCard } from "./approval-card";
 import { ConversationDrawer } from "./conversation-drawer";
 import { ConversationHeader } from "./conversation-header";
 import { MessageList, type AgentUiMessage } from "./message-list";
 import {
+  approveAgentToolCall,
   cancelAgentRun,
   createAgentConversation,
   getAgentConversation,
   listAgentConversations,
+  rejectAgentToolCall,
   sendAgentMessage,
   subscribeAgentRun,
   type AgentConversation,
   type AgentConversationSummary,
+  type AgentToolCallView,
 } from "@/lib/finance/agent-api";
 import { useFinanceUI, type SearchNavigationTarget, type SectionId } from "@/lib/finance/ui-store";
 
@@ -66,6 +70,8 @@ export function AgentChatPanel() {
   const [runId, setRunId] = useState<string | null>(null);
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingApproval, setPendingApproval] = useState<{ call: AgentToolCallView; impact?: unknown } | null>(null);
+  const [approvalBusy, setApprovalBusy] = useState(false);
 
   const refreshList = useCallback(async () => {
     const result = await listAgentConversations();
@@ -153,6 +159,24 @@ export function AgentChatPanel() {
           if (event.type === "tool.completed" || event.type === "tool.failed") {
             loadConversation(conversationId).catch(() => undefined);
           }
+          if (event.type === "approval.required") {
+            setPendingApproval({
+              call: {
+                id: typeof event.payload.toolCallId === "string" ? event.payload.toolCallId : "",
+                name: typeof event.payload.name === "string" ? event.payload.name : "",
+                riskClass: typeof event.payload.riskClass === "string" ? event.payload.riskClass : "",
+                status: "awaiting_approval",
+                arguments: event.payload.arguments,
+              },
+              impact: event.payload.impact,
+            });
+          }
+          if (event.type === "approval.resolved") {
+            setPendingApproval((current) =>
+              current && current.call.id === event.payload.toolCallId ? null : current,
+            );
+            loadConversation(conversationId).catch(() => undefined);
+          }
           if (event.type === "ui.navigate") {
             const target = navigationTarget(event.payload);
             if (target) {
@@ -165,6 +189,7 @@ export function AgentChatPanel() {
             unsubscribe();
             setRunId(null);
             setStreamText("");
+            setPendingApproval(null);
             loadConversation(conversationId).catch(() => undefined);
             refreshList().catch(() => undefined);
             if (event.type === "run.failed") {
@@ -185,6 +210,23 @@ export function AgentChatPanel() {
     await cancelAgentRun(runId).catch(() => undefined);
     setRunId(null);
   }, [runId]);
+
+  const resolveApproval = useCallback(async (approve: boolean) => {
+    if (!pendingApproval) return;
+    setApprovalBusy(true);
+    try {
+      if (approve) {
+        await approveAgentToolCall(pendingApproval.call.id);
+      } else {
+        await rejectAgentToolCall(pendingApproval.call.id);
+      }
+      setPendingApproval((current) => (current?.call.id === pendingApproval.call.id ? null : current));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo resolver la aprobación");
+    } finally {
+      setApprovalBusy(false);
+    }
+  }, [pendingApproval]);
 
   if (!open) return null;
 
@@ -225,6 +267,18 @@ export function AgentChatPanel() {
           <MessageList messages={messages} />
         )}
       </div>
+
+      {pendingApproval ? (
+        <div className="border-t bg-background/95 px-4 py-2">
+          <ApprovalCard
+            call={pendingApproval.call}
+            impact={pendingApproval.impact}
+            busy={approvalBusy}
+            onApprove={() => { void resolveApproval(true); }}
+            onReject={() => { void resolveApproval(false); }}
+          />
+        </div>
+      ) : null}
 
       {error ? (
         <div role="status" className="border-t bg-destructive/5 px-4 py-2 text-xs text-destructive">

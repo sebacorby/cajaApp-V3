@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { AgentRunnerService } from "../../src/modules/agent-chat/agent-runner.service.js";
 import { FakeAgentChatProvider } from "../../src/modules/ai/agent/fake-agent-chat-provider.js";
 import { AgentEventsService } from "../../src/modules/agent-chat/agent-events.service.js";
+import { AgentToolRegistry, projectAgentResult } from "../../src/modules/agent-chat/agent-tool-registry.js";
+import { AgentToolExecutor } from "../../src/modules/agent-chat/agent-tool-executor.js";
 
 function dependencies(events = [
   { type: "text-delta" as const, text: "Hola " },
@@ -113,7 +116,12 @@ describe("AgentRunnerService US2 tool loop", () => {
       ]);
     const registry = {
       listProviderTools: vi.fn(() => [{ name: "dashboard.get_overview", description: "dashboard", inputSchema: { type: "object" } }]),
-      lookup: vi.fn(() => ({ riskClass: "R0", parallelSafe: true, requiresExplicitIntent: false })),
+      lookup: vi.fn(() => ({
+        riskClass: "R0",
+        parallelSafe: true,
+        requiresExplicitIntent: false,
+        inputSchema: z.object({ from: z.string(), to: z.string() }),
+      })),
     };
     const executor = {
       canRunInParallel: vi.fn(() => false),
@@ -138,7 +146,7 @@ describe("AgentRunnerService US2 tool loop", () => {
 
 
 describe("AgentRunnerService US3 R2 policy", () => {
-  function r2Deps(userText: string, toolName: string, providerArguments: Record<string, unknown>) {
+  function r2Deps(userText: string, toolName: string, providerArguments: Record<string, unknown>, approvals?: unknown) {
     let round = 0;
     const provider = {
       identity: { provider: "fake", model: "r2-tools" },
@@ -176,38 +184,57 @@ describe("AgentRunnerService US3 R2 policy", () => {
         { role: "assistant", content: "", toolCalls: [{ id: "provider-r2-1", name: toolName, arguments: providerArguments }] },
         { role: "tool", content: "{}", toolCallId: "provider-r2-1", name: toolName },
       ]);
-    const registry = {
-      listProviderTools: vi.fn(() => [{ name: toolName, description: "R2", inputSchema: { type: "object" } }]),
-      lookup: vi.fn(() => ({ riskClass: "R2", parallelSafe: false, requiresExplicitIntent: true })),
+    const handler = vi.fn(async () => ({ id: "created-r2" }));
+    const registry = new AgentToolRegistry([
+      {
+        name: toolName,
+        description: "R2 write test",
+        inputSchema: z.object({}).passthrough(),
+        riskClass: "R2",
+        parallelSafe: false,
+        requiresExplicitIntent: true,
+        handler,
+        resultProjector: projectAgentResult,
+        auditEntityRefs: () => [],
+      },
+    ]);
+    const executor = new AgentToolExecutor(registry, {
+      findSucceeded: vi.fn(async () => null),
+      markSucceeded: vi.fn(async () => undefined),
+    });
+    const executeSpy = vi.spyOn(executor, "execute");
+    const resolvedApprovals = approvals ?? {
+      requestApproval: vi.fn(async () => ({ id: "approval-1", toolCallId: "tool-r2-db-1", status: "pending", argumentsHash: "hash-1", impact: {} })),
+      getByToolCall: vi.fn(async () => ({ status: "pending", argumentsHash: "hash-1" })),
+      waitForDecision: vi.fn(async () => ({ status: "rejected", argumentsHash: "hash-1", resolvedAt: null })),
     };
-    const executor = {
-      canRunInParallel: vi.fn(() => false),
-      execute: vi.fn(async (request: any) => ({
-        name: toolName, riskClass: "R2", arguments: request.arguments,
-        result: { id: "created-r2" }, entityRefs: [],
-      })),
-    };
-    const runner = new AgentRunnerService({ ...d, provider, registry, executor } as never);
-    return { d, executor, runner };
+    const runner = new AgentRunnerService({
+      ...d, provider, registry, executor, approvals: resolvedApprovals,
+    } as never);
+    return { d, executor, executeSpy, handler, approvals: resolvedApprovals, runner };
   }
 
   it("pasa explicit intent y clave estable a una R2 pedida por el usuario", async () => {
-    const { executor, runner } = r2Deps("Registrá un gasto de ARS 18500 en farmacia hoy", "movements.create_manual", { amount: "18500" });
+    const { executeSpy, runner } = r2Deps("Registrá un gasto de ARS 18500 en farmacia hoy", "movements.create_manual", { amount: "18500" });
     const run = await runner.startRun("11111111-1111-4111-8111-111111111111", { content: "Registrá un gasto de ARS 18500 en farmacia hoy", attachmentIds: [] });
     await runner.waitForRun(run.id);
-    expect(executor.execute).toHaveBeenCalledWith(expect.objectContaining({
+    expect(executeSpy).toHaveBeenCalledWith(expect.objectContaining({
       explicitIntent: true, toolCallId: "tool-r2-db-1",
       idempotencyKey: "22222222-2222-4222-8222-222222222222:provider-r2-1",
     }));
   });
 
-  it("no considera explícita una R2 targeteada con referencia ambigua", async () => {
-    const { executor, runner } = r2Deps("Cambiá ese movimiento", "movements.update_manual", {
+  it("no muta una R2 con referencia ambigua: la pausa y resuelve por approval", async () => {
+    const { executeSpy, runner, approvals, handler } = r2Deps("Cambiá ese movimiento", "movements.update_manual", {
       movementId: "11111111-1111-4111-8111-111111111111",
       changes: { amount: "19000" },
     });
     const run = await runner.startRun("11111111-1111-4111-8111-111111111111", { content: "Cambiá ese movimiento", attachmentIds: [] });
     await runner.waitForRun(run.id);
-    expect(executor.execute).toHaveBeenCalledWith(expect.objectContaining({ explicitIntent: false }));
+    expect(handler).not.toHaveBeenCalled();
+    expect(executeSpy).not.toHaveBeenCalled();
+    expect(approvals.requestApproval).toHaveBeenCalledWith(expect.objectContaining({
+      toolCallId: "tool-r2-db-1", toolName: "movements.update_manual",
+    }));
   });
 });

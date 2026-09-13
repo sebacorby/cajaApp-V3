@@ -3,16 +3,20 @@ import { validateData } from "../../shared/validation.js";
 import {
   agentConversationParamsSchema,
   agentRunParamsSchema,
+  agentToolCallParamsSchema,
+  approveAgentToolCallBodySchema,
   createAgentConversationBodySchema,
   createAgentMessageBodySchema,
   getAgentConversationQuerySchema,
   listAgentConversationsQuerySchema,
+  rejectAgentToolCallBodySchema,
   updateAgentConversationBodySchema,
 } from "./agent-chat.schemas.js";
 import { agentChatService } from "./agent-chat.service.js";
 import { agentRunnerService } from "./agent-runner.service.js";
 import { agentEventsService } from "./agent-events.service.js";
 import { agentToolRegistry } from "./agent-tool-registry.js";
+import { agentApprovalService } from "./agent-approval.service.js";
 
 function lastEventSequence(header: string | string[] | undefined): number {
   const raw = Array.isArray(header) ? header[0] : header;
@@ -78,6 +82,18 @@ export const agentChatController: FastifyPluginAsync = async (app: FastifyInstan
   app.post("/runs/:runId/cancel", async (request, reply) => {
     const params = validateData(agentRunParamsSchema, request.params);
     return reply.send(await agentRunnerService.cancelRun(params.runId));
+  });
+
+  app.post("/tool-calls/:toolCallId/approve", async (request, reply) => {
+    const params = validateData(agentToolCallParamsSchema, request.params);
+    validateData(approveAgentToolCallBodySchema, request.body ?? {});
+    return reply.send(await agentApprovalService.approve(params.toolCallId));
+  });
+
+  app.post("/tool-calls/:toolCallId/reject", async (request, reply) => {
+    const params = validateData(agentToolCallParamsSchema, request.params);
+    const body = validateData(rejectAgentToolCallBodySchema, request.body ?? {});
+    return reply.send(await agentApprovalService.reject(params.toolCallId, body.reason));
   });
 
   app.get("/runs/:runId/events", async (request, reply) => {

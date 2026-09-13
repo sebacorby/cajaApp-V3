@@ -125,19 +125,19 @@
 
 ### Tests for User Story 4
 
-- [ ] T050 [P] [US4] Escribir tests de approval requerida, hash de argumentos, rechazo y continuación de run en `workspace/backend/tests/agent-chat/approvals.test.ts`.
-- [ ] T051 [P] [US4] Escribir tests de que R3/R4 nunca ejecutan sin approval y no pueden bypassarse en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
-- [ ] T052 [P] [US4] Extender Playwright con Approval Card, confirmar/cancelar y restore validation AC-05/06 en `workspace/frontend/tests/agent-chat.spec.ts`.
+- [X] T050 [P] [US4] Escribir tests de approval requerida, hash de argumentos, rechazo y continuación de run en `workspace/backend/tests/agent-chat/approvals.test.ts`.
+- [X] T051 [P] [US4] Escribir tests de que R3/R4 nunca ejecutan sin approval y no pueden bypassarse en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
+- [X] T052 [P] [US4] Extender Playwright con Approval Card, confirmar/cancelar y restore validation AC-05/06 en `workspace/frontend/tests/agent-chat.spec.ts`.
 
 ### Implementation for User Story 4
 
-- [ ] T053 [US4] Implementar creación/resolución/expiración de approvals y `argumentsHash` en `workspace/backend/src/modules/agent-chat/agent-approval.service.ts`.
-- [ ] T054 [US4] Agregar endpoints approve/reject y schemas correspondientes en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`, `agent-chat.routes.ts` y `agent-chat.schemas.ts`.
-- [ ] T055 [US4] Integrar pausa `awaiting_approval`, confirmación/rechazo y reanudación del mismo run en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
-- [ ] T056 [P] [US4] Registrar tools R3 de accept/archive/reverse/delete/reconciliation/month close/health delete en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T057 [US4] Registrar `backup.restore` como R4 con validación previa y projector de impacto en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T058 [P] [US4] Implementar Approval Card accesible en `workspace/frontend/src/components/finance/agent/approval-card.tsx`.
-- [ ] T059 [US4] Conectar approve/reject a `agent-api.ts` y panel, invalidar UI si cambian argumentos y cerrar tests US4.
+- [X] T053 [US4] Implementar creación/resolución/expiración de approvals y `argumentsHash` en `workspace/backend/src/modules/agent-chat/agent-approval.service.ts`.
+- [X] T054 [US4] Agregar endpoints approve/reject y schemas correspondientes en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`, `agent-chat.routes.ts` y `agent-chat.schemas.ts`.
+- [X] T055 [US4] Integrar pausa `awaiting_approval`, confirmación/rechazo y reanudación del mismo run en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
+- [X] T056 [P] [US4] Registrar tools R3 de accept/archive/reverse/delete/reconciliation/month close/health delete en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T057 [US4] Registrar `backup.restore` como R4 con validación previa y projector de impacto en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T058 [P] [US4] Implementar Approval Card accesible en `workspace/frontend/src/components/finance/agent/approval-card.tsx`.
+- [X] T059 [US4] Conectar approve/reject a `agent-api.ts` y panel, invalidar UI si cambian argumentos y cerrar tests US4.
 
 **Checkpoint**: ninguna R3/R4 muta sin approval válida ligada a argumentos exactos.
 

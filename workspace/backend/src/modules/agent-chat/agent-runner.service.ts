@@ -9,6 +9,8 @@ import { agentChatService, type AgentChatService } from "./agent-chat.service.js
 import { agentEventsService, type AgentEventsService } from "./agent-events.service.js";
 import { AgentToolRegistry, agentToolRegistry } from "./agent-tool-registry.js";
 import { AgentToolExecutor, agentToolExecutor, type AgentToolRequest, type ExecutedAgentTool } from "./agent-tool-executor.js";
+import { agentApprovalService, type AgentApprovalDecision, type AgentApprovalService } from "./agent-approval.service.js";
+import type { AgentJsonValue } from "../ai/agent/agent-chat-provider.js";
 
 const PROMPT_VERSION = "agent-prompt-v1.0.0";
 
@@ -19,6 +21,7 @@ type RunnerDeps = {
   eventBus?: AgentEventsService;
   registry?: AgentToolRegistry;
   executor?: AgentToolExecutor;
+  approvals?: AgentApprovalService;
 };
 
 type ActiveRun = { controller: AbortController; task: Promise<void> };
@@ -26,6 +29,8 @@ type PreparedToolCall = {
   providerCall: AgentProviderToolCall;
   dbId: string;
   ordinal: number;
+  status: string;
+  argumentsValid: boolean;
   request: AgentToolRequest;
 };
 
@@ -36,6 +41,7 @@ export class AgentRunnerService {
   private readonly eventBus: AgentEventsService;
   private readonly registry: AgentToolRegistry;
   private readonly executor: AgentToolExecutor;
+  private readonly approvals: AgentApprovalService;
   private readonly active = new Map<string, ActiveRun>();
 
   constructor(deps: RunnerDeps = {}) {
@@ -45,6 +51,7 @@ export class AgentRunnerService {
     this.eventBus = deps.eventBus ?? agentEventsService;
     this.registry = deps.registry ?? agentToolRegistry;
     this.executor = deps.executor ?? agentToolExecutor;
+    this.approvals = deps.approvals ?? agentApprovalService;
   }
 
   async startRun(conversationId: string, input: { content: string; attachmentIds: string[] }) {
@@ -160,10 +167,68 @@ export class AgentRunnerService {
 
   private safeToolFailure(error: unknown): { code: string; message: string } {
     const code = typeof (error as any)?.code === "string" ? (error as any).code : "TOOL_EXECUTION_FAILED";
-    if (["INVALID_TOOL_ARGUMENTS", "UNKNOWN_TOOL", "EXPLICIT_INTENT_REQUIRED", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_RECORD_MISMATCH"].includes(code)) {
+    if (["INVALID_TOOL_ARGUMENTS", "UNKNOWN_TOOL", "EXPLICIT_INTENT_REQUIRED", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_RECORD_MISMATCH", "APPROVAL_REQUIRED", "APPROVAL_ARGUMENTS_MISMATCH", "APPROVAL_REJECTED", "APPROVAL_EXPIRED", "VALIDATION_ERROR", "NOT_FOUND"].includes(code)) {
       return { code, message: error instanceof Error ? error.message.slice(0, 500) : code };
     }
     return { code, message: "La tool no pudo completarse con los argumentos validados." };
+  }
+
+  private async resolveToolImpact(
+    definition: { impactSummary?: (args: unknown) => unknown | Promise<unknown> },
+    name: string,
+    args: AgentJsonValue,
+  ): Promise<unknown> {
+    if (definition.impactSummary) return await definition.impactSummary(args);
+    return {
+      tool: name,
+      arguments: args,
+      message: "Acción crítica de CajaApp: se detiene antes de ejecutarse hasta que confirmes el impacto.",
+    };
+  }
+
+  private async waitApprovalDecision(toolCallId: string, signal: AbortSignal): Promise<AgentApprovalDecision> {
+    let aborted = false;
+    const abortPromise = new Promise<never>((_resolve, reject) => {
+      const fail = () => {
+        aborted = true;
+        reject(Object.assign(new Error("Agent run aborted"), { name: "AbortError" }));
+      };
+      if (signal.aborted) return fail();
+      signal.addEventListener("abort", fail, { once: true });
+    });
+    const decision = await Promise.race([
+      this.approvals.waitForDecision(toolCallId),
+      abortPromise,
+    ]);
+    if (aborted) throw Object.assign(new Error("Agent run aborted"), { name: "AbortError" });
+    return decision;
+  }
+
+  private needsApproval(item: PreparedToolCall, latestUserText: string): boolean {
+    if (item.status === "succeeded" || !item.argumentsValid) return false;
+    const definition = this.registry.lookup(item.providerCall.name);
+    if (!definition) return false;
+    if (definition.riskClass === "R3" || definition.riskClass === "R4") return true;
+    if (definition.riskClass === "R2") {
+      const explicit = this.explicitIntentFor(latestUserText, item.providerCall.name, definition.riskClass);
+      return explicit !== true;
+    }
+    return false;
+  }
+
+  private async markToolStarted(runId: string, item: PreparedToolCall): Promise<void> {
+    if (item.status === "succeeded") return;
+    const definition = this.registry.lookup(item.providerCall.name);
+    if (!definition) return;
+    await this.db.agentToolCall.update({
+      where: { id: item.dbId },
+      data: { status: "running" },
+    });
+    this.eventBus.publish(runId, "tool.started", {
+      toolCallId: item.dbId,
+      name: item.providerCall.name,
+      riskClass: definition.riskClass,
+    });
   }
 
   private async execute(runId: string, conversationId: string, signal: AbortSignal): Promise<void> {
@@ -220,8 +285,12 @@ export class AgentRunnerService {
 
         for (const providerCall of toolCalls) {
           const definition = this.registry.lookup(providerCall.name);
+          const parsedArguments = definition?.inputSchema.safeParse(providerCall.arguments);
+          const executionArguments = parsedArguments?.success
+            ? parsedArguments.data as AgentJsonValue
+            : providerCall.arguments;
           const idempotencyKey = `${runId}:${providerCall.id}`;
-          const argumentsJson = JSON.stringify(providerCall.arguments);
+          const argumentsJson = JSON.stringify(executionArguments);
           let row = await this.db.agentToolCall.findUnique({ where: { idempotencyKey } });
           if (row) {
             if (row.runId !== runId || row.toolName !== providerCall.name || row.argumentsJson !== argumentsJson) {
@@ -244,7 +313,7 @@ export class AgentRunnerService {
           }
           this.eventBus.publish(runId, "tool.proposed", {
             toolCallId: row.id, providerCallId: providerCall.id, name: providerCall.name,
-            riskClass: definition?.riskClass ?? "UNKNOWN", arguments: providerCall.arguments,
+            riskClass: definition?.riskClass ?? "UNKNOWN", arguments: executionArguments,
           });
 
           if (!definition) {
@@ -258,17 +327,15 @@ export class AgentRunnerService {
             continue;
           }
 
-          if (row.status !== "succeeded") {
-            await this.db.agentToolCall.update({ where: { id: row.id }, data: { status: "running" } });
-          }
-          this.eventBus.publish(runId, "tool.started", { toolCallId: row.id, name: providerCall.name, riskClass: definition.riskClass });
           prepared.push({
             providerCall,
             dbId: row.id,
             ordinal: row.ordinal,
+            status: row.status,
+            argumentsValid: parsedArguments?.success === true,
             request: {
               name: providerCall.name,
-              arguments: providerCall.arguments,
+              arguments: executionArguments,
               explicitIntent: definition.requiresExplicitIntent
                 ? this.explicitIntentFor(latestUserText, providerCall.name, definition.riskClass)
                 : undefined,
@@ -278,10 +345,111 @@ export class AgentRunnerService {
           });
         }
 
-        const settled = await this.settleToolRequests(prepared.map((item) => item.request));
-        for (let index = 0; index < prepared.length; index += 1) {
-          const item = prepared[index];
-          const outcome = settled[index];
+        const immediate = prepared.filter((item) => !this.needsApproval(item, latestUserText));
+        const pendingSequence: PreparedToolCall[] = [];
+
+        for (const item of prepared) {
+          if (!this.needsApproval(item, latestUserText)) continue;
+          const definition = this.registry.lookup(item.providerCall.name);
+          if (!definition) continue;
+          let impact: unknown;
+          try {
+            impact = await this.resolveToolImpact(definition, item.providerCall.name, item.request.arguments);
+          } catch (error) {
+            const failure = this.safeToolFailure(error);
+            await this.db.agentToolCall.update({
+              where: { id: item.dbId },
+              data: { status: "failed", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date() },
+            });
+            await this.chat.appendMessage(conversationId, "tool", {
+              text: JSON.stringify({ error: failure }),
+              toolCall: {
+                id: item.dbId, providerCallId: item.providerCall.id, name: item.providerCall.name,
+                riskClass: definition.riskClass, status: "failed", arguments: item.request.arguments,
+                errorCode: failure.code, errorMessage: failure.message,
+              },
+            });
+            this.eventBus.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
+            continue;
+          }
+          const approval = await this.approvals.requestApproval({
+            toolCallId: item.dbId,
+            toolName: definition.name,
+            arguments: item.request.arguments,
+            impactSummary: impact,
+          });
+          await this.db.agentToolCall.update({
+            where: { id: item.dbId },
+            data: { status: "awaiting_approval" },
+          });
+          this.eventBus.publish(runId, "approval.required", {
+            toolCallId: item.dbId,
+            approvalId: approval.id,
+            name: definition.name,
+            riskClass: definition.riskClass,
+            arguments: item.request.arguments,
+            impact: (approval.impact ?? {}) as AgentJsonValue,
+            argumentsHash: approval.argumentsHash,
+          } as AgentJsonValue);
+          pendingSequence.push(item);
+        }
+
+        if (pendingSequence.length > 0) {
+          await this.db.agentRun.update({ where: { id: runId }, data: { status: "awaiting_approval" } });
+        }
+
+        const decisions = new Map<string, AgentApprovalDecision>();
+        for (const item of pendingSequence) {
+          const decision = await this.waitApprovalDecision(item.dbId, signal);
+          decisions.set(item.dbId, decision);
+          this.eventBus.publish(runId, "approval.resolved", {
+            toolCallId: item.dbId,
+            status: decision.status,
+            argumentsHash: decision.argumentsHash,
+            resolvedAt: decision.resolvedAt,
+          });
+          if (decision.status === "approved") {
+            const persisted = await this.approvals.getByToolCall(item.dbId);
+            if (!persisted || persisted.status !== "approved") {
+              decisions.set(item.dbId, { status: "expired", argumentsHash: decision.argumentsHash, resolvedAt: null });
+            }
+          }
+        }
+        if (pendingSequence.length > 0) {
+          await this.db.agentRun.update({ where: { id: runId }, data: { status: "running" } });
+        }
+
+        const outcomes = new Map<string, PromiseSettledResult<ExecutedAgentTool>>();
+        for (const item of immediate) await this.markToolStarted(runId, item);
+        const settledImmediate = await this.settleToolRequests(immediate.map((item) => item.request));
+        for (let index = 0; index < immediate.length; index += 1) {
+          outcomes.set(immediate[index].dbId, settledImmediate[index]);
+        }
+
+        for (const item of pendingSequence) {
+          const decision = decisions.get(item.dbId)!;
+          const definition = this.registry.lookup(item.providerCall.name);
+          if (decision.status === "approved") {
+            try {
+              await this.markToolStarted(runId, item);
+              const executed = await this.executor.execute({
+                ...item.request,
+                explicitIntent: definition?.riskClass === "R2" ? true : item.request.explicitIntent,
+                approval: { status: "approved", argumentsHash: decision.argumentsHash },
+              });
+              outcomes.set(item.dbId, { status: "fulfilled", value: executed });
+            } catch (reason) {
+              outcomes.set(item.dbId, { status: "rejected", reason });
+            }
+          } else {
+            const code = decision.status === "expired" ? "APPROVAL_EXPIRED" : "APPROVAL_REJECTED";
+            const message = decision.status === "expired" ? "La aprobación expiró" : "La acción fue rechazada por el usuario";
+            outcomes.set(item.dbId, { status: "rejected", reason: Object.assign(new Error(message), { code }) });
+          }
+        }
+
+        for (const item of prepared) {
+          const outcome = outcomes.get(item.dbId)!;
           if (outcome.status === "fulfilled") {
             const limited = this.limitedResult(outcome.value.result);
             await this.db.agentToolCall.update({
@@ -311,10 +479,24 @@ export class AgentRunnerService {
             if (item.providerCall.name === "ui.navigate") this.eventBus.publish(runId, "ui.navigate", limited.result);
           } else {
             const failure = this.safeToolFailure(outcome.reason);
-            await this.db.agentToolCall.update({ where: { id: item.dbId }, data: { status: "failed", errorCode: failure.code, errorMessage: failure.message, completedAt: new Date() } });
+            const rejected = failure.code === "APPROVAL_REJECTED" || failure.code === "APPROVAL_EXPIRED";
+            await this.db.agentToolCall.update({
+              where: { id: item.dbId },
+              data: {
+                status: rejected ? "rejected" : "failed",
+                errorCode: failure.code,
+                errorMessage: failure.message,
+                completedAt: new Date(),
+              },
+            });
             await this.chat.appendMessage(conversationId, "tool", {
               text: JSON.stringify({ error: failure }),
-              toolCall: { id: item.dbId, providerCallId: item.providerCall.id, name: item.providerCall.name, riskClass: this.registry.lookup(item.providerCall.name)?.riskClass ?? "UNKNOWN", status: "failed", arguments: item.providerCall.arguments, errorCode: failure.code, errorMessage: failure.message },
+              toolCall: {
+                id: item.dbId, providerCallId: item.providerCall.id, name: item.providerCall.name,
+                riskClass: this.registry.lookup(item.providerCall.name)?.riskClass ?? "UNKNOWN",
+                status: rejected ? "rejected" : "failed", arguments: item.providerCall.arguments,
+                errorCode: failure.code, errorMessage: failure.message,
+              },
             });
             this.eventBus.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
           }
