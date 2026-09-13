@@ -73,20 +73,20 @@
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] Escribir tests de registry cerrado, risk classes congeladas y tool desconocida en `workspace/backend/tests/agent-chat/tool-registry.test.ts`.
-- [ ] T031 [P] [US2] Escribir tests de ejecución paralela sólo para reads `parallelSafe`, validación de args y projector sin secretos en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
-- [ ] T032 [P] [US2] Extender `workspace/frontend/tests/agent-chat.spec.ts` con consulta financiera real, Tool Card y navegación AC-02/08/13/14.
+- [X] T030 [P] [US2] Escribir tests de registry cerrado, risk classes congeladas y tool desconocida en `workspace/backend/tests/agent-chat/tool-registry.test.ts`.
+- [X] T031 [P] [US2] Escribir tests de ejecución paralela sólo para reads `parallelSafe`, validación de args y projector sin secretos en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
+- [X] T032 [P] [US2] Extender `workspace/frontend/tests/agent-chat.spec.ts` con consulta financiera real, Tool Card y navegación AC-02/08/13/14.
 
 ### Implementation for User Story 2
 
-- [ ] T033 [US2] Implementar registry base, lookup cerrado y metadata pública en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T034 [US2] Implementar executor de reads, validación y paralelismo seguro en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts`.
-- [ ] T035 [P] [US2] Registrar tools read de búsqueda/dashboard/movimientos/categorías en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts` delegando a services existentes.
-- [ ] T036 [P] [US2] Registrar tools read de tarjetas/import-center/debit/salary en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T037 [P] [US2] Registrar tools read de ingresos/presupuestos/objetivos/future/reportes/salud/cierres/backups/settings en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T038 [US2] Integrar tool calls/result messages y reads paralelos en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
-- [ ] T039 [P] [US2] Implementar Tool Card y actividad resumida en `workspace/frontend/src/components/finance/agent/tool-call-card.tsx` y `activity-panel.tsx`.
-- [ ] T040 [US2] Implementar `ui.navigate` validado contra `useFinanceUI` desde eventos del agente en `workspace/frontend/src/components/finance/agent/agent-chat-panel.tsx`.
+- [X] T033 [US2] Implementar registry base, lookup cerrado y metadata pública en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T034 [US2] Implementar executor de reads, validación y paralelismo seguro en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts`.
+- [X] T035 [P] [US2] Registrar tools read de búsqueda/dashboard/movimientos/categorías en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts` delegando a services existentes.
+- [X] T036 [P] [US2] Registrar tools read de tarjetas/import-center/debit/salary en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T037 [P] [US2] Registrar tools read de ingresos/presupuestos/objetivos/future/reportes/salud/cierres/backups/settings en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T038 [US2] Integrar tool calls/result messages y reads paralelos en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
+- [X] T039 [P] [US2] Implementar Tool Card y actividad resumida en `workspace/frontend/src/components/finance/agent/tool-call-card.tsx` y `activity-panel.tsx`.
+- [X] T040 [US2] Implementar `ui.navigate` validado contra `useFinanceUI` desde eventos del agente en `workspace/frontend/src/components/finance/agent/agent-chat-panel.tsx`.
 
 **Checkpoint**: preguntas sobre estado actual usan sólo tools registradas; ninguna read muta dominio.
 

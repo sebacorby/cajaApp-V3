@@ -14,11 +14,24 @@ export interface AgentConversationSummary {
   archivedAt: string | null;
 }
 
+export interface AgentToolCallView {
+  id: string;
+  providerCallId?: string;
+  name: string;
+  riskClass: string;
+  status: "proposed" | "running" | "succeeded" | "failed" | "rejected" | "cancelled" | string;
+  arguments?: unknown;
+  result?: unknown;
+  entityRefs?: Array<{ entityType: string; entityId: string; label?: string; section?: string }>;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
 export interface AgentMessage {
   id: string;
   sequence: number;
   role: "user" | "assistant" | "tool";
-  content: { text?: string; attachmentIds?: string[] };
+  content: { text?: string; attachmentIds?: string[]; toolCall?: AgentToolCallView };
   createdAt: string;
 }
 
@@ -30,7 +43,7 @@ export interface AgentEvent {
   runId: string;
   sequence: number;
   timestamp: string;
-  type: "run.started" | "assistant.delta" | "assistant.completed" | "run.completed" | "run.cancelled" | "run.failed" | "heartbeat";
+  type: "run.started" | "assistant.delta" | "tool.proposed" | "tool.started" | "tool.completed" | "tool.failed" | "ui.navigate" | "assistant.completed" | "run.completed" | "run.cancelled" | "run.failed" | "heartbeat";
   payload: Record<string, unknown>;
 }
 
@@ -97,7 +110,8 @@ export function subscribeAgentRun(
 ): () => void {
   const source = new EventSource(`${API_BASE_URL}/api/agent/runs/${runId}/events`);
   const eventTypes: AgentEvent["type"][] = [
-    "run.started", "assistant.delta", "assistant.completed", "run.completed", "run.cancelled", "run.failed", "heartbeat",
+    "run.started", "assistant.delta", "tool.proposed", "tool.started", "tool.completed", "tool.failed", "ui.navigate",
+    "assistant.completed", "run.completed", "run.cancelled", "run.failed", "heartbeat",
   ];
   for (const type of eventTypes) {
     source.addEventListener(type, (event) => {

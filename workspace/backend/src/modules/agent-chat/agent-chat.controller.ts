@@ -12,6 +12,7 @@ import {
 import { agentChatService } from "./agent-chat.service.js";
 import { agentRunnerService } from "./agent-runner.service.js";
 import { agentEventsService } from "./agent-events.service.js";
+import { agentToolRegistry } from "./agent-tool-registry.js";
 
 function lastEventSequence(header: string | string[] | undefined): number {
   const raw = Array.isArray(header) ? header[0] : header;
@@ -20,6 +21,11 @@ function lastEventSequence(header: string | string[] | undefined): number {
 }
 
 export const agentChatController: FastifyPluginAsync = async (app: FastifyInstance) => {
+  app.get("/tools", async (_request, reply) => reply.send({
+    version: "agent-tools-v1.0.0",
+    tools: agentToolRegistry.listPublic(),
+  }));
+
   app.get("/conversations", async (request, reply) => {
     const query = validateData(listAgentConversationsQuerySchema, request.query) as {
       status?: "active" | "archived";
@@ -79,11 +85,13 @@ export const agentChatController: FastifyPluginAsync = async (app: FastifyInstan
     const abort = new AbortController();
     request.raw.on("close", () => abort.abort());
     reply.hijack();
+    const requestOrigin = typeof request.headers.origin === "string" ? request.headers.origin : undefined;
     reply.raw.writeHead(200, {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
+      ...(requestOrigin ? { "Access-Control-Allow-Origin": requestOrigin, Vary: "Origin" } : {}),
     });
     try {
       for await (const event of agentEventsService.stream(params.runId, {

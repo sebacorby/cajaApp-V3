@@ -16,7 +16,14 @@ import {
   type AgentConversation,
   type AgentConversationSummary,
 } from "@/lib/finance/agent-api";
-import { useFinanceUI } from "@/lib/finance/ui-store";
+import { useFinanceUI, type SearchNavigationTarget, type SectionId } from "@/lib/finance/ui-store";
+
+const AGENT_NAV_SECTIONS = new Set<SectionId>([
+  "dashboard", "movimientos", "ingresos", "tarjetas", "importaciones", "conciliacion",
+  "cierres", "respaldo", "deuda", "presupuestos", "objetivos", "reportes", "salud", "configuracion",
+]);
+const SEARCH_TARGET_SECTIONS = new Set(["movimientos", "tarjetas", "ingresos", "presupuestos", "objetivos"]);
+const SEARCH_RECORD_TYPES = new Set(["movement", "card_statement", "income_source", "budget", "goal"]);
 
 function toUiMessages(conversation: AgentConversation | null): AgentUiMessage[] {
   if (!conversation) return [];
@@ -24,7 +31,23 @@ function toUiMessages(conversation: AgentConversation | null): AgentUiMessage[] 
     id: message.id,
     role: message.role,
     text: message.content.text ?? "",
+    toolCall: message.content.toolCall,
   }));
+}
+
+function navigationTarget(payload: Record<string, unknown>): SearchNavigationTarget | null {
+  if (typeof payload.section !== "string" || !SEARCH_TARGET_SECTIONS.has(payload.section)) return null;
+  if (typeof payload.recordId !== "string" || typeof payload.recordType !== "string" || !SEARCH_RECORD_TYPES.has(payload.recordType)) return null;
+  if (typeof payload.module !== "string" || typeof payload.typeLabel !== "string" || typeof payload.title !== "string") return null;
+  return {
+    section: payload.section as SearchNavigationTarget["section"],
+    recordId: payload.recordId,
+    recordType: payload.recordType as SearchNavigationTarget["recordType"],
+    module: payload.module,
+    typeLabel: payload.typeLabel,
+    title: payload.title,
+    context: typeof payload.context === "string" ? payload.context : "",
+  };
 }
 
 export function AgentChatPanel() {
@@ -32,6 +55,8 @@ export function AgentChatPanel() {
   const setOpen = useFinanceUI((state) => state.setAgentOpen);
   const activeId = useFinanceUI((state) => state.activeAgentConversationId);
   const setActiveId = useFinanceUI((state) => state.setActiveAgentConversationId);
+  const setSection = useFinanceUI((state) => state.setSection);
+  const navigateToSearchResult = useFinanceUI((state) => state.navigateToSearchResult);
 
   const [mobile, setMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -125,6 +150,17 @@ export function AgentChatPanel() {
             const text = typeof event.payload.text === "string" ? event.payload.text : "";
             setStreamText((current) => current + text);
           }
+          if (event.type === "tool.completed" || event.type === "tool.failed") {
+            loadConversation(conversationId).catch(() => undefined);
+          }
+          if (event.type === "ui.navigate") {
+            const target = navigationTarget(event.payload);
+            if (target) {
+              navigateToSearchResult(target);
+            } else if (typeof event.payload.section === "string" && AGENT_NAV_SECTIONS.has(event.payload.section as SectionId)) {
+              setSection(event.payload.section as SectionId);
+            }
+          }
           if (["run.completed", "run.cancelled", "run.failed"].includes(event.type)) {
             unsubscribe();
             setRunId(null);
@@ -142,7 +178,7 @@ export function AgentChatPanel() {
       setRunId(null);
       setError(cause instanceof Error ? cause.message : "No se pudo enviar el mensaje");
     }
-  }, [draft, ensureConversation, loadConversation, refreshList, runId]);
+  }, [draft, ensureConversation, loadConversation, navigateToSearchResult, refreshList, runId, setSection]);
 
   const stop = useCallback(async () => {
     if (!runId) return;

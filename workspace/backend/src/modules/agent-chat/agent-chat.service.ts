@@ -93,7 +93,18 @@ export class AgentChatService {
     return rows.map((row) => {
       let parsed: any = {};
       try { parsed = JSON.parse(row.contentJson); } catch { parsed = {}; }
-      return { role: row.role as AgentChatMessage["role"], content: typeof parsed.text === "string" ? parsed.text : "" };
+      const message: AgentChatMessage = {
+        role: row.role as AgentChatMessage["role"],
+        content: typeof parsed.text === "string" ? parsed.text : "",
+      };
+      if (message.role === "assistant" && Array.isArray(parsed.toolCalls)) {
+        message.toolCalls = parsed.toolCalls;
+      }
+      if (message.role === "tool" && parsed.toolCall && typeof parsed.toolCall === "object") {
+        if (typeof parsed.toolCall.providerCallId === "string") message.toolCallId = parsed.toolCall.providerCallId;
+        if (typeof parsed.toolCall.name === "string") message.name = parsed.toolCall.name;
+      }
+      return message;
     });
   }
 }
