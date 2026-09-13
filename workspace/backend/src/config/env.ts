@@ -226,6 +226,7 @@ const envSchema = z.object({
   AGENT_RECENT_MESSAGES: z.coerce.number().int().min(1).max(500).default(40),
   AGENT_MAX_STEPS_PER_RUN: z.coerce.number().int().min(1).max(128).default(32),
   AGENT_STREAM_HEARTBEAT_MS: z.coerce.number().int().min(1_000).max(30_000).default(5_000),
+  AGENT_OPENAI_TOOL_CALLING_ENABLED: envBoolean,
 
 
   CARD_STATEMENT_PROMPTS_DIR: z.string().default("../../contracts/prompts/cards"),

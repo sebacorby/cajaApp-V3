@@ -20,16 +20,16 @@
 
 **Purpose**: persistencia Agent*, provider determinístico y event stream; bloquea todas las historias.
 
-- [ ] T006 [P] Escribir tests de persistencia/cascade/idempotencia de modelos Agent* en `workspace/backend/tests/agent-chat/persistence.test.ts` antes de modificar Prisma.
-- [ ] T007 Agregar `AgentConversation`, `AgentMessage`, `AgentAttachment`, `AgentRun`, `AgentToolCall`, `AgentApproval` y relaciones/índices del `data-model.md` en `workspace/backend/prisma/schema.prisma`.
-- [ ] T008 Crear migración `workspace/backend/prisma/migrations/<timestamp>_add_agent_chat/migration.sql` que sólo agregue tablas/índices Agent* y validar sobre copia de `dev.db`.
-- [ ] T009 [P] Escribir tests del contrato provider, cancelación y tool calls en `workspace/backend/tests/agent-chat/provider.test.ts`.
-- [ ] T010 Implementar `FakeAgentChatProvider` determinístico en `workspace/backend/src/modules/ai/agent/fake-agent-chat-provider.ts`.
-- [ ] T011 [P] Implementar adapter Ollama `/api/chat` streaming/tool calling en `workspace/backend/src/modules/ai/agent/ollama-agent-chat.client.ts` con tests de parsing en `workspace/backend/tests/agent-chat/provider.test.ts`.
-- [ ] T012 [P] Implementar adapter OpenAI-compatible sólo cuando declara tool calling compatible en `workspace/backend/src/modules/ai/agent/openai-compatible-agent-chat.client.ts` con tests de parsing.
-- [ ] T013 Implementar factory/inyección de provider en `workspace/backend/src/modules/ai/agent/agent-chat-provider.factory.ts`, permitiendo fake explícito en tests sin afectar extracción documental.
-- [ ] T014 [P] Escribir tests de secuencia, replay y heartbeat en `workspace/backend/tests/agent-chat/events.test.ts`.
-- [ ] T015 Implementar buffer SSE por run, secuencia monótona, replay y heartbeat en `workspace/backend/src/modules/agent-chat/agent-events.service.ts`.
+- [X] T006 [P] Escribir tests de persistencia/cascade/idempotencia de modelos Agent* en `workspace/backend/tests/agent-chat/persistence.test.ts` antes de modificar Prisma.
+- [X] T007 Agregar `AgentConversation`, `AgentMessage`, `AgentAttachment`, `AgentRun`, `AgentToolCall`, `AgentApproval` y relaciones/índices del `data-model.md` en `workspace/backend/prisma/schema.prisma`.
+- [X] T008 Crear migración `workspace/backend/prisma/migrations/<timestamp>_add_agent_chat/migration.sql` que sólo agregue tablas/índices Agent* y validar sobre copia de `dev.db`.
+- [X] T009 [P] Escribir tests del contrato provider, cancelación y tool calls en `workspace/backend/tests/agent-chat/provider.test.ts`.
+- [X] T010 Implementar `FakeAgentChatProvider` determinístico en `workspace/backend/src/modules/ai/agent/fake-agent-chat-provider.ts`.
+- [X] T011 [P] Implementar adapter Ollama `/api/chat` streaming/tool calling en `workspace/backend/src/modules/ai/agent/ollama-agent-chat.client.ts` con tests de parsing en `workspace/backend/tests/agent-chat/provider.test.ts`.
+- [X] T012 [P] Implementar adapter OpenAI-compatible sólo cuando declara tool calling compatible en `workspace/backend/src/modules/ai/agent/openai-compatible-agent-chat.client.ts` con tests de parsing.
+- [X] T013 Implementar factory/inyección de provider en `workspace/backend/src/modules/ai/agent/agent-chat-provider.factory.ts`, permitiendo fake explícito en tests sin afectar extracción documental.
+- [X] T014 [P] Escribir tests de secuencia, replay y heartbeat en `workspace/backend/tests/agent-chat/events.test.ts`.
+- [X] T015 Implementar buffer SSE por run, secuencia monótona, replay y heartbeat en `workspace/backend/src/modules/agent-chat/agent-events.service.ts`.
 
 **Checkpoint**: `prisma generate`, build y tests foundation verdes; `ai-advisor` y extracción documental intactos.
 
