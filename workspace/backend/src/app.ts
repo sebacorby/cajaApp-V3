@@ -24,6 +24,7 @@ import { aiAdvisorRoutes } from "./modules/ai-advisor/ai-advisor.routes.js";
 import { salaryReceiptsRoutes } from "./modules/salary-receipts/salary-receipts.routes.js";
 import { monthCloseRoutes } from "./modules/month-close/month-close.routes.js";
 import { backupRestoreRoutes } from "./modules/backup-restore/backup-restore.routes.js";
+import { agentChatRoutes } from "./modules/agent-chat/agent-chat.routes.js";
 import { AppError } from "./shared/errors.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -100,6 +101,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(salaryReceiptsRoutes);
   await app.register(monthCloseRoutes);
   await app.register(backupRestoreRoutes);
+  await app.register(agentChatRoutes);
 
   return app;
 }

@@ -4,6 +4,8 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { NAV_ITEMS } from "@/lib/finance/nav";
 import { useFinanceUI } from "@/lib/finance/ui-store";
+import { AgentLauncher } from "../agent/agent-launcher";
+import { AgentChatPanel } from "../agent/agent-chat-panel";
 
 interface AppShellProps { children: React.ReactNode }
 
@@ -35,6 +37,8 @@ export function AppShell({ children }: AppShellProps) {
           </footer>
         </div>
       </div>
+      <AgentLauncher />
+      <AgentChatPanel />
     </div>
   );
 }

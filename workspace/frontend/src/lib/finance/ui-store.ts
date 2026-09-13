@@ -67,6 +67,8 @@ interface FinanceUIState {
   newMovementOpen: boolean;
   movementDrilldown: MovementDrilldown | null;
   searchTarget: SearchNavigationTarget | null;
+  agentOpen: boolean;
+  activeAgentConversationId: string | null;
   setSection: (section: SectionId) => void;
   setPeriod: (period: Period) => void;
   requestNewMovement: () => void;
@@ -75,6 +77,8 @@ interface FinanceUIState {
   clearMovementDrilldown: () => void;
   navigateToSearchResult: (target: SearchNavigationTarget) => void;
   clearSearchTarget: () => void;
+  setAgentOpen: (open: boolean) => void;
+  setActiveAgentConversationId: (conversationId: string | null) => void;
 }
 
 function isoDate(year: number, month: number, day: number): string {
@@ -167,6 +171,8 @@ export const useFinanceUI = create<FinanceUIState>((set) => ({
   newMovementOpen: false,
   movementDrilldown: null,
   searchTarget: null,
+  agentOpen: false,
+  activeAgentConversationId: null,
   setSection: (section) =>
     set({
       section,
@@ -201,4 +207,6 @@ export const useFinanceUI = create<FinanceUIState>((set) => ({
       movementDrilldown: null,
     }),
   clearSearchTarget: () => set({ searchTarget: null }),
+  setAgentOpen: (agentOpen) => set({ agentOpen }),
+  setActiveAgentConversationId: (activeAgentConversationId) => set({ activeAgentConversationId }),
 }));

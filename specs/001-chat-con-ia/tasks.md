@@ -43,23 +43,23 @@
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] Escribir tests CRUD/paginación/cascade de conversaciones en `workspace/backend/tests/agent-chat/conversations.test.ts`.
-- [ ] T017 [P] [US1] Escribir tests runner de conversación general, persistencia de user/assistant y cancelación en `workspace/backend/tests/agent-chat/runner.test.ts`.
-- [ ] T018 [P] [US1] Crear Playwright inicial de launcher/panel/minimizar/reabrir/mobile en `workspace/frontend/tests/agent-chat.spec.ts` antes de implementar UI.
+- [X] T016 [P] [US1] Escribir tests CRUD/paginación/cascade de conversaciones en `workspace/backend/tests/agent-chat/conversations.test.ts`.
+- [X] T017 [P] [US1] Escribir tests runner de conversación general, persistencia de user/assistant y cancelación en `workspace/backend/tests/agent-chat/runner.test.ts`.
+- [X] T018 [P] [US1] Crear Playwright inicial de launcher/panel/minimizar/reabrir/mobile en `workspace/frontend/tests/agent-chat.spec.ts` antes de implementar UI.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implementar CRUD/paginación de conversaciones y mensajes en `workspace/backend/src/modules/agent-chat/agent-chat.service.ts`.
-- [ ] T020 [US1] Implementar creación/cancelación/snapshot de runs y loop sin tools con provider inyectable en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
-- [ ] T021 [US1] Implementar controller HTTP/SSE en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`.
-- [ ] T022 [US1] Implementar rutas `/api/agent` de conversaciones, mensajes, runs, cancel y events en `workspace/backend/src/modules/agent-chat/agent-chat.routes.ts`.
-- [ ] T023 [US1] Registrar `agentChatRoutes` en `workspace/backend/src/app.ts`.
-- [ ] T024 [P] [US1] Crear cliente tipado de conversaciones/runs/SSE en `workspace/frontend/src/lib/finance/agent-api.ts`.
-- [ ] T025 [US1] Agregar estado visual `agentOpen`, `activeAgentConversationId` y acciones relacionadas sin agregar `SectionId` en `workspace/frontend/src/lib/finance/ui-store.ts`.
-- [ ] T026 [P] [US1] Implementar launcher circular accesible en `workspace/frontend/src/components/finance/agent/agent-launcher.tsx`.
-- [ ] T027 [P] [US1] Implementar header, lista de mensajes, contenido Markdown, empty state y composer en `workspace/frontend/src/components/finance/agent/conversation-header.tsx`, `message-list.tsx`, `message-content.tsx`, `agent-empty-state.tsx`, `agent-composer.tsx`.
-- [ ] T028 [US1] Implementar panel desktop/mobile, historial básico y conexión SSE/cancel en `workspace/frontend/src/components/finance/agent/agent-chat-panel.tsx` y `conversation-drawer.tsx`.
-- [ ] T029 [US1] Montar una única instancia persistente launcher/panel en `workspace/frontend/src/components/finance/layout/app-shell.tsx` y cerrar Playwright US1.
+- [X] T019 [US1] Implementar CRUD/paginación de conversaciones y mensajes en `workspace/backend/src/modules/agent-chat/agent-chat.service.ts`.
+- [X] T020 [US1] Implementar creación/cancelación/snapshot de runs y loop sin tools con provider inyectable en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
+- [X] T021 [US1] Implementar controller HTTP/SSE en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`.
+- [X] T022 [US1] Implementar rutas `/api/agent` de conversaciones, mensajes, runs, cancel y events en `workspace/backend/src/modules/agent-chat/agent-chat.routes.ts`.
+- [X] T023 [US1] Registrar `agentChatRoutes` en `workspace/backend/src/app.ts`.
+- [X] T024 [P] [US1] Crear cliente tipado de conversaciones/runs/SSE en `workspace/frontend/src/lib/finance/agent-api.ts`.
+- [X] T025 [US1] Agregar estado visual `agentOpen`, `activeAgentConversationId` y acciones relacionadas sin agregar `SectionId` en `workspace/frontend/src/lib/finance/ui-store.ts`.
+- [X] T026 [P] [US1] Implementar launcher circular accesible en `workspace/frontend/src/components/finance/agent/agent-launcher.tsx`.
+- [X] T027 [P] [US1] Implementar header, lista de mensajes, contenido Markdown, empty state y composer en `workspace/frontend/src/components/finance/agent/conversation-header.tsx`, `message-list.tsx`, `message-content.tsx`, `agent-empty-state.tsx`, `agent-composer.tsx`.
+- [X] T028 [US1] Implementar panel desktop/mobile, historial básico y conexión SSE/cancel en `workspace/frontend/src/components/finance/agent/agent-chat-panel.tsx` y `conversation-drawer.tsx`.
+- [X] T029 [US1] Montar una única instancia persistente launcher/panel en `workspace/frontend/src/components/finance/layout/app-shell.tsx` y cerrar Playwright US1.
 
 **Checkpoint**: MVP conversacional usable con provider fake en tests y provider real configurable en runtime.
 
