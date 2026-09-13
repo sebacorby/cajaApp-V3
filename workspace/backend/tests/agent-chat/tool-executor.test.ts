@@ -22,6 +22,16 @@ function readTool(overrides: Partial<AgentToolRegistryEntry> = {}): AgentToolReg
   };
 }
 
+function writeTool(overrides: Partial<AgentToolRegistryEntry> = {}): AgentToolRegistryEntry {
+  return readTool({
+    name: "test.write",
+    riskClass: "R2",
+    parallelSafe: false,
+    requiresExplicitIntent: true,
+    ...overrides,
+  });
+}
+
 describe("AgentToolExecutor", () => {
   it("valida argumentos antes de invocar handler", async () => {
     const handler = vi.fn(async () => ({ ok: true }));
@@ -91,5 +101,48 @@ describe("AgentToolExecutor", () => {
       { name: "test.artifact", arguments: { value: "b" }, explicitIntent: true },
     ]);
     expect(maxActive).toBe(1);
+  });
+
+  it("bloquea una R2 inferida o ambigua antes de mutar", async () => {
+    const handler = vi.fn(async () => ({ id: "created" }));
+    const executor = new AgentToolExecutor(new AgentToolRegistry([writeTool({ handler })]));
+    await expect(executor.execute({
+      name: "test.write",
+      arguments: { value: "x" },
+      explicitIntent: false,
+      toolCallId: "tool-call-1",
+      idempotencyKey: "run-1:provider-call-1",
+    })).rejects.toMatchObject({ code: "EXPLICIT_INTENT_REQUIRED" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("persiste el resultado de una R2 explícita antes de devolverlo", async () => {
+    const handler = vi.fn(async () => ({ id: "created-1", ok: true }));
+    const markSucceeded = vi.fn(async () => undefined);
+    const store = { findSucceeded: vi.fn(async () => null), markSucceeded };
+    const executor = new AgentToolExecutor(new AgentToolRegistry([writeTool({ handler })]), store as never);
+    const executed = await executor.execute({
+      name: "test.write", arguments: { value: "x" }, explicitIntent: true,
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:provider-call-1",
+    });
+    expect(executed.result).toEqual({ id: "created-1", ok: true });
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(markSucceeded).toHaveBeenCalledWith("tool-call-1", "run-1:provider-call-1", JSON.stringify(executed.result));
+  });
+
+  it("reutiliza una R2 succeeded por idempotencyKey sin ejecutar dos veces", async () => {
+    const handler = vi.fn(async () => ({ id: "duplicate" }));
+    const store = {
+      findSucceeded: vi.fn(async () => ({ resultJson: JSON.stringify({ id: "created-1", ok: true }) })),
+      markSucceeded: vi.fn(async () => undefined),
+    };
+    const executor = new AgentToolExecutor(new AgentToolRegistry([writeTool({ handler })]), store as never);
+    const executed = await executor.execute({
+      name: "test.write", arguments: { value: "x" }, explicitIntent: true,
+      toolCallId: "tool-call-1", idempotencyKey: "run-1:provider-call-1",
+    });
+    expect(executed.result).toEqual({ id: "created-1", ok: true });
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.markSucceeded).not.toHaveBeenCalled();
   });
 });

@@ -7,15 +7,28 @@ import { dashboardService } from "../dashboard/dashboard.service.js";
 import { dashboardQuerySchema } from "../dashboard/dashboard.schemas.js";
 import { movementsService } from "../movements/movements.service.js";
 import { movementCategoriesService } from "../movements/categories.service.js";
-import { movementQuerySchema, suggestMovementCategorySchema } from "../movements/movements.schemas.js";
+import {
+  assignMovementCategorySchema,
+  createManualMovementSchema,
+  createMovementCategorySchema,
+  movementQuerySchema,
+  suggestMovementCategorySchema,
+  updateManualMovementSchema,
+  updateMovementCategorySchema,
+} from "../movements/movements.schemas.js";
 import { cardsService } from "../cards/cards.service.js";
+import { exchangeRateUpdateSchema, manualPurchaseSchema } from "../cards/cards.schemas.js";
+import { manualPurchasesService } from "../manual-purchases/manual-purchases.service.js";
 import { importsService } from "../imports/imports.service.js";
 import { importCenterService } from "../import-center/import-center.service.js";
 import { debitImportsService } from "../debit-imports/debit-imports.service.js";
 import { salaryReceiptsService } from "../salary-receipts/salary-receipts.service.js";
 import { incomesService } from "../incomes/incomes.service.js";
+import { createIncomeEventSchema, createIncomeSourceSchema, updateIncomeSourceSchema } from "../incomes/incomes.schemas.js";
 import { budgetsService } from "../budgets/budgets.service.js";
+import { changeBudgetStatusSchema, createBudgetSchema, updateBudgetSchema } from "../budgets/budgets.schemas.js";
 import { goalsService } from "../goals/goals.service.js";
+import { changeGoalStatusSchema, createGoalContributionSchema, createGoalSchema, updateGoalSchema } from "../goals/goals.schemas.js";
 import { futureService } from "../future/future.service.js";
 import { reportsService } from "../reports/reports.service.js";
 import { reconciliationService } from "../reconciliation/reconciliation.service.js";
@@ -23,6 +36,7 @@ import { financialHealthService } from "../financial-health/financial-health.ser
 import { monthCloseService } from "../month-close/month-close.service.js";
 import { backupRestoreService } from "../backup-restore/backup-restore.service.js";
 import { settingsService } from "../settings/settings.service.js";
+import { updateSettingsSchema } from "../settings/settings.schemas.js";
 
 export const AGENT_READ_TOOL_NAMES = [
   "app.search",
@@ -67,6 +81,30 @@ export const AGENT_READ_TOOL_NAMES = [
   "settings.get_system",
   "ui.navigate",
 ] as const;
+
+export const AGENT_R2_TOOL_NAMES = [
+  "movements.create_manual",
+  "movements.update_manual",
+  "categories.create",
+  "categories.update",
+  "categories.assign",
+  "incomes.create_source",
+  "incomes.update_source",
+  "incomes.create_event",
+  "budgets.create",
+  "budgets.update",
+  "budgets.set_status",
+  "goals.create",
+  "goals.update",
+  "goals.set_status",
+  "goals.add_contribution",
+  "cards.set_exchange_rate",
+  "cards.create_manual_purchase",
+  "backup.create",
+  "settings.update",
+] as const;
+
+export const AGENT_TOOL_NAMES = [...AGENT_READ_TOOL_NAMES, ...AGENT_R2_TOOL_NAMES] as const;
 
 export interface AgentToolRegistryEntry {
   name: string;
@@ -153,6 +191,13 @@ function refFromArg(entityType: string, section: string, key: string) {
   };
 }
 
+function refFromResult(entityType: string, section: string, key = "id") {
+  return (result: unknown): AgentEntityRef[] => {
+    const value = (result as Record<string, unknown> | null)?.[key];
+    return typeof value === "string" ? [{ entityType, entityId: value, section }] : [];
+  };
+}
+
 function makeReadTool(
   name: string,
   description: string,
@@ -187,6 +232,24 @@ function makeArtifactTool(
     handler,
     resultProjector,
     auditEntityRefs: refsNone,
+  };
+}
+
+function makeWriteTool(
+  name: string,
+  description: string,
+  inputSchema: ZodTypeAny,
+  handler: (args: any) => Promise<unknown>,
+  auditEntityRefs: AgentToolRegistryEntry["auditEntityRefs"] = refsNone,
+): AgentToolRegistryEntry {
+  return {
+    name, description, inputSchema,
+    riskClass: "R2",
+    parallelSafe: false,
+    requiresExplicitIntent: true,
+    handler,
+    resultProjector: projectAgentResult,
+    auditEntityRefs,
   };
 }
 
@@ -290,6 +353,17 @@ const uiNavigateSchema = z.object({
   title: z.string().max(240).optional(),
   context: z.string().max(500).optional(),
 });
+
+const updateManualToolSchema = z.object({ movementId: uuidSchema, changes: updateManualMovementSchema });
+const updateCategoryToolSchema = z.object({ categoryId: uuidSchema, changes: updateMovementCategorySchema });
+const updateIncomeSourceToolSchema = z.object({ sourceId: uuidSchema, changes: updateIncomeSourceSchema });
+const updateBudgetToolSchema = z.object({ budgetId: uuidSchema, changes: updateBudgetSchema });
+const budgetStatusToolSchema = z.object({ budgetId: uuidSchema, change: changeBudgetStatusSchema });
+const updateGoalToolSchema = z.object({ goalId: uuidSchema, changes: updateGoalSchema });
+const goalStatusToolSchema = z.object({ goalId: uuidSchema, change: changeGoalStatusSchema });
+const goalContributionToolSchema = z.object({ goalId: uuidSchema, contribution: createGoalContributionSchema });
+const manualPurchaseToolSchema = z.object({ statementId: uuidSchema, purchase: manualPurchaseSchema });
+const backupCreateSchema = z.object({ label: z.string().trim().min(1).max(80).optional() });
 
 function csvArtifactProjector(result: unknown): AgentJsonValue {
   const row = result as { fileName?: unknown; records?: unknown; csv?: unknown };
@@ -395,6 +469,44 @@ const entries: AgentToolRegistryEntry[] = [
       const row = args as { recordId?: string; recordType?: string; section?: string; title?: string };
       return row.recordId && row.recordType ? [{ entityType: row.recordType, entityId: row.recordId, section: row.section, label: row.title }] : [];
     }),
+  makeWriteTool("movements.create_manual", "Crea un movimiento manual cuando el usuario lo pide explícitamente.", createManualMovementSchema,
+    (args) => movementsService.createManualMovement(args), refFromResult("movement", "movimientos")),
+  makeWriteTool("movements.update_manual", "Actualiza un movimiento manual identificado de forma inequívoca.", updateManualToolSchema,
+    (args) => movementsService.updateManualMovement(args.movementId, args.changes), refFromArg("movement", "movimientos", "movementId")),
+  makeWriteTool("categories.create", "Crea una categoría de movimientos.", createMovementCategorySchema,
+    (args) => movementCategoriesService.createCategory(args), refFromResult("category", "movimientos")),
+  makeWriteTool("categories.update", "Actualiza una categoría identificada.", updateCategoryToolSchema,
+    (args) => movementCategoriesService.updateCategory(args.categoryId, args.changes), refFromArg("category", "movimientos", "categoryId")),
+  makeWriteTool("categories.assign", "Asigna o quita una categoría a un movimiento compatible.", assignMovementCategorySchema,
+    (args) => movementCategoriesService.assignCategory(args), refFromArg("movement", "movimientos", "sourceId")),
+  makeWriteTool("incomes.create_source", "Crea una fuente de ingreso.", createIncomeSourceSchema,
+    (args) => incomesService.createSource(args), refFromResult("income_source", "ingresos")),
+  makeWriteTool("incomes.update_source", "Actualiza una fuente de ingreso identificada.", updateIncomeSourceToolSchema,
+    (args) => incomesService.updateSource(args.sourceId, args.changes), refFromArg("income_source", "ingresos", "sourceId")),
+  makeWriteTool("incomes.create_event", "Registra un evento de ingreso.", createIncomeEventSchema,
+    (args) => incomesService.createEvent(args), refFromResult("income_event", "ingresos")),
+  makeWriteTool("budgets.create", "Crea un presupuesto por categoría y período.", createBudgetSchema,
+    (args) => budgetsService.create(args), refFromResult("budget", "presupuestos")),
+  makeWriteTool("budgets.update", "Actualiza un presupuesto identificado.", updateBudgetToolSchema,
+    (args) => budgetsService.update(args.budgetId, args.changes), refFromArg("budget", "presupuestos", "budgetId")),
+  makeWriteTool("budgets.set_status", "Cambia el estado de un presupuesto identificado.", budgetStatusToolSchema,
+    (args) => budgetsService.changeStatus(args.budgetId, args.change.status), refFromArg("budget", "presupuestos", "budgetId")),
+  makeWriteTool("goals.create", "Crea un objetivo de ahorro.", createGoalSchema,
+    (args) => goalsService.createGoal(args), refFromResult("goal", "objetivos")),
+  makeWriteTool("goals.update", "Actualiza un objetivo identificado.", updateGoalToolSchema,
+    (args) => goalsService.updateGoal(args.goalId, args.changes), refFromArg("goal", "objetivos", "goalId")),
+  makeWriteTool("goals.set_status", "Cambia el estado de un objetivo identificado.", goalStatusToolSchema,
+    (args) => goalsService.changeStatus(args.goalId, args.change), refFromArg("goal", "objetivos", "goalId")),
+  makeWriteTool("goals.add_contribution", "Registra un aporte en un objetivo identificado.", goalContributionToolSchema,
+    (args) => goalsService.addContribution(args.goalId, args.contribution), refFromArg("goal", "objetivos", "goalId")),
+  makeWriteTool("cards.set_exchange_rate", "Actualiza la cotización USD/ARS usada por Tarjetas.", exchangeRateUpdateSchema,
+    (args) => cardsService.updateExchangeRate(args)),
+  makeWriteTool("cards.create_manual_purchase", "Registra una compra manual en un resumen de tarjeta activo.", manualPurchaseToolSchema,
+    (args) => manualPurchasesService.createPurchase(args.statementId, args.purchase), refFromArg("card_statement", "tarjetas", "statementId")),
+  makeWriteTool("backup.create", "Crea un backup manual mediante el servicio gobernado de CajaApp.", backupCreateSchema,
+    (args) => backupRestoreService.create(args.label), refFromResult("backup", "respaldo")),
+  makeWriteTool("settings.update", "Actualiza preferencias locales de CajaApp.", updateSettingsSchema,
+    (args) => settingsService.updateSettings(args)),
 ];
 
 export const agentToolRegistry = new AgentToolRegistry(entries);

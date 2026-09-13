@@ -100,18 +100,18 @@
 
 ### Tests for User Story 3
 
-- [ ] T041 [P] [US3] Escribir tests de explicit-intent R2, ambigüedad e idempotencia en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
-- [ ] T042 [P] [US3] Extender Playwright con creación de movimiento R2 y caso ambiguo AC-03/04 en `workspace/frontend/tests/agent-chat.spec.ts`.
+- [X] T041 [P] [US3] Escribir tests de explicit-intent R2, ambigüedad e idempotencia en `workspace/backend/tests/agent-chat/tool-executor.test.ts`.
+- [X] T042 [P] [US3] Extender Playwright con creación de movimiento R2 y caso ambiguo AC-03/04 en `workspace/frontend/tests/agent-chat.spec.ts`.
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] Agregar evaluación de explicit intent suministrada por el runner y política R2 en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts` sin confiar en risk/input del modelo.
-- [ ] T044 [US3] Implementar idempotencia durable usando `AgentToolCall.idempotencyKey` en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts`.
-- [ ] T045 [P] [US3] Registrar R2 de movimientos/categorías en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T046 [P] [US3] Registrar R2 de ingresos/presupuestos/objetivos en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T047 [P] [US3] Registrar R2 de exchange rate/compra manual/backup create/settings en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
-- [ ] T048 [US3] Persistir resultados exitosos antes de devolver tool result al modelo y serializar writes en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
-- [ ] T049 [US3] Mostrar acciones R2 ejecutadas/fallidas con resultado real en `workspace/frontend/src/components/finance/agent/tool-call-card.tsx` y cerrar tests US3.
+- [X] T043 [US3] Agregar evaluación de explicit intent suministrada por el runner y política R2 en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts` sin confiar en risk/input del modelo.
+- [X] T044 [US3] Implementar idempotencia durable usando `AgentToolCall.idempotencyKey` en `workspace/backend/src/modules/agent-chat/agent-tool-executor.ts`.
+- [X] T045 [P] [US3] Registrar R2 de movimientos/categorías en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T046 [P] [US3] Registrar R2 de ingresos/presupuestos/objetivos en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T047 [P] [US3] Registrar R2 de exchange rate/compra manual/backup create/settings en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts`.
+- [X] T048 [US3] Persistir resultados exitosos antes de devolver tool result al modelo y serializar writes en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
+- [X] T049 [US3] Mostrar acciones R2 ejecutadas/fallidas con resultado real en `workspace/frontend/src/components/finance/agent/tool-call-card.tsx` y cerrar tests US3.
 
 **Checkpoint**: R2 explícita funciona una vez; R2 inferida nunca muta sin confirmación.
 

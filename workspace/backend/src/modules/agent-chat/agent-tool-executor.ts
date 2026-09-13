@@ -1,4 +1,5 @@
 import type { AgentJsonValue } from "../ai/agent/agent-chat-provider.js";
+import { prisma } from "../../db/prisma.js";
 import type { AgentEntityRef, AgentRiskClass } from "./agent-types.js";
 import { AgentToolRegistry, agentToolRegistry } from "./agent-tool-registry.js";
 
@@ -6,7 +7,33 @@ export interface AgentToolRequest {
   name: string;
   arguments: AgentJsonValue;
   explicitIntent?: boolean;
+  toolCallId?: string;
+  idempotencyKey?: string;
 }
+
+export interface AgentToolExecutionStore {
+  findSucceeded(idempotencyKey: string): Promise<{ resultJson: string } | null>;
+  markSucceeded(toolCallId: string, idempotencyKey: string, resultJson: string): Promise<void>;
+}
+
+const prismaExecutionStore: AgentToolExecutionStore = {
+  async findSucceeded(idempotencyKey) {
+    const row = await prisma.agentToolCall.findUnique({
+      where: { idempotencyKey },
+      select: { status: true, resultJson: true },
+    });
+    return row?.status === "succeeded" && row.resultJson ? { resultJson: row.resultJson } : null;
+  },
+  async markSucceeded(toolCallId, idempotencyKey, resultJson) {
+    const updated = await prisma.agentToolCall.updateMany({
+      where: { id: toolCallId, idempotencyKey },
+      data: { status: "succeeded", resultJson, completedAt: new Date() },
+    });
+    if (updated.count !== 1) {
+      throw new AgentToolExecutionError("IDEMPOTENCY_RECORD_MISMATCH", "Agent tool call idempotency record does not match");
+    }
+  },
+};
 
 export interface ExecutedAgentTool {
   name: string;
@@ -24,7 +51,10 @@ export class AgentToolExecutionError extends Error {
 }
 
 export class AgentToolExecutor {
-  constructor(private readonly registry: AgentToolRegistry = agentToolRegistry) {}
+  constructor(
+    private readonly registry: AgentToolRegistry = agentToolRegistry,
+    private readonly store: AgentToolExecutionStore = prismaExecutionStore,
+  ) {}
 
   canRunInParallel(calls: AgentToolRequest[]): boolean {
     return calls.length > 1 && calls.every((call) => {
@@ -48,14 +78,36 @@ export class AgentToolExecutor {
       );
     }
     try {
+      if (tool.riskClass === "R2") {
+        if (!call.toolCallId || !call.idempotencyKey) {
+          throw new AgentToolExecutionError("IDEMPOTENCY_KEY_REQUIRED", `Tool ${call.name} requires durable idempotency metadata`);
+        }
+        const cached = await this.store.findSucceeded(call.idempotencyKey);
+        if (cached) {
+          const result = JSON.parse(cached.resultJson) as AgentJsonValue;
+          return {
+            name: tool.name,
+            riskClass: tool.riskClass,
+            arguments: parsed.data as AgentJsonValue,
+            result,
+            entityRefs: tool.auditEntityRefs(result, parsed.data),
+          };
+        }
+      }
+
       const raw = await tool.handler(parsed.data);
-      return {
+      const result = tool.resultProjector(raw);
+      const executed = {
         name: tool.name,
         riskClass: tool.riskClass,
         arguments: parsed.data as AgentJsonValue,
-        result: tool.resultProjector(raw),
+        result,
         entityRefs: tool.auditEntityRefs(raw, parsed.data),
       };
+      if (tool.riskClass === "R2") {
+        await this.store.markSucceeded(call.toolCallId!, call.idempotencyKey!, JSON.stringify(result));
+      }
+      return executed;
     } catch (error) {
       if (error instanceof AgentToolExecutionError) throw error;
       const message = error instanceof Error ? error.message : "Tool execution failed";

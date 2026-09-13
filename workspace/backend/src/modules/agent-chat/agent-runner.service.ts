@@ -104,6 +104,35 @@ export class AgentRunnerService {
     return /\b(export(?:ar|á)?|csv|descarg(?:ar|á)?|download|backup|respaldo)\b/i.test(userText);
   }
 
+  private explicitMutationIntent(userText: string, toolName: string): boolean {
+    const action = /(?:^|\s)(registr(?:a|á|ar)|cre(?:a|á|ar)|agreg(?:a|á|ar)|añad(?:e|í|ir)|cambi(?:a|á|ar)|edit(?:a|á|ar)|actualiz(?:a|á|ar)|asign(?:a|á|ar)|establec(?:e|é|er)|configur(?:a|á|ar)|pon(?:é|e|er)|aport(?:a|á|ar)|gener(?:a|á|ar)|guard(?:a|á|ar)|ocult(?:a|á|ar)|mostr(?:a|á|ar)|activ(?:a|á|ar)|desactiv(?:a|á|ar)|paus(?:a|á|ar)|reanud(?:a|á|ar)|cerr(?:a|á|ar)|create|update|set|add|register|assign|save)(?=\s|$|[.,;:!?])/i.test(userText);
+    if (!action) return false;
+
+    const ambiguousReference = /\b(ese|esa|eso|este|esta|aquel|aquella)\b/i.test(userText);
+    const targeted = /^(movements\.update_manual|categories\.update|categories\.assign|incomes\.update_source|budgets\.update|budgets\.set_status|goals\.update|goals\.set_status|goals\.add_contribution|cards\.create_manual_purchase)$/.test(toolName);
+    const explicitId = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i.test(userText);
+    if (targeted && ambiguousReference && !explicitId) return false;
+
+    const domainPatterns: Record<string, RegExp> = {
+      movements: /\b(gasto|movimiento|ingreso|egreso)\b/i,
+      categories: /\bcategor(?:ía|ia|ías|ias)\b/i,
+      incomes: /\b(ingreso|sueldo|salario|fuente|evento)\b/i,
+      budgets: /\bpresupuesto\b/i,
+      goals: /\b(objetivo|meta|aporte)\b/i,
+      cards: /\b(tarjeta|compra|cotizaci(?:ó|o)n|d[oó]lar|usd|ars|tipo de cambio)\b/i,
+      backup: /\b(backup|respaldo)\b/i,
+      settings: /\b(configuraci(?:ó|o)n|preferencia|tema|moneda|importe|monto)\b/i,
+    };
+    const prefix = toolName.split(".")[0];
+    return domainPatterns[prefix]?.test(userText) ?? false;
+  }
+
+  private explicitIntentFor(userText: string, toolName: string, riskClass: string): boolean | undefined {
+    if (riskClass === "R1") return this.explicitArtifactIntent(userText);
+    if (riskClass === "R2") return this.explicitMutationIntent(userText, toolName);
+    return undefined;
+  }
+
   private async settleToolRequests(requests: AgentToolRequest[]): Promise<PromiseSettledResult<ExecutedAgentTool>[]> {
     if (this.executor.canRunInParallel(requests)) {
       return Promise.allSettled(requests.map((request) => this.executor.execute(request)));
@@ -131,7 +160,7 @@ export class AgentRunnerService {
 
   private safeToolFailure(error: unknown): { code: string; message: string } {
     const code = typeof (error as any)?.code === "string" ? (error as any).code : "TOOL_EXECUTION_FAILED";
-    if (code === "INVALID_TOOL_ARGUMENTS" || code === "UNKNOWN_TOOL" || code === "EXPLICIT_INTENT_REQUIRED") {
+    if (["INVALID_TOOL_ARGUMENTS", "UNKNOWN_TOOL", "EXPLICIT_INTENT_REQUIRED", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_RECORD_MISMATCH"].includes(code)) {
       return { code, message: error instanceof Error ? error.message.slice(0, 500) : code };
     }
     return { code, message: "La tool no pudo completarse con los argumentos validados." };
@@ -190,19 +219,29 @@ export class AgentRunnerService {
         const prepared: PreparedToolCall[] = [];
 
         for (const providerCall of toolCalls) {
-          ordinal += 1;
           const definition = this.registry.lookup(providerCall.name);
-          const row = await this.db.agentToolCall.create({
-            data: {
-              runId,
-              ordinal,
-              toolName: providerCall.name,
-              riskClass: definition?.riskClass ?? "UNKNOWN",
-              argumentsJson: JSON.stringify(providerCall.arguments),
-              idempotencyKey: `${runId}:${ordinal}:${providerCall.id}`,
-              status: "proposed",
-            },
-          });
+          const idempotencyKey = `${runId}:${providerCall.id}`;
+          const argumentsJson = JSON.stringify(providerCall.arguments);
+          let row = await this.db.agentToolCall.findUnique({ where: { idempotencyKey } });
+          if (row) {
+            if (row.runId !== runId || row.toolName !== providerCall.name || row.argumentsJson !== argumentsJson) {
+              throw Object.assign(new Error("Provider tool call id was reused with different arguments"), { code: "IDEMPOTENCY_CONFLICT" });
+            }
+            ordinal = Math.max(ordinal, row.ordinal);
+          } else {
+            ordinal += 1;
+            row = await this.db.agentToolCall.create({
+              data: {
+                runId,
+                ordinal,
+                toolName: providerCall.name,
+                riskClass: definition?.riskClass ?? "UNKNOWN",
+                argumentsJson,
+                idempotencyKey,
+                status: "proposed",
+              },
+            });
+          }
           this.eventBus.publish(runId, "tool.proposed", {
             toolCallId: row.id, providerCallId: providerCall.id, name: providerCall.name,
             riskClass: definition?.riskClass ?? "UNKNOWN", arguments: providerCall.arguments,
@@ -219,16 +258,22 @@ export class AgentRunnerService {
             continue;
           }
 
-          await this.db.agentToolCall.update({ where: { id: row.id }, data: { status: "running" } });
+          if (row.status !== "succeeded") {
+            await this.db.agentToolCall.update({ where: { id: row.id }, data: { status: "running" } });
+          }
           this.eventBus.publish(runId, "tool.started", { toolCallId: row.id, name: providerCall.name, riskClass: definition.riskClass });
           prepared.push({
             providerCall,
             dbId: row.id,
-            ordinal,
+            ordinal: row.ordinal,
             request: {
               name: providerCall.name,
               arguments: providerCall.arguments,
-              explicitIntent: definition.requiresExplicitIntent ? this.explicitArtifactIntent(latestUserText) : undefined,
+              explicitIntent: definition.requiresExplicitIntent
+                ? this.explicitIntentFor(latestUserText, providerCall.name, definition.riskClass)
+                : undefined,
+              toolCallId: row.id,
+              idempotencyKey,
             },
           });
         }

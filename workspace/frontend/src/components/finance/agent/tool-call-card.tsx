@@ -1,9 +1,9 @@
 import { CheckCircle2, CircleDashed, XCircle } from "lucide-react";
 import type { AgentToolCallView } from "@/lib/finance/agent-api";
 
-function statusLabel(status: string): string {
-  if (status === "succeeded") return "Completada";
-  if (status === "failed") return "Falló";
+function statusLabel(status: string, riskClass: string): string {
+  if (status === "succeeded") return riskClass === "R2" ? "Acción ejecutada" : "Completada";
+  if (status === "failed") return riskClass === "R2" ? "Acción no ejecutada" : "Falló";
   if (status === "running") return "Ejecutando";
   if (status === "rejected") return "Rechazada";
   if (status === "cancelled") return "Cancelada";
@@ -29,6 +29,7 @@ export function ToolCallCard({ call }: { call: AgentToolCallView }) {
       data-testid="agent-tool-card"
       data-tool-name={call.name}
       data-status={call.status}
+      data-risk-class={call.riskClass}
       className="w-full rounded-xl border bg-background/80 p-3 text-xs shadow-xs"
     >
       <div className="flex items-center justify-between gap-3">
@@ -38,7 +39,7 @@ export function ToolCallCard({ call }: { call: AgentToolCallView }) {
         </div>
         <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
           <StatusIcon status={call.status} />
-          <span>{statusLabel(call.status)}</span>
+          <span>{statusLabel(call.status, call.riskClass)}</span>
         </div>
       </div>
       <details className="mt-2 rounded-lg bg-muted/50 px-2.5 py-2">
