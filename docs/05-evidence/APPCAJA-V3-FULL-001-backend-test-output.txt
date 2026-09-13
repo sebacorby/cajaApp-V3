@@ -1,0 +1,34 @@
+﻿
+> cajaapp-v3-backend@1.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mI:/cajaApp-V3/workspace/backend[39m
+
+ [32mÔ£ô[39m tests/cards/card-statement.schema.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32mÔ£ô[39m tests/cards/golden-fixture.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+{"level":30,"time":1783620490332,"pid":31456,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490333,"pid":39932,"hostname":"NTTD-46YCT3","inputRows":2,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490334,"pid":34820,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+ [32mÔ£ô[39m tests/imports/display-order-preservation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+{"level":30,"time":1783620490335,"pid":34820,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490335,"pid":34820,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490336,"pid":34820,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+ [32mÔ£ô[39m tests/cards/installment-projection.service.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+{"level":30,"time":1783620490334,"pid":31456,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490334,"pid":31456,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":2,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490334,"pid":31456,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":0,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490334,"pid":31456,"hostname":"NTTD-46YCT3","inputRows":1,"projectedInstallments":5,"statementMonthKey":"2026-06","msg":"Installment projections calculated"}
+{"level":30,"time":1783620490347,"pid":31456,"hostname":"NTTD-46YCT3","monthsCount":2,"msg":"Monthly projections aggregated"}
+ [32mÔ£ô[39m tests/cards/projections.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+{"level":30,"time":1783620490390,"pid":41868,"hostname":"NTTD-46YCT3","creditCardScore":6,"bankAccountScore":0,"invoiceScore":0,"receiptScore":0,"msg":"Detected credit card statement (keyword)"}
+{"level":40,"time":1783620490390,"pid":41868,"hostname":"NTTD-46YCT3","creditCardScore":0,"bankAccountScore":0,"invoiceScore":0,"receiptScore":0,"msg":"Unknown document type (keyword)"}
+ [32mÔ£ô[39m tests/imports/pdf-import-contract.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+{"level":30,"time":1783620490672,"pid":25944,"hostname":"NTTD-46YCT3","fromMonth":"2026-07","toMonth":"2027-01","monthsCount":0,"msg":"Updated values retrieved"}
+ [32mÔ£ô[39m tests/smoke/api-smoke.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[32m55 passed[39m[22m[90m (55)[39m
+[2m   Start at [22m 15:08:09
+[2m   Duration [22m 861ms[2m (transform 343ms, setup 0ms, collect 1.21s, tests 180ms, environment 1ms, prepare 1.13s)[22m
+

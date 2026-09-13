@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model UploadedDocument {
+  id            String   @id @default(uuid())
+  fileName      String
+  mimeType      String
+  sizeBytes     Int
+  sha256        String
+  storagePath   String
+  pageCount     Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  aiExtractionRuns AiExtractionRun[]
+  drafts           CardStatementDraft[]
+  statements       CardStatement[]
+}
+
+model AiExtractionRun {
+  id              String   @id @default(uuid())
+  documentId      String
+  document        UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  promptFilePath  String
+  promptHash      String
+  promptVersion   String?
+
+  modelProvider   String
+  modelBaseUrl    String
+  modelName       String
+
+  rawResponsePath String?
+  rawResponseHash String?
+  jsonOutput      String?
+
+  validationErrors String?
+  retries          Int      @default(0)
+
+  status          String   @default("started")
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  draft           CardStatementDraft?
+}
+
+model CardStatementDraft {
+  id            String   @id @default(uuid())
+  documentId    String
+  document      UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  aiRunId       String?  @unique
+  aiRun         AiExtractionRun? @relation(fields: [aiRunId], references: [id])
+
+  status        String   @default("imported")
+
+  previewJson   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sections      CardStatementDraftSection[]
+  groups        CardStatementDraftGroup[]
+  rows          CardStatementDraftRow[]
+
+  acceptedStatement CardStatement?
+}
+
+model CardStatementDraftSection {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  label         String
+  displayOrder  Int
+
+  @@unique([draftId, sectionKey])
+  @@index([draftId])
+}
+
+model CardStatementDraftGroup {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  groupKey      String
+  sectionKey    String
+  label         String
+  displayOrder  Int
+  cardLast4     String?
+  holderName    String?
+
+  @@unique([draftId, groupKey])
+  @@index([draftId])
+}
+
+model CardStatementDraftRow {
+  id            String   @id @default(uuid())
+  draftId       String
+  draft         CardStatementDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  groupKey      String?
+
+  displayOrder  Int
+  sourcePage    Int?
+
+  rowType       String
+  editable      Boolean  @default(false)
+
+  dateRaw       String?
+  dateIso       String?
+  markerRaw     String?
+  referenceRaw  String?
+  installmentRaw String?
+  receiptRaw    String?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  originalText  String
+  confidence    Float?
+
+  @@index([draftId])
+  @@index([draftId, sectionKey])
+  @@index([draftId, groupKey])
+}
+
+model CardStatement {
+  id            String   @id @default(uuid())
+  documentId    String
+  document      UploadedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  draftId       String?  @unique
+  draft         CardStatementDraft? @relation(fields: [draftId], references: [id])
+
+  status        String   @default("accepted")
+
+  bankName      String?
+  brand         String?
+  statementNumber String?
+  accountNumber String?
+  holderName    String?
+  periodLabel   String?
+
+  totalPesosRaw String?
+  totalDollarsRaw String?
+  minimumPaymentPesosRaw String?
+
+  currentDueDate String?
+  nextClosingDate String?
+  nextDueDate    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sections      CardStatementSection[]
+  groups        CardStatementGroup[]
+  rows          CardStatementRow[]
+  projections   CardInstallmentProjection[]
+  manualPurchases ManualCardPurchase[]
+}
+
+model CardStatementSection {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  label         String
+  displayOrder  Int
+
+  @@index([statementId])
+}
+
+model CardStatementGroup {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  groupKey      String
+  sectionKey    String
+  label         String
+  displayOrder  Int
+  cardLast4     String?
+  holderName    String?
+
+  totalPesosRaw   String?
+  totalDollarsRaw String?
+
+  @@index([statementId])
+}
+
+model CardStatementRow {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  sectionKey    String
+  groupKey      String?
+
+  displayOrder  Int
+  sourcePage    Int?
+
+  rowType       String
+  editable      Boolean
+
+  dateRaw       String?
+  dateIso       String?
+  markerRaw     String?
+  referenceRaw  String?
+  installmentRaw String?
+  receiptRaw    String?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  originalText  String
+  confidence    Float?
+
+  @@index([statementId])
+  @@index([statementId, sectionKey])
+  @@index([statementId, groupKey])
+}
+
+model CardInstallmentProjection {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  rowId         String
+  monthKey      String
+  label         String
+
+  installmentCurrent Int?
+  installmentTotal  Int?
+
+  amountPesosRaw    String?
+  amountDollarsRaw  String?
+  currencyOriginal  String?
+
+  isManual      Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+
+  @@index([statementId])
+  @@index([statementId, monthKey])
+}
+
+model ManualCardPurchase {
+  id            String   @id @default(uuid())
+  statementId   String
+  statement     CardStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  cardLast4     String
+  holderName    String
+  purchaseDate  String
+  description   String
+  currency      String
+  amountRaw     String
+  installments  Int
+  notes         String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([statementId])
+}

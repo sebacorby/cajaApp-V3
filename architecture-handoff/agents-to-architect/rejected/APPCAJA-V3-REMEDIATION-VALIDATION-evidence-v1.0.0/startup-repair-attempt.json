@@ -1,0 +1,14 @@
+{
+  "stdout": "\nERROR: No se puede ejecutar un documento en medio de una canalización: C:\\Windows\\System32\\taskkill.exe.\n{\n    \"ok\":  false,\n    \"error\":  \"No se puede ejecutar un documento en medio de una canalización: C:\\\\Windows\\\\System32\\\\taskkill.exe.\",\n    \"stateFile\":  \"C:\\\\Users\\\\javie\\\\AppData\\\\Local\\\\Temp\\\\cajaapp-headless\\\\state.json\"\n}\n",
+  "stderr": "",
+  "exit_code": 1,
+  "cmd": [
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    "I:\\cajaApp-V3\\cajaapp-headless-up.ps1",
+    "-JsonOnly"
+  ]
+}

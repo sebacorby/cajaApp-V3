@@ -1,0 +1,86 @@
+
+> cajaapp-v3-backend@1.0.0 dev
+> tsx watch src/main.ts
+
+[14:09:04.492] [32mINFO[39m (25484): [36mDatabase connected successfully[39m
+[14:09:04.611] [31mERROR[39m (25484): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:29:18 [tsx] change in ./src\modules\ai\ollama.client.ts Rerunning...
+c[14:29:19.114] [32mINFO[39m (7984): [36mDatabase connected successfully[39m
+[14:29:19.244] [31mERROR[39m (7984): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:29:36 [tsx] change in ./src\modules\ai\ai-extraction.service.ts Rerunning...
+c[14:29:37.241] [32mINFO[39m (24824): [36mDatabase connected successfully[39m
+[14:29:37.372] [31mERROR[39m (24824): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:30:01 [tsx] change in ./src\modules\imports\imports.service.ts Rerunning...
+c[14:30:02.347] [32mINFO[39m (34544): [36mDatabase connected successfully[39m
+[14:30:02.471] [31mERROR[39m (34544): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:30:11 [tsx] change in ./src\shared\errors.ts Rerunning...
+c[14:30:12.294] [32mINFO[39m (9436): [36mDatabase connected successfully[39m
+[14:30:12.415] [31mERROR[39m (9436): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:31:13 [tsx] change in ./src\modules\cards\cards.controller.ts Rerunning...
+c[14:31:14.293] [32mINFO[39m (33552): [36mDatabase connected successfully[39m
+[14:31:14.410] [31mERROR[39m (33552): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:31:55 [tsx] change in ./src\modules\cards\cards.service.ts Rerunning...
+c[14:31:56.007] [32mINFO[39m (29048): [36mDatabase connected successfully[39m
+[14:31:56.100] [31mERROR[39m (29048): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:32:17 [tsx] change in ./src\modules\projections\installment-projection.service.ts Rerunning...
+c[14:32:18.185] [32mINFO[39m (32636): [36mDatabase connected successfully[39m
+[14:32:18.283] [31mERROR[39m (32636): [36mFailed to start server[39m
+    error: {
+      "code": "FST_ERR_DUPLICATED_ROUTE",
+      "name": "FastifyError",
+      "statusCode": 500,
+      "message": "Method 'GET' already declared for route '/health'"
+    }
+02:33:06 [tsx] change in ./src\app.ts Rerunning...
+c02:33:23 [tsx] change in ./src\app.ts Rerunning...
+c[14:33:24.018] [32mINFO[39m (18548): [36mDatabase connected successfully[39m
+[14:33:24.119] [31mERROR[39m (18548): [36mFailed to start server[39m
+    error: {
+      "code": "EACCES",
+      "errno": -4092,
+      "syscall": "listen",
+      "address": "127.0.0.1",
+      "port": 4000
+    }

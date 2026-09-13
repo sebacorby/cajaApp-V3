@@ -1,0 +1,6 @@
+﻿Build Command: npm run build
+Result: SUCCESS
+
+tsc -p tsconfig.json
+No errors
+Output directory: dist/

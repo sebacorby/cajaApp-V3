@@ -1,0 +1,36 @@
+# File Integrity Initial — v1.0.0 Salary Receipt Focal Validation
+
+## Date: 2026-07-16
+
+## Backend Files
+```
+E5078779DD636F2AB66299D1A366316727F23458ADAB4881C93C826F339856BE 18623 workspace/backend/prisma/schema.prisma
+4D2E6F89E79D4916BD38800A7EAE7C2D80490EF154849A6A826043FF44E3BF05 3454 workspace/backend/src/app.ts
+A5C0A845E5741C3A1BB06F6D02E285214544657248C1CE0B7525042B22465EDB 6923 workspace/backend/src/config/env.ts
+AABEE6BE42B1877CEAF32C3B42701DB0619B1A2AEA10347D677CA6483286DBDB 1101 workspace/backend/src/modules/salary-receipts/salary-receipts.types.ts
+4A93C0ABFD454ECDBF273268E9FB6A7D81BDFFC4EB81F4FEBF642198DC479CF1 2526 workspace/backend/src/modules/salary-receipts/salary-receipts.schemas.ts
+D61502D9C58FF50986658A113147E14B6D0F9B345BD420E208742B0A194C716D 20948 workspace/backend/src/modules/salary-receipts/salary-receipts.service.ts
+7067AF451B5597A96895B6E50B84B065E4895DDB8779D9B5877813FAFC2B2C8E workspace/backend/src/modules/salary-receipts/salary-receipt-extraction.service.ts
+652DF15D2DFF4B1DBD43CA2308FB2A563F00D167DD73DB14F6C847FA90ACB933 2806 workspace/backend/src/modules/salary-receipts/salary-receipts.controller.ts
+94E66051DB6017994D7D45DA9B9BB08027D76591C48EE8579AEFB18DDFE29E1C 282 workspace/backend/src/modules/salary-receipts/salary-receipts.routes.ts
+D1BDB193A2A7904DD693358614F96959744A588B0D75E6C0DB504F514B38B0C2 2734 workspace/backend/tests/salary-receipts/salary-receipts.test.ts
+825D44D6C4E1E59D8F489B33D08F52EE56EE434C8F70003B5CFED2261B458A87 138923 workspace/backend/package-lock.json
+```
+
+## Frontend Files
+```
+E165040A57288FD5AEC8A5B91E8EDD982517397CF7A9B3CBC413C6A0419DAD57 4716 workspace/frontend/src/lib/finance/salary-receipts-api.ts
+42C640C1F565CDFD8B9677E9E94E03AC47EE60635ADC6EBCC17F4DB623AA1F57 22130 workspace/frontend/src/components/finance/imports/salary-receipts-panel.tsx
+EEF0B236C8C3C574593CB690E10A4A8FA635E8DD3EB9FBF75D5ECDA762F62A33 workspace/frontend/src/components/finance/sections/ingresos-section.tsx
+F5984E101F95EA20BE4977A5695A549D9EE3D6409E65A97985714FC5E89B454B 5879 workspace/frontend/tests/salary-receipts.spec.ts
+DB0ECE39A9A66B3FB10A4BD6644B2A4616D82AD42476BA9F513964EC6793E6ED 505576 workspace/frontend/package-lock.json
+```
+
+## Scripts
+```
+BFBE07440453C3D7192F58C863829A6A801E2D2EEC40DC2F9F15C5F1DC874385 18775 start-cajaapp.ps1
+AB6A0175D0F8C734E761790ECA3CEA99A8A0C372F39562D1481A0B5679F1C13F 29501 cajaapp-headless-up.ps1
+```
+
+## Scope Note
+- The file `ingresos-section.tsx` listed in the scope had an incorrect path. Correct path is `workspace/frontend/src/components/finance/sections/ingresos-section.tsx`

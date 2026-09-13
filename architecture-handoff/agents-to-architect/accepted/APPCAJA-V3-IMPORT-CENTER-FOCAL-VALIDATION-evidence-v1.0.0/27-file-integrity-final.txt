@@ -1,0 +1,55 @@
+# 27-file-integrity-final.txt
+
+# APP-IMPORT-CENTER-001 — Final File Integrity
+# SHA-256 checksums recorded at campaign end
+
+## Backend Scope Files (4 + 1 app.ts)
+
+| File | Initial Hash | Final Hash | Match |
+|------|-------------|-------------|-------|
+| import-center.controller.ts | 318D1E4F... | 318D1E4F... | ✅ |
+| import-center.routes.ts | 6398796B... | 6398796B... | ✅ |
+| import-center.schemas.ts | 915804D5... | 915804D5... | ✅ |
+| import-center.service.ts | E6F32640... | E6F32640... | ✅ |
+| app.ts | D442A63C... | D442A63C... | ✅ |
+
+## Backend Test
+
+| File | Initial Hash | Final Hash | Match |
+|------|-------------|-------------|-------|
+| import-center.test.ts | F12BD1FE... | F12BD1FE... | ✅ |
+
+## Frontend Scope Files (6)
+
+| File | Initial Hash | Final Hash | Match |
+|------|-------------|-------------|-------|
+| import-center-api.ts | E4F2621B... | E4F2621B... | ✅ |
+| importaciones-section.tsx | 32E0F409... | 32E0F409... | ✅ |
+| section-router.tsx | 7905A2A6... | 7905A2A6... | ✅ |
+| nav.ts | 1D9F0C54... | 1D9F0C54... | ✅ |
+| ui-store.ts | 627ABB3A... | 627ABB3A... | ✅ |
+| import-center.spec.ts | DB0ECE39... | DB0ECE39... | ✅ |
+
+## Lockfiles & Schema
+
+| File | Initial Hash | Final Hash | Match |
+|------|-------------|-------------|-------|
+| backend/package-lock.json | 825D44D6... | 825D44D6... | ✅ |
+| frontend/package-lock.json | DB0ECE39... | DB0ECE39... | ✅ |
+| backend/prisma/schema.prisma | E5078779... | E5078779... | ✅ |
+| cajaapp-headless-up.ps1 | D4160DB0... | D4160DB0... | ✅ |
+
+## SQLite
+
+| File | Initial Hash | Final Hash | Match |
+|------|-------------|-------------|-------|
+| dev.db | E24E819E... | E24E819E... | ✅ |
+
+## Migration Check
+No new migrations created in prisma/migrations/ ✅
+
+## Scripts Check
+cajaapp-headless-up.ps1 hash unchanged ✅
+
+## Conclusion
+All 12 scope files + lockfiles + schema + script unchanged after validation ✅

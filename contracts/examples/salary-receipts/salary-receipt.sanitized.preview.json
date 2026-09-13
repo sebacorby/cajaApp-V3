@@ -1,0 +1,65 @@
+{
+  "version": "salary-receipt-v1",
+  "documentType": "salary_receipt_pdf",
+  "source": {
+    "employerName": "EMPRESA DE EJEMPLO SA",
+    "employerTaxId": "30-00000000-0",
+    "employeeName": "PERSONA DE EJEMPLO",
+    "employeeTaxId": "20-00000000-0",
+    "periodMonthKey": "2026-06",
+    "payDate": "2026-07-04",
+    "currency": "ARS"
+  },
+  "summary": {
+    "grossAmount": "1450000.00",
+    "deductionsAmount": "246500.00",
+    "netAmount": "1203500.00"
+  },
+  "items": [
+    {
+      "id": "concept-1",
+      "displayOrder": 1,
+      "kind": "earning",
+      "code": "001",
+      "label": "Sueldo básico",
+      "amount": "1200000.00",
+      "sourcePage": 1,
+      "originalText": "001 Sueldo básico 1.200.000,00",
+      "confidence": 0.99
+    },
+    {
+      "id": "concept-2",
+      "displayOrder": 2,
+      "kind": "earning",
+      "code": "014",
+      "label": "Antigüedad",
+      "amount": "250000.00",
+      "sourcePage": 1,
+      "originalText": "014 Antigüedad 250.000,00",
+      "confidence": 0.98
+    },
+    {
+      "id": "concept-3",
+      "displayOrder": 3,
+      "kind": "deduction",
+      "code": "501",
+      "label": "Jubilación",
+      "amount": "159500.00",
+      "sourcePage": 1,
+      "originalText": "501 Jubilación 159.500,00",
+      "confidence": 0.99
+    },
+    {
+      "id": "concept-4",
+      "displayOrder": 4,
+      "kind": "deduction",
+      "code": "502",
+      "label": "Obra social",
+      "amount": "87000.00",
+      "sourcePage": 1,
+      "originalText": "502 Obra social 87.000,00",
+      "confidence": 0.99
+    }
+  ],
+  "warnings": []
+}

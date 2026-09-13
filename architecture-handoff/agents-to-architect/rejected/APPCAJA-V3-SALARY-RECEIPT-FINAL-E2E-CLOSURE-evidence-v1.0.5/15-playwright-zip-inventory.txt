@@ -1,0 +1,8 @@
+playwright-salary-receipt-final-v1.0.5.zip
+SHA-256: BE67535406B1CDEE587E91A32D87947C61782DD16215E13381969C9DD7685FF1
+Size: 3432986 bytes
+Contains:
+- test-results/salary-receipts.real-Recib-eae0e--acepta-y-anula-un-PDF-real-chromium/test-failed-1.png (screenshot showing the preview form with salary fields)
+- test-results/salary-receipts.real-Recib-eae0e--acepta-y-anula-un-PDF-real-chromium/video.webm
+- test-results/salary-receipts.real-Recib-eae0e--acepta-y-anula-un-PDF-real-chromium/trace.zip
+- test-results/salary-receipts.real-Recib-eae0e--acepta-y-anula-un-PDF-real-chromium/error-context.md

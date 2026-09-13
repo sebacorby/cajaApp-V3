@@ -1,0 +1,1743 @@
+{
+    "completedPhases":  [
+                            "discovery",
+                            "foundations",
+                            "components"
+                        ],
+    "components":  {
+                       "accordion":  {
+                                         "cssTokensUsed":  [
+
+                                                           ],
+                                         "figmaNodeId":  "8:588",
+                                         "hardcodedValues":  [
+
+                                                             ],
+                                         "imports":  [
+
+                                                     ],
+                                         "props":  [
+
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/ui/accordion.tsx",
+                                         "status":  "created",
+                                         "tier":  0
+                                     },
+                       "alert-center":  {
+                                            "cssTokensUsed":  [
+                                                                  "bg-destructive",
+                                                                  "text-destructive-foreground",
+                                                                  "text-muted-foreground"
+                                                              ],
+                                            "figmaNodeId":  "8:855",
+                                            "hardcodedValues":  [
+                                                                    "text-[10px] badge geometry"
+                                                                ],
+                                            "imports":  [
+                                                            "@/components/ui/*"
+                                                        ],
+                                            "props":  [
+
+                                                      ],
+                                            "sourceFile":  "workspace/frontend/src/components/finance/alerts/alert-center.tsx",
+                                            "status":  "created",
+                                            "tier":  1
+                                        },
+                       "alert-dialog":  {
+                                            "cssTokensUsed":  [
+
+                                                              ],
+                                            "figmaNodeId":  "8:590",
+                                            "hardcodedValues":  [
+
+                                                                ],
+                                            "imports":  [
+
+                                                        ],
+                                            "props":  [
+
+                                                      ],
+                                            "sourceFile":  "workspace/frontend/src/components/ui/alert-dialog.tsx",
+                                            "status":  "created",
+                                            "tier":  0
+                                        },
+                       "alert":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:589",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/alert.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "amount":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:856",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+                                                      "@/components/finance/preferences/app-preferences-provider"
+                                                  ],
+                                      "props":  [
+                                                    "value",
+                                                    "currency",
+                                                    "unit",
+                                                    "className"
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/finance/shared/amount.tsx",
+                                      "status":  "created",
+                                      "tier":  1
+                                  },
+                       "app-shell":  {
+                                         "cssTokensUsed":  [
+                                                               "bg-background",
+                                                               "text-foreground"
+                                                           ],
+                                         "figmaNodeId":  "8:857",
+                                         "hardcodedValues":  [
+
+                                                             ],
+                                         "imports":  [
+                                                         "./sidebar",
+                                                         "./header"
+                                                     ],
+                                         "props":  [
+
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/finance/layout/app-shell.tsx",
+                                         "status":  "created",
+                                         "tier":  2
+                                     },
+                       "aspect-ratio":  {
+                                            "cssTokensUsed":  [
+
+                                                              ],
+                                            "figmaNodeId":  "8:605",
+                                            "hardcodedValues":  [
+
+                                                                ],
+                                            "imports":  [
+
+                                                        ],
+                                            "props":  [
+
+                                                      ],
+                                            "sourceFile":  "workspace/frontend/src/components/ui/aspect-ratio.tsx",
+                                            "status":  "created",
+                                            "tier":  0
+                                        },
+                       "avatar":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:606",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/avatar.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "badge":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:607",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/badge.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "balance-trend":  {
+                                             "cssTokensUsed":  [
+                                                                   "text-muted-foreground"
+                                                               ],
+                                             "figmaNodeId":  "8:874",
+                                             "hardcodedValues":  [
+                                                                     "#059669 ARS line",
+                                                                     "#2563eb USD line",
+                                                                     "text-[11px] labels"
+                                                                 ],
+                                             "imports":  [
+
+                                                         ],
+                                             "props":  [
+                                                           "currency"
+                                                       ],
+                                             "sourceFile":  "workspace/frontend/src/components/finance/dashboard/balance-trend.tsx",
+                                             "status":  "created",
+                                             "tier":  0
+                                         },
+                       "brand":  {
+                                     "cssTokensUsed":  [
+                                                           "text-foreground",
+                                                           "text-muted-foreground"
+                                                       ],
+                                     "figmaNodeId":  "8:881",
+                                     "hardcodedValues":  [
+                                                             "text-[15px] wordmark",
+                                                             "text-[11px] tagline"
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/finance/layout/brand.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "breadcrumb":  {
+                                          "cssTokensUsed":  [
+
+                                                            ],
+                                          "figmaNodeId":  "8:620",
+                                          "hardcodedValues":  [
+
+                                                              ],
+                                          "imports":  [
+
+                                                      ],
+                                          "props":  [
+
+                                                    ],
+                                          "sourceFile":  "workspace/frontend/src/components/ui/breadcrumb.tsx",
+                                          "status":  "created",
+                                          "tier":  0
+                                      },
+                       "button":  {
+                                      "cssTokensUsed":  [
+                                                            "bg-primary",
+                                                            "text-primary-foreground",
+                                                            "bg-secondary",
+                                                            "text-secondary-foreground",
+                                                            "bg-destructive",
+                                                            "bg-accent",
+                                                            "text-accent-foreground",
+                                                            "bg-background",
+                                                            "border-ring"
+                                                        ],
+                                      "figmaNodeId":  "8:625",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+                                                    "variant: default|destructive|outline|secondary|ghost|link",
+                                                    "size: default|sm|lg|icon",
+                                                    "asChild"
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/button.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "calendar":  {
+                                        "cssTokensUsed":  [
+                                                              "text-muted-foreground"
+                                                          ],
+                                        "figmaNodeId":  "8:626",
+                                        "hardcodedValues":  [
+                                                                "text-[0.8rem] day cells"
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/calendar.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "card":  {
+                                    "cssTokensUsed":  [
+
+                                                      ],
+                                    "figmaNodeId":  "8:641",
+                                    "hardcodedValues":  [
+
+                                                        ],
+                                    "imports":  [
+
+                                                ],
+                                    "props":  [
+
+                                              ],
+                                    "sourceFile":  "workspace/frontend/src/components/ui/card.tsx",
+                                    "status":  "created",
+                                    "tier":  0
+                                },
+                       "carousel":  {
+                                        "cssTokensUsed":  [
+
+                                                          ],
+                                        "figmaNodeId":  "8:642",
+                                        "hardcodedValues":  [
+
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/carousel.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "category-donut":  {
+                                              "cssTokensUsed":  [
+                                                                    "text-muted-foreground"
+                                                                ],
+                                              "figmaNodeId":  "8:882",
+                                              "hardcodedValues":  [
+                                                                      "dynamic category.color inline style",
+                                                                      "text-[11px] legend"
+                                                                  ],
+                                              "imports":  [
+
+                                                          ],
+                                              "props":  [
+                                                            "slices"
+                                                        ],
+                                              "sourceFile":  "workspace/frontend/src/components/finance/charts/category-donut.tsx",
+                                              "status":  "created",
+                                              "tier":  0
+                                          },
+                       "chart":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:649",
+                                     "hardcodedValues":  [
+                                                             "recharts #ccc/#fff overrides",
+                                                             "border-[1.5px] tooltip cursor"
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/chart.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "checkbox":  {
+                                        "cssTokensUsed":  [
+
+                                                          ],
+                                        "figmaNodeId":  "8:657",
+                                        "hardcodedValues":  [
+
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/checkbox.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "collapsible":  {
+                                           "cssTokensUsed":  [
+
+                                                             ],
+                                           "figmaNodeId":  "8:658",
+                                           "hardcodedValues":  [
+
+                                                               ],
+                                           "imports":  [
+
+                                                       ],
+                                           "props":  [
+
+                                                     ],
+                                           "sourceFile":  "workspace/frontend/src/components/ui/collapsible.tsx",
+                                           "status":  "created",
+                                           "tier":  0
+                                       },
+                       "command":  {
+                                       "cssTokensUsed":  [
+
+                                                         ],
+                                       "figmaNodeId":  "8:667",
+                                       "hardcodedValues":  [
+
+                                                           ],
+                                       "imports":  [
+
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/ui/command.tsx",
+                                       "status":  "created",
+                                       "tier":  0
+                                   },
+                       "context-menu":  {
+                                            "cssTokensUsed":  [
+
+                                                              ],
+                                            "figmaNodeId":  "8:672",
+                                            "hardcodedValues":  [
+
+                                                                ],
+                                            "imports":  [
+
+                                                        ],
+                                            "props":  [
+
+                                                      ],
+                                            "sourceFile":  "workspace/frontend/src/components/ui/context-menu.tsx",
+                                            "status":  "created",
+                                            "tier":  0
+                                        },
+                       "dialog":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:679",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/dialog.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "drawer":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:680",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/drawer.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "dropdown-menu":  {
+                                             "cssTokensUsed":  [
+
+                                                               ],
+                                             "figmaNodeId":  "8:681",
+                                             "hardcodedValues":  [
+
+                                                                 ],
+                                             "imports":  [
+
+                                                         ],
+                                             "props":  [
+
+                                                       ],
+                                             "sourceFile":  "workspace/frontend/src/components/ui/dropdown-menu.tsx",
+                                             "status":  "created",
+                                             "tier":  0
+                                         },
+                       "form":  {
+                                    "cssTokensUsed":  [
+
+                                                      ],
+                                    "figmaNodeId":  "8:694",
+                                    "hardcodedValues":  [
+
+                                                        ],
+                                    "imports":  [
+
+                                                ],
+                                    "props":  [
+
+                                              ],
+                                    "sourceFile":  "workspace/frontend/src/components/ui/form.tsx",
+                                    "status":  "created",
+                                    "tier":  0
+                                },
+                       "global-search-dialog":  {
+                                                    "cssTokensUsed":  [
+                                                                          "bg-muted",
+                                                                          "text-muted-foreground",
+                                                                          "bg-card"
+                                                                      ],
+                                                    "figmaNodeId":  "8:893",
+                                                    "hardcodedValues":  [
+                                                                            "max-h-[88vh] dialog geometry",
+                                                                            "text-[10px] kbd hint"
+                                                                        ],
+                                                    "imports":  [
+                                                                    "@/components/ui/dialog"
+                                                                ],
+                                                    "props":  [
+
+                                                              ],
+                                                    "sourceFile":  "workspace/frontend/src/components/finance/search/global-search-dialog.tsx",
+                                                    "status":  "created",
+                                                    "tier":  1
+                                                },
+                       "header":  {
+                                      "cssTokensUsed":  [
+                                                            "bg-card",
+                                                            "text-muted-foreground",
+                                                            "text-foreground",
+                                                            "bg-muted"
+                                                        ],
+                                      "figmaNodeId":  "8:903",
+                                      "hardcodedValues":  [
+                                                              "w-[168px] period select",
+                                                              "max-w-[220px] truncation",
+                                                              "text-[13px] wordmark"
+                                                          ],
+                                      "imports":  [
+                                                      "@/components/ui/button",
+                                                      "./sidebar",
+                                                      "./brand",
+                                                      "@/components/finance/search/global-search-dialog",
+                                                      "@/components/finance/alerts/alert-center"
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/finance/layout/header.tsx",
+                                      "status":  "created",
+                                      "tier":  2
+                                  },
+                       "hover-card":  {
+                                          "cssTokensUsed":  [
+
+                                                            ],
+                                          "figmaNodeId":  "8:695",
+                                          "hardcodedValues":  [
+
+                                                              ],
+                                          "imports":  [
+
+                                                      ],
+                                          "props":  [
+
+                                                    ],
+                                          "sourceFile":  "workspace/frontend/src/components/ui/hover-card.tsx",
+                                          "status":  "created",
+                                          "tier":  0
+                                      },
+                       "input-otp":  {
+                                         "cssTokensUsed":  [
+
+                                                           ],
+                                         "figmaNodeId":  "8:709",
+                                         "hardcodedValues":  [
+
+                                                             ],
+                                         "imports":  [
+
+                                                     ],
+                                         "props":  [
+
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/ui/input-otp.tsx",
+                                         "status":  "created",
+                                         "tier":  0
+                                     },
+                       "input":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:696",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/input.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "label":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:710",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/label.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "menubar":  {
+                                       "cssTokensUsed":  [
+
+                                                         ],
+                                       "figmaNodeId":  "8:711",
+                                       "hardcodedValues":  [
+
+                                                           ],
+                                       "imports":  [
+
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/ui/menubar.tsx",
+                                       "status":  "created",
+                                       "tier":  0
+                                   },
+                       "monthly-evolution-chart":  {
+                                                       "cssTokensUsed":  [
+                                                                             "bg-muted",
+                                                                             "fill-muted-foreground"
+                                                                         ],
+                                                       "figmaNodeId":  "8:916",
+                                                       "hardcodedValues":  [
+                                                                               "#10b981/#f43f5e area fills",
+                                                                               "#059669/#e11d48/#d97706 strokes",
+                                                                               "bg-emerald-500/bg-rose-500/bg-amber-500 bars",
+                                                                               "min-w-[620px] table geometry"
+                                                                           ],
+                                                       "imports":  [
+
+                                                                   ],
+                                                       "props":  [
+
+                                                                 ],
+                                                       "sourceFile":  "workspace/frontend/src/components/finance/charts/monthly-evolution-chart.tsx",
+                                                       "status":  "created",
+                                                       "tier":  0
+                                                   },
+                       "navigation-menu":  {
+                                               "cssTokensUsed":  [
+
+                                                                 ],
+                                               "figmaNodeId":  "8:725",
+                                               "hardcodedValues":  [
+
+                                                                   ],
+                                               "imports":  [
+
+                                                           ],
+                                               "props":  [
+
+                                                         ],
+                                               "sourceFile":  "workspace/frontend/src/components/ui/navigation-menu.tsx",
+                                               "status":  "created",
+                                               "tier":  0
+                                           },
+                       "pagination":  {
+                                          "cssTokensUsed":  [
+
+                                                            ],
+                                          "figmaNodeId":  "8:726",
+                                          "hardcodedValues":  [
+
+                                                              ],
+                                          "imports":  [
+
+                                                      ],
+                                          "props":  [
+
+                                                    ],
+                                          "sourceFile":  "workspace/frontend/src/components/ui/pagination.tsx",
+                                          "status":  "created",
+                                          "tier":  0
+                                      },
+                       "popover":  {
+                                       "cssTokensUsed":  [
+
+                                                         ],
+                                       "figmaNodeId":  "8:738",
+                                       "hardcodedValues":  [
+
+                                                           ],
+                                       "imports":  [
+
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/ui/popover.tsx",
+                                       "status":  "created",
+                                       "tier":  0
+                                   },
+                       "progress":  {
+                                        "cssTokensUsed":  [
+
+                                                          ],
+                                        "figmaNodeId":  "8:739",
+                                        "hardcodedValues":  [
+
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/progress.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "radio-group":  {
+                                           "cssTokensUsed":  [
+
+                                                             ],
+                                           "figmaNodeId":  "8:751",
+                                           "hardcodedValues":  [
+
+                                                               ],
+                                           "imports":  [
+
+                                                       ],
+                                           "props":  [
+
+                                                     ],
+                                           "sourceFile":  "workspace/frontend/src/components/ui/radio-group.tsx",
+                                           "status":  "created",
+                                           "tier":  0
+                                       },
+                       "resizable":  {
+                                         "cssTokensUsed":  [
+
+                                                           ],
+                                         "figmaNodeId":  "8:752",
+                                         "hardcodedValues":  [
+
+                                                             ],
+                                         "imports":  [
+
+                                                     ],
+                                         "props":  [
+
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/ui/resizable.tsx",
+                                         "status":  "created",
+                                         "tier":  0
+                                     },
+                       "scroll-area":  {
+                                           "cssTokensUsed":  [
+
+                                                             ],
+                                           "figmaNodeId":  "8:757",
+                                           "hardcodedValues":  [
+
+                                                               ],
+                                           "imports":  [
+
+                                                       ],
+                                           "props":  [
+
+                                                     ],
+                                           "sourceFile":  "workspace/frontend/src/components/ui/scroll-area.tsx",
+                                           "status":  "created",
+                                           "tier":  0
+                                       },
+                       "sections-note":  {
+                                             "figmaNodeId":  null,
+                                             "reason":  "routes/pages are not DS components per conservative invariants",
+                                             "sourceFile":  "workspace/frontend/src/components/finance/sections/* (16 sections + section-router)",
+                                             "status":  "skipped",
+                                             "tier":  -1
+                                         },
+                       "select":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:768",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/select.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "separator":  {
+                                         "cssTokensUsed":  [
+
+                                                           ],
+                                         "figmaNodeId":  "8:769",
+                                         "hardcodedValues":  [
+
+                                                             ],
+                                         "imports":  [
+
+                                                     ],
+                                         "props":  [
+
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/ui/separator.tsx",
+                                         "status":  "created",
+                                         "tier":  0
+                                     },
+                       "sheet":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:770",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/sheet.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "sidebar-data-quality":  {
+                                                    "cssTokensUsed":  [
+                                                                          "text-foreground",
+                                                                          "text-muted-foreground"
+                                                                      ],
+                                                    "figmaNodeId":  "8:917",
+                                                    "hardcodedValues":  [
+                                                                            "text-[11px]/text-[10px] metrics"
+                                                                        ],
+                                                    "imports":  [
+                                                                    "@/components/ui/button"
+                                                                ],
+                                                    "props":  [
+
+                                                              ],
+                                                    "sourceFile":  "workspace/frontend/src/components/finance/layout/sidebar-data-quality.tsx",
+                                                    "status":  "created",
+                                                    "tier":  1
+                                                },
+                       "sidebar":  {
+                                       "cssTokensUsed":  [
+                                                             "bg-card",
+                                                             "text-muted-foreground"
+                                                         ],
+                                       "figmaNodeId":  "8:848",
+                                       "hardcodedValues":  [
+                                                               "text-[11px] section labels"
+                                                           ],
+                                       "imports":  [
+                                                       "./brand",
+                                                       "./sidebar-data-quality"
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/finance/layout/sidebar.tsx",
+                                       "status":  "created",
+                                       "tier":  1
+                                   },
+                       "skeleton":  {
+                                        "cssTokensUsed":  [
+
+                                                          ],
+                                        "figmaNodeId":  "8:782",
+                                        "hardcodedValues":  [
+
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/skeleton.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "slider":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:784",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/slider.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "sonner":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:786",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/sonner.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "sparkline":  {
+                                         "cssTokensUsed":  [
+
+                                                           ],
+                                         "figmaNodeId":  "8:927",
+                                         "hardcodedValues":  [
+                                                                 "#0d9488 default stroke"
+                                                             ],
+                                         "imports":  [
+
+                                                     ],
+                                         "props":  [
+                                                       "color"
+                                                   ],
+                                         "sourceFile":  "workspace/frontend/src/components/finance/charts/sparkline.tsx",
+                                         "status":  "created",
+                                         "tier":  0
+                                     },
+                       "summary-cards":  {
+                                             "cssTokensUsed":  [
+
+                                                               ],
+                                             "figmaNodeId":  "8:935",
+                                             "hardcodedValues":  [
+
+                                                                 ],
+                                             "imports":  [
+                                                             "./amount"
+                                                         ],
+                                             "props":  [
+
+                                                       ],
+                                             "sourceFile":  "workspace/frontend/src/components/finance/shared/summary-cards.tsx",
+                                             "status":  "created",
+                                             "tier":  1
+                                         },
+                       "switch":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:797",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/switch.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "table":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:800",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/table.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "tabs":  {
+                                    "cssTokensUsed":  [
+
+                                                      ],
+                                    "figmaNodeId":  "8:804",
+                                    "hardcodedValues":  [
+
+                                                        ],
+                                    "imports":  [
+
+                                                ],
+                                    "props":  [
+
+                                              ],
+                                    "sourceFile":  "workspace/frontend/src/components/ui/tabs.tsx",
+                                    "status":  "created",
+                                    "tier":  0
+                                },
+                       "textarea":  {
+                                        "cssTokensUsed":  [
+
+                                                          ],
+                                        "figmaNodeId":  "8:815",
+                                        "hardcodedValues":  [
+
+                                                            ],
+                                        "imports":  [
+
+                                                    ],
+                                        "props":  [
+
+                                                  ],
+                                        "sourceFile":  "workspace/frontend/src/components/ui/textarea.tsx",
+                                        "status":  "created",
+                                        "tier":  0
+                                    },
+                       "toast":  {
+                                     "cssTokensUsed":  [
+
+                                                       ],
+                                     "figmaNodeId":  "8:817",
+                                     "hardcodedValues":  [
+
+                                                         ],
+                                     "imports":  [
+
+                                                 ],
+                                     "props":  [
+
+                                               ],
+                                     "sourceFile":  "workspace/frontend/src/components/ui/toast.tsx",
+                                     "status":  "created",
+                                     "tier":  0
+                                 },
+                       "toaster":  {
+                                       "cssTokensUsed":  [
+
+                                                         ],
+                                       "figmaNodeId":  "8:824",
+                                       "hardcodedValues":  [
+
+                                                           ],
+                                       "imports":  [
+
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/ui/toaster.tsx",
+                                       "status":  "created",
+                                       "tier":  0
+                                   },
+                       "toggle-group":  {
+                                            "cssTokensUsed":  [
+
+                                                              ],
+                                            "figmaNodeId":  "8:832",
+                                            "hardcodedValues":  [
+
+                                                                ],
+                                            "imports":  [
+
+                                                        ],
+                                            "props":  [
+
+                                                      ],
+                                            "sourceFile":  "workspace/frontend/src/components/ui/toggle-group.tsx",
+                                            "status":  "created",
+                                            "tier":  0
+                                        },
+                       "toggle":  {
+                                      "cssTokensUsed":  [
+
+                                                        ],
+                                      "figmaNodeId":  "8:830",
+                                      "hardcodedValues":  [
+
+                                                          ],
+                                      "imports":  [
+
+                                                  ],
+                                      "props":  [
+
+                                                ],
+                                      "sourceFile":  "workspace/frontend/src/components/ui/toggle.tsx",
+                                      "status":  "created",
+                                      "tier":  0
+                                  },
+                       "tooltip":  {
+                                       "cssTokensUsed":  [
+
+                                                         ],
+                                       "figmaNodeId":  "8:839",
+                                       "hardcodedValues":  [
+
+                                                           ],
+                                       "imports":  [
+
+                                                   ],
+                                       "props":  [
+
+                                                 ],
+                                       "sourceFile":  "workspace/frontend/src/components/ui/tooltip.tsx",
+                                       "status":  "created",
+                                       "tier":  0
+                                   },
+                       "sidebar-ui":  {
+                                          "sourceFile":  "workspace/frontend/src/components/ui/sidebar.tsx",
+                                          "status":  "created",
+                                          "tier":  0,
+                                          "figmaNodeId":  "8:848",
+                                          "note":  "shadcn primitive specimen; finance sidebar stays under \u0027sidebar\u0027 key",
+                                          "cssTokensUsed":  [
+
+                                                            ],
+                                          "hardcodedValues":  [
+
+                                                              ],
+                                          "props":  [
+
+                                                    ],
+                                          "imports":  [
+
+                                                      ]
+                                      }
+                   },
+    "cssSystem":  "tailwind-v4-shadcn",
+    "currentPhase":  "done",
+    "entities":  {
+                     "collections":  {
+
+                                     },
+                     "componentSets":  {
+
+                                       },
+                     "pages":  {
+
+                               },
+                     "variables":  {
+
+                                   },
+                     "frames":  {
+                                    "foundations":  {
+                                                        "figmaNodeId":  "6:5",
+                                                        "fills":  "direct hexLight/hexDark (no variables: relay has no variable tools)",
+                                                        "status":  "created"
+                                                    },
+                                    "components":  {
+                                                       "figmaNodeId":  "8:583",
+                                                       "status":  "created",
+                                                       "fills":  "direct hexLight (+hexDark dark-smoke)"
+                                                   },
+                                    "dark-smoke":  {
+                                                       "figmaNodeId":  "9:1342",
+                                                       "status":  "created"
+                                                   }
+                                }
+                 },
+    "fileKey":  "ZmReEtgV1bJ9uMLvNABqHl",
+    "fileUrl":  "https://www.figma.com/design/ZmReEtgV1bJ9uMLvNABqHl/",
+    "framework":  "nextjs",
+    "gapAnalysis":  {
+                        "coveragePercent":  99,
+                        "createdComponents":  61,
+                        "driftValues":  14,
+                        "mappedTokens":  38,
+                        "recommendedStandardizations":  [
+
+                                                        ],
+                        "totalComponents":  63,
+                        "totalTokens":  38
+                    },
+    "groundingSources":  [
+                             "docs/design.md",
+                             "workspace/frontend/src/app/globals.css",
+                             "workspace/frontend/components.json"
+                         ],
+    "lastUpdated":  "2026-09-12T17:57:40.000Z",
+    "mode":  "build",
+    "runId":  "cajaapp-v3",
+    "tokens":  {
+                   "drift":  [
+                                 {
+                                     "context":  "default category color constant",
+                                     "file":  "workspace/frontend/src/components/finance/categories/category-management-sheet.tsx",
+                                     "property":  "color",
+                                     "reason":  "no equivalent token; user-data color rendered via inline style",
+                                     "value":  "#64748b"
+                                 },
+                                 {
+                                     "context":  "ARS vs USD trend line prop",
+                                     "file":  "workspace/frontend/src/components/finance/dashboard/balance-trend.tsx",
+                                     "property":  "color",
+                                     "reason":  "hardcoded currency semantics; chart-1..5 oklch palette is the token alternative",
+                                     "value":  "#059669 / #2563eb"
+                                 },
+                                 {
+                                     "context":  "default stroke prop",
+                                     "file":  "workspace/frontend/src/components/finance/charts/sparkline.tsx",
+                                     "property":  "color",
+                                     "reason":  "no equivalent token",
+                                     "value":  "#0d9488"
+                                 },
+                                 {
+                                     "context":  "SVG area fills + strokes + dots",
+                                     "file":  "workspace/frontend/src/components/finance/charts/monthly-evolution-chart.tsx",
+                                     "property":  "fill/stroke",
+                                     "reason":  "hardcoded income/expense/projected semantics; chart-1..5 are the token alternative",
+                                     "value":  "#10b981 #f43f5e #059669 #e11d48 #d97706"
+                                 },
+                                 {
+                                     "context":  "progress bars",
+                                     "file":  "workspace/frontend/src/components/finance/charts/monthly-evolution-chart.tsx + sections/reportes-section.tsx + sections/dashboard-section.tsx",
+                                     "property":  "className",
+                                     "reason":  "direct Tailwind palette, bypasses chart tokens",
+                                     "value":  "bg-emerald-500 / bg-rose-500 / bg-amber-500"
+                                 },
+                                 {
+                                     "context":  "status pills",
+                                     "file":  "workspace/frontend/src/components/finance/sections/ingresos-section.tsx + deuda-futura-section.tsx",
+                                     "property":  "className",
+                                     "reason":  "direct Tailwind palette, no warning/success tokens in code",
+                                     "value":  "bg-amber-100 text-amber-800, bg-amber-50 text-amber-700, bg-emerald-50 text-emerald-700 (+dark variants)"
+                                 },
+                                 {
+                                     "context":  "table eyebrow",
+                                     "file":  "workspace/frontend/src/components/finance/card-statements/statement-document.tsx",
+                                     "property":  "className",
+                                     "reason":  "direct Tailwind palette",
+                                     "value":  "text-slate-400"
+                                 },
+                                 {
+                                     "context":  "scrollbar thumb + hover",
+                                     "file":  "workspace/frontend/src/app/globals.css @layer base",
+                                     "property":  "background",
+                                     "reason":  "hardcoded chrome outside token system",
+                                     "value":  "oklch(0.85 0.02 155) / oklch(0.75 0.03 158)"
+                                 },
+                                 {
+                                     "context":  "recharts overrides + tooltip cursor",
+                                     "file":  "workspace/frontend/src/components/ui/chart.tsx",
+                                     "property":  "stroke/fill/border-width",
+                                     "reason":  "third-party recharts selectors with literal #ccc/#fff; border-[1.5px] has no spacing token",
+                                     "value":  "#ccc #fff border-[1.5px]"
+                                 },
+                                 {
+                                     "context":  "day-cell type",
+                                     "file":  "workspace/frontend/src/components/ui/calendar.tsx",
+                                     "property":  "className",
+                                     "reason":  "arbitrary font size; no type scale in code (Tailwind defaults apply)",
+                                     "value":  "text-[0.8rem]"
+                                 },
+                                 {
+                                     "context":  "caption/eyebrow/kbd/legend micro-type across finance/*",
+                                     "file":  "workspace/frontend/src/components/finance/* (11px/10px/15px/13px)",
+                                     "property":  "className",
+                                     "reason":  "arbitrary sizes; no type scale in code",
+                                     "value":  "text-[11px] text-[10px] text-[15px] text-[13px]"
+                                 },
+                                 {
+                                     "context":  "table/dialog/overlay geometry",
+                                     "file":  "workspace/frontend/src/components/finance/* (min-w-[980px], w-[108px], max-h-[88vh], lg:w-[360px] ...)",
+                                     "property":  "className",
+                                     "reason":  "one-off layout math; no spacing scale in code (Tailwind defaults)",
+                                     "value":  "arbitrary w/min-w/max-h values"
+                                 },
+                                 {
+                                     "context":  "dynamic widths",
+                                     "file":  "workspace/frontend/src/components/finance/charts/category-donut.tsx + sections/dashboard-section.tsx",
+                                     "property":  "style",
+                                     "reason":  "runtime-computed widths and user-data colors; not designable constants",
+                                     "value":  "style={{width: %}} style={{backgroundColor: category.color}}"
+                                 },
+                                 {
+                                     "context":  "focus ring width",
+                                     "file":  "workspace/frontend/src/components/ui/button.tsx (buttonVariants)",
+                                     "property":  "className",
+                                     "reason":  "literal ring width; no token",
+                                     "value":  "focus-visible:ring-[3px]"
+                                 }
+                             ],
+                   "mapped":  {
+                                  "accent":  {
+                                                 "cssVar":  "--accent",
+                                                 "status":  "created",
+                                                 "type":  "color",
+                                                 "value":  "oklch(0.95 0.03 160) / oklch(0.32 0.04 165)",
+                                                 "hexLight":  "#DEF5E8",
+                                                 "hexDark":  "#1E392E",
+                                                 "figmaNodeIds":  {
+                                                                      "light":  "6:9",
+                                                                      "dark":  "6:104"
+                                                                  }
+                                             },
+                                  "accent-foreground":  {
+                                                            "cssVar":  "--accent-foreground",
+                                                            "status":  "created",
+                                                            "type":  "color",
+                                                            "value":  "oklch(0.3 0.05 165) / oklch(0.96 0.008 150)",
+                                                            "hexLight":  "#103627",
+                                                            "hexDark":  "#EEF3EF",
+                                                            "figmaNodeIds":  {
+                                                                                 "light":  "6:10",
+                                                                                 "dark":  "6:105"
+                                                                             }
+                                                        },
+                                  "background":  {
+                                                     "cssVar":  "--background",
+                                                     "status":  "created",
+                                                     "type":  "color",
+                                                     "value":  "oklch(0.985 0.008 150) / oklch(0.16 0.015 165)",
+                                                     "hexLight":  "#F6FCF7",
+                                                     "hexDark":  "#070F0C",
+                                                     "figmaNodeIds":  {
+                                                                          "light":  "6:11",
+                                                                          "dark":  "6:106"
+                                                                      }
+                                                 },
+                                  "border":  {
+                                                 "cssVar":  "--border",
+                                                 "status":  "created",
+                                                 "type":  "color",
+                                                 "value":  "oklch(0.92 0.01 155) / oklch(1 0 0 / 10%)",
+                                                 "hexLight":  "#E0E7E2",
+                                                 "hexDark":  "#FFFFFF",
+                                                 "alphaDark":  10,
+                                                 "figmaNodeIds":  {
+                                                                      "light":  "6:12",
+                                                                      "dark":  "6:107"
+                                                                  }
+                                             },
+                                  "card":  {
+                                               "cssVar":  "--card",
+                                               "status":  "created",
+                                               "type":  "color",
+                                               "value":  "oklch(1 0 0) / oklch(0.21 0.02 160)",
+                                               "hexLight":  "#FFFFFF",
+                                               "hexDark":  "#101B15",
+                                               "figmaNodeIds":  {
+                                                                    "light":  "6:13",
+                                                                    "dark":  "6:108"
+                                                                }
+                                           },
+                                  "card-foreground":  {
+                                                          "cssVar":  "--card-foreground",
+                                                          "status":  "created",
+                                                          "type":  "color",
+                                                          "value":  "oklch(0.21 0.02 160) / oklch(0.96 0.008 150)",
+                                                          "hexLight":  "#101B15",
+                                                          "hexDark":  "#EEF3EF",
+                                                          "figmaNodeIds":  {
+                                                                               "light":  "6:14",
+                                                                               "dark":  "6:109"
+                                                                           }
+                                                      },
+                                  "chart-1":  {
+                                                  "cssVar":  "--chart-1",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.5 0.1 165) / oklch(0.7 0.12 165)",
+                                                  "hexLight":  "#117555",
+                                                  "hexDark":  "#46B68C",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:15",
+                                                                       "dark":  "6:110"
+                                                                   }
+                                              },
+                                  "chart-2":  {
+                                                  "cssVar":  "--chart-2",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.62 0.11 185) / oklch(0.75 0.12 185)",
+                                                  "hexLight":  "#009B8F",
+                                                  "hexDark":  "#36C6B8",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:16",
+                                                                       "dark":  "6:111"
+                                                                   }
+                                              },
+                                  "chart-3":  {
+                                                  "cssVar":  "--chart-3",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.72 0.15 75) / oklch(0.8 0.15 75)",
+                                                  "hexLight":  "#DA950B",
+                                                  "hexDark":  "#F5AE39",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:17",
+                                                                       "dark":  "6:112"
+                                                                   }
+                                              },
+                                  "chart-4":  {
+                                                  "cssVar":  "--chart-4",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.66 0.18 350) / oklch(0.72 0.17 350)",
+                                                  "hexLight":  "#DF5BA1",
+                                                  "hexDark":  "#F072B3",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:18",
+                                                                       "dark":  "6:113"
+                                                                   }
+                                              },
+                                  "chart-5":  {
+                                                  "cssVar":  "--chart-5",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.58 0.13 290) / oklch(0.7 0.14 290)",
+                                                  "hexLight":  "#7A6BC1",
+                                                  "hexDark":  "#9E8EEF",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:19",
+                                                                       "dark":  "6:114"
+                                                                   }
+                                              },
+                                  "destructive":  {
+                                                      "cssVar":  "--destructive",
+                                                      "status":  "created",
+                                                      "type":  "color",
+                                                      "value":  "oklch(0.58 0.22 25) / oklch(0.7 0.19 22)",
+                                                      "hexLight":  "#DF202E",
+                                                      "hexDark":  "#FF6367",
+                                                      "figmaNodeIds":  {
+                                                                           "light":  "6:20",
+                                                                           "dark":  "6:115"
+                                                                       }
+                                                  },
+                                  "font-mono":  {
+                                                    "cssVar":  "--font-mono",
+                                                    "status":  "created",
+                                                    "type":  "typography",
+                                                    "value":  "var(--font-geist-mono)",
+                                                    "figmaNodeId":  "6:208",
+                                                    "note":  "Figma renders Inter; Geist is code font"
+                                                },
+                                  "font-sans":  {
+                                                    "cssVar":  "--font-sans",
+                                                    "status":  "created",
+                                                    "type":  "typography",
+                                                    "value":  "var(--font-geist-sans)",
+                                                    "figmaNodeId":  "6:207",
+                                                    "note":  "Figma renders Inter; Geist is code font"
+                                                },
+                                  "foreground":  {
+                                                     "cssVar":  "--foreground",
+                                                     "status":  "created",
+                                                     "type":  "color",
+                                                     "value":  "oklch(0.21 0.02 160) / oklch(0.96 0.008 150)",
+                                                     "hexLight":  "#101B15",
+                                                     "hexDark":  "#EEF3EF",
+                                                     "figmaNodeIds":  {
+                                                                          "light":  "6:21",
+                                                                          "dark":  "6:116"
+                                                                      }
+                                                 },
+                                  "input":  {
+                                                "cssVar":  "--input",
+                                                "status":  "created",
+                                                "type":  "color",
+                                                "value":  "oklch(0.93 0.01 155) / oklch(1 0 0 / 15%)",
+                                                "hexLight":  "#E3EAE5",
+                                                "hexDark":  "#FFFFFF",
+                                                "alphaDark":  15,
+                                                "figmaNodeIds":  {
+                                                                     "light":  "6:22",
+                                                                     "dark":  "6:117"
+                                                                 }
+                                            },
+                                  "muted":  {
+                                                "cssVar":  "--muted",
+                                                "status":  "created",
+                                                "type":  "color",
+                                                "value":  "oklch(0.96 0.01 155) / oklch(0.27 0.02 162)",
+                                                "hexLight":  "#EDF4EF",
+                                                "hexDark":  "#1E2A23",
+                                                "figmaNodeIds":  {
+                                                                     "light":  "6:23",
+                                                                     "dark":  "6:118"
+                                                                 }
+                                            },
+                                  "muted-foreground":  {
+                                                           "cssVar":  "--muted-foreground",
+                                                           "status":  "created",
+                                                           "type":  "color",
+                                                           "value":  "oklch(0.52 0.02 160) / oklch(0.7 0.02 160)",
+                                                           "hexLight":  "#5F6D65",
+                                                           "hexDark":  "#94A29A",
+                                                           "figmaNodeIds":  {
+                                                                                "light":  "6:24",
+                                                                                "dark":  "6:119"
+                                                                            }
+                                                       },
+                                  "popover":  {
+                                                  "cssVar":  "--popover",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(1 0 0) / oklch(0.21 0.02 160)",
+                                                  "hexLight":  "#FFFFFF",
+                                                  "hexDark":  "#101B15",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:25",
+                                                                       "dark":  "6:120"
+                                                                   }
+                                              },
+                                  "popover-foreground":  {
+                                                             "cssVar":  "--popover-foreground",
+                                                             "status":  "created",
+                                                             "type":  "color",
+                                                             "value":  "oklch(0.21 0.02 160) / oklch(0.96 0.008 150)",
+                                                             "hexLight":  "#101B15",
+                                                             "hexDark":  "#EEF3EF",
+                                                             "figmaNodeIds":  {
+                                                                                  "light":  "6:26",
+                                                                                  "dark":  "6:121"
+                                                                              }
+                                                         },
+                                  "primary":  {
+                                                  "cssVar":  "--primary",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.45 0.09 165) / oklch(0.72 0.12 165)",
+                                                  "hexLight":  "#0E6549",
+                                                  "hexDark":  "#4DBC92",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:27",
+                                                                       "dark":  "6:122"
+                                                                   }
+                                              },
+                                  "primary-foreground":  {
+                                                             "cssVar":  "--primary-foreground",
+                                                             "status":  "created",
+                                                             "type":  "color",
+                                                             "value":  "oklch(0.99 0.01 150) / oklch(0.18 0.03 165)",
+                                                             "hexLight":  "#F7FEF8",
+                                                             "hexDark":  "#04160E",
+                                                             "figmaNodeIds":  {
+                                                                                  "light":  "6:28",
+                                                                                  "dark":  "6:123"
+                                                                              }
+                                                         },
+                                  "radius":  {
+                                                 "cssVar":  "--radius",
+                                                 "status":  "created",
+                                                 "type":  "radius",
+                                                 "value":  "0.875rem (14px); sm=calc-4px=10px; md=calc-2px=12px; lg=14px; xl=+4px=18px)",
+                                                 "figmaNodeId":  "6:202",
+                                                 "note":  "represented by sm/md/lg/xl swatches"
+                                             },
+                                  "radius-lg":  {
+                                                    "cssVar":  "--radius-lg",
+                                                    "status":  "created",
+                                                    "type":  "radius",
+                                                    "value":  "var(--radius) = 14px",
+                                                    "figmaNodeId":  "6:202"
+                                                },
+                                  "radius-md":  {
+                                                    "cssVar":  "--radius-md",
+                                                    "status":  "created",
+                                                    "type":  "radius",
+                                                    "value":  "calc(var(--radius) - 2px) = 12px",
+                                                    "figmaNodeId":  "6:200"
+                                                },
+                                  "radius-sm":  {
+                                                    "cssVar":  "--radius-sm",
+                                                    "status":  "created",
+                                                    "type":  "radius",
+                                                    "value":  "calc(var(--radius) - 4px) = 10px",
+                                                    "figmaNodeId":  "6:198"
+                                                },
+                                  "radius-xl":  {
+                                                    "cssVar":  "--radius-xl",
+                                                    "status":  "created",
+                                                    "type":  "radius",
+                                                    "value":  "calc(var(--radius) + 4px) = 18px",
+                                                    "figmaNodeId":  "6:204"
+                                                },
+                                  "ring":  {
+                                               "cssVar":  "--ring",
+                                               "status":  "created",
+                                               "type":  "color",
+                                               "value":  "oklch(0.45 0.09 165) / oklch(0.72 0.12 165)",
+                                               "hexLight":  "#0E6549",
+                                               "hexDark":  "#4DBC92",
+                                               "figmaNodeIds":  {
+                                                                    "light":  "6:29",
+                                                                    "dark":  "6:124"
+                                                                }
+                                           },
+                                  "secondary":  {
+                                                    "cssVar":  "--secondary",
+                                                    "status":  "created",
+                                                    "type":  "color",
+                                                    "value":  "oklch(0.96 0.015 155) / oklch(0.27 0.02 162)",
+                                                    "hexLight":  "#EAF5ED",
+                                                    "hexDark":  "#1E2A23",
+                                                    "figmaNodeIds":  {
+                                                                         "light":  "6:30",
+                                                                         "dark":  "6:125"
+                                                                     }
+                                                },
+                                  "secondary-foreground":  {
+                                                               "cssVar":  "--secondary-foreground",
+                                                               "status":  "created",
+                                                               "type":  "color",
+                                                               "value":  "oklch(0.3 0.03 160) / oklch(0.96 0.008 150)",
+                                                               "hexLight":  "#203329",
+                                                               "hexDark":  "#EEF3EF",
+                                                               "figmaNodeIds":  {
+                                                                                    "light":  "6:31",
+                                                                                    "dark":  "6:126"
+                                                                                }
+                                                           },
+                                  "sidebar":  {
+                                                  "cssVar":  "--sidebar",
+                                                  "status":  "created",
+                                                  "type":  "color",
+                                                  "value":  "oklch(0.99 0.006 150) / oklch(0.19 0.018 165)",
+                                                  "hexLight":  "#F9FDFA",
+                                                  "hexDark":  "#0C1612",
+                                                  "figmaNodeIds":  {
+                                                                       "light":  "6:32",
+                                                                       "dark":  "6:127"
+                                                                   }
+                                              },
+                                  "sidebar-accent":  {
+                                                         "cssVar":  "--sidebar-accent",
+                                                         "status":  "created",
+                                                         "type":  "color",
+                                                         "value":  "oklch(0.95 0.02 160) / oklch(0.27 0.02 162)",
+                                                         "hexLight":  "#E4F3EA",
+                                                         "hexDark":  "#1E2A23",
+                                                         "figmaNodeIds":  {
+                                                                              "light":  "6:33",
+                                                                              "dark":  "6:128"
+                                                                          }
+                                                     },
+                                  "sidebar-accent-foreground":  {
+                                                                    "cssVar":  "--sidebar-accent-foreground",
+                                                                    "status":  "created",
+                                                                    "type":  "color",
+                                                                    "value":  "oklch(0.3 0.03 160) / oklch(0.96 0.008 150)",
+                                                                    "hexLight":  "#203329",
+                                                                    "hexDark":  "#EEF3EF",
+                                                                    "figmaNodeIds":  {
+                                                                                         "light":  "6:34",
+                                                                                         "dark":  "6:129"
+                                                                                     }
+                                                                },
+                                  "sidebar-border":  {
+                                                         "cssVar":  "--sidebar-border",
+                                                         "status":  "created",
+                                                         "type":  "color",
+                                                         "value":  "oklch(0.92 0.01 155) / oklch(1 0 0 / 10%)",
+                                                         "hexLight":  "#E0E7E2",
+                                                         "hexDark":  "#FFFFFF",
+                                                         "alphaDark":  10,
+                                                         "figmaNodeIds":  {
+                                                                              "light":  "6:35",
+                                                                              "dark":  "6:130"
+                                                                          }
+                                                     },
+                                  "sidebar-foreground":  {
+                                                             "cssVar":  "--sidebar-foreground",
+                                                             "status":  "created",
+                                                             "type":  "color",
+                                                             "value":  "oklch(0.21 0.02 160) / oklch(0.96 0.008 150)",
+                                                             "hexLight":  "#101B15",
+                                                             "hexDark":  "#EEF3EF",
+                                                             "figmaNodeIds":  {
+                                                                                  "light":  "6:36",
+                                                                                  "dark":  "6:131"
+                                                                              }
+                                                         },
+                                  "sidebar-primary":  {
+                                                          "cssVar":  "--sidebar-primary",
+                                                          "status":  "created",
+                                                          "type":  "color",
+                                                          "value":  "oklch(0.45 0.09 165) / oklch(0.72 0.12 165)",
+                                                          "hexLight":  "#0E6549",
+                                                          "hexDark":  "#4DBC92",
+                                                          "figmaNodeIds":  {
+                                                                               "light":  "6:37",
+                                                                               "dark":  "6:132"
+                                                                           }
+                                                      },
+                                  "sidebar-primary-foreground":  {
+                                                                     "cssVar":  "--sidebar-primary-foreground",
+                                                                     "status":  "created",
+                                                                     "type":  "color",
+                                                                     "value":  "oklch(0.99 0.01 150) / oklch(0.18 0.03 165)",
+                                                                     "hexLight":  "#F7FEF8",
+                                                                     "hexDark":  "#04160E",
+                                                                     "figmaNodeIds":  {
+                                                                                          "light":  "6:38",
+                                                                                          "dark":  "6:133"
+                                                                                      }
+                                                                 },
+                                  "sidebar-ring":  {
+                                                       "cssVar":  "--sidebar-ring",
+                                                       "status":  "created",
+                                                       "type":  "color",
+                                                       "value":  "oklch(0.45 0.09 165) / oklch(0.72 0.12 165)",
+                                                       "hexLight":  "#0E6549",
+                                                       "hexDark":  "#4DBC92",
+                                                       "figmaNodeIds":  {
+                                                                            "light":  "6:39",
+                                                                            "dark":  "6:134"
+                                                                        }
+                                                   }
+                              }
+               },
+    "version":  "2.0.0"
+}

@@ -1,0 +1,31 @@
+{
+  "summary": {
+    "npm_ci": 4294963248,
+    "prisma_generate": 1,
+    "prisma_migrate_deploy": 1,
+    "prisma_migrate_status": 1,
+    "build": 1,
+    "test": 1
+  },
+  "npm_ci": {
+    "exit_code": 4294963248,
+    "stdout_len": 0,
+    "stderr_len": 1086
+  },
+  "prisma_generate": {
+    "exit_code": 1
+  },
+  "prisma_migrate_deploy": {
+    "exit_code": 1
+  },
+  "prisma_migrate_status": {
+    "exit_code": 1
+  },
+  "build": {
+    "exit_code": 1
+  },
+  "test": {
+    "exit_code": 1,
+    "stdout": "\n> cajaapp-v3-backend@1.0.0 test\n> vitest run\n\n"
+  }
+}

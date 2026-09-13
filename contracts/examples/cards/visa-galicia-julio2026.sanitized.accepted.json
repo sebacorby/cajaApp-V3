@@ -1,0 +1,53 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "status": "accepted",
+  "acceptedAt": "2026-07-09T12:00:00.000Z",
+  "source": {
+    "bankName": "Banco Galicia",
+    "brand": "VISA",
+    "statementNumber": "VI00000000000839532",
+    "pageCount": 8
+  },
+  "summary": {
+    "totalPesos": "3118842.50",
+    "totalDollars": "161.84",
+    "minimumPaymentPesos": "508000.00",
+    "currentDueDate": "2026-07-13",
+    "nextClosingDate": "2026-07-30",
+    "nextDueDate": "2026-08-07"
+  },
+  "sections": [
+    { "id": "header", "displayOrder": 1, "label": "Encabezado" },
+    { "id": "total-to-pay", "displayOrder": 2, "label": "Total a Pagar" },
+    { "id": "billing-cycle", "displayOrder": 3, "label": "Ciclo de Facturación" },
+    { "id": "payment-limits-rates", "displayOrder": 4, "label": "Pago Mínimo y Límites" },
+    { "id": "consolidated", "displayOrder": 5, "label": "Consolidado" },
+    { "id": "consumption-detail", "displayOrder": 6, "label": "Detalle del Consumo" },
+    { "id": "charges-and-taxes", "displayOrder": 7, "label": "Cargos e Impuestos" },
+    { "id": "statement-total", "displayOrder": 8, "label": "Total del Resumen" },
+    { "id": "plan-v", "displayOrder": 9, "label": "Plan V" },
+    { "id": "future-installments", "displayOrder": 10, "label": "Cuotas a Vencer" },
+    { "id": "legal-text", "displayOrder": 11, "label": "Texto Legal" }
+  ],
+  "groups": [
+    { "id": "g-6792", "displayOrder": 1, "label": "TARJETA 6792 Total Consumos de JAVIER SEB CORBELLA", "cardLast4": "6792", "holderName": "JAVIER SEB CORBELLA" },
+    { "id": "g-5884", "displayOrder": 2, "label": "TARJETA 5884 Total Consumos de EMILSE RITA JIMENEZ", "cardLast4": "5884", "holderName": "EMILSE RITA JIMENEZ" },
+    { "id": "g-4255", "displayOrder": 3, "label": "TARJETA 4255 Total Consumos de JAVIER SEB CORBELLA", "cardLast4": "4255", "holderName": "JAVIER SEB CORBELLA" },
+    { "id": "g-0015", "displayOrder": 4, "label": "TARJETA 0015 Total Consumos de LUCAS SALVA JIMENEZ", "cardLast4": "0015", "holderName": "LUCAS SALVA JIMENEZ" }
+  ],
+  "rows": [
+    { "id": "r-5884-1", "displayOrder": 9, "sourcePage": 3, "sectionId": "consumption-detail", "groupId": "g-5884", "rowType": "transaction", "editable": true, "dateRaw": "15-Nov-25", "dateIso": "2025-11-15", "referenceRaw": "JUANITA JO", "installmentRaw": "08/09", "receiptRaw": "000563", "amountPesos": "58055.55", "amountDollars": null, "currencyOriginal": "ARS", "originalText": "15-11-25 * JUANITA JO 08/09 000563 58.055,55" },
+    { "id": "r-5884-2", "displayOrder": 10, "sourcePage": 3, "sectionId": "consumption-detail", "groupId": "g-5884", "rowType": "transaction", "editable": true, "dateRaw": "23-Mar-26", "dateIso": "2026-03-23", "referenceRaw": "GRANDES TIENDAS SAN JU", "installmentRaw": "03/03", "receiptRaw": "003731", "amountPesos": "33922.66", "amountDollars": null, "currencyOriginal": "ARS", "originalText": "23-03-26 * GRANDES TIENDAS SAN JU 03/03 003731 33.922,66" },
+    { "id": "r-5884-3", "displayOrder": 11, "sourcePage": 3, "sectionId": "consumption-detail", "groupId": "g-5884", "rowType": "transaction", "editable": true, "dateRaw": "09-May-26", "dateIso": "2026-05-09", "referenceRaw": "M Y S", "installmentRaw": "02/03", "receiptRaw": "008078", "amountPesos": "9500.00", "amountDollars": null, "currencyOriginal": "ARS", "originalText": "09-05-26 * M Y S 02/03 008078 9.500,00" },
+    { "id": "r-4255-1", "displayOrder": 15, "sourcePage": 4, "sectionId": "consumption-detail", "groupId": "g-4255", "rowType": "transaction", "editable": true, "dateRaw": "25-Aug-25", "dateIso": "2025-08-25", "referenceRaw": "WWW.FRAVEGA.COM", "installmentRaw": "11/12", "receiptRaw": "008224", "amountPesos": "200416.50", "amountDollars": null, "currencyOriginal": "ARS", "originalText": "25-08-25 * WWW.FRAVEGA.COM 11/12 008224 200.416,50" },
+    { "id": "r-4255-6", "displayOrder": 20, "sourcePage": 5, "sectionId": "consumption-detail", "groupId": "g-4255", "rowType": "transaction", "editable": true, "dateRaw": "28-May-26", "dateIso": "2026-05-28", "referenceRaw": "K NANONOBLE PTE. LTD.", "installmentRaw": null, "receiptRaw": "371072", "amountPesos": null, "amountDollars": "10.00", "currencyOriginal": "USD", "originalText": "28-05-26 K NANONOBLE PTE. LTD. USD 10,00 371072 10,00" }
+  ],
+  "projections": [
+    { "monthKey": "2026-08", "label": "Agosto-2026", "totalPesos": "58055.55", "totalDollars": "0.00" },
+    { "monthKey": "2026-09", "label": "Setiembre-2026", "totalPesos": "33922.66", "totalDollars": "0.00" },
+    { "monthKey": "2026-10", "label": "Octubre-2026", "totalPesos": "9500.00", "totalDollars": "0.00" },
+    { "monthKey": "2026-12", "label": "Diciembre-2026", "totalPesos": "200416.50", "totalDollars": "0.00" },
+    { "monthKey": "2027-01", "label": "Enero-2027", "totalPesos": "200416.50", "totalDollars": "0.00" },
+    { "monthKey": "2026-08", "label": "Agosto-2026", "totalPesos": "0.00", "totalDollars": "10.00" }
+  ]
+}

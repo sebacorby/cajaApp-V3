@@ -1,0 +1,58 @@
+import { FastifyInstance, FastifyPluginAsync } from "fastify";
+import { cardsService } from "./cards.service.js";
+import { cardStatementPreviewSchema } from "./cards.schemas.js";
+import { validateData } from "../../shared/validation.js";
+import { logger } from "../../shared/logger.js";
+import { cardStatementMapper } from "./card-statement.mapper.js";
+
+export const cardsController: FastifyPluginAsync = async (app: FastifyInstance) => {
+  app.get("/drafts/:draftId", async (request, reply) => {
+    const params = request.params as { draftId: string };
+    const { draftId } = params;
+    const draft = await cardsService.getDraft(draftId);
+    const response = cardStatementMapper.draftToApiResponse(draft);
+    return reply.send(response);
+  });
+
+  app.put("/drafts/:draftId", async (request, reply) => {
+    const params = request.params as { draftId: string };
+    const body = request.body as { preview: unknown };
+    const { draftId } = params;
+    const { preview } = body;
+
+    const validatedPreview = validateData(cardStatementPreviewSchema, preview);
+
+    const result = await cardsService.updateDraft(draftId, validatedPreview);
+
+    logger.info({ draftId }, "Draft updated");
+
+    return reply.send(result);
+  });
+
+  app.post("/drafts/:draftId/accept", async (request, reply) => {
+    const params = request.params as { draftId: string };
+    const body = request.body as { preview: unknown };
+    const { draftId } = params;
+    const { preview } = body;
+
+    const validatedPreview = validateData(cardStatementPreviewSchema, preview);
+
+    const result = await cardsService.acceptDraft(draftId, validatedPreview);
+
+    logger.info({ draftId, statementId: result.statementId }, "Draft accepted");
+
+    return reply.send(result);
+  });
+
+  app.get("/updated-values", async (request, reply) => {
+    const query = request.query as { from?: string; to?: string };
+    const { from, to } = query;
+
+    if (!from || !to) {
+      return reply.status(400).send({ error: "from and to query parameters are required" });
+    }
+
+    const result = await cardsService.getUpdatedValues(from, to);
+    return reply.send(result);
+  });
+};

@@ -1,0 +1,36 @@
+﻿
+> nextjs_tailwind_shadcn_ts@0.2.0 build
+> next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
+
+Ôû▓ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 1892ms
+  Skipping validation of types
+  Finished TypeScript config validation in 6ms ...
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/4) ...
+  Generating static pages using 5 workers (1/4) 
+  Generating static pages using 5 workers (2/4) 
+  Generating static pages using 5 workers (3/4) 
+Ô£ô Generating static pages using 5 workers (4/4) in 521ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôöö ãÆ /api
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+
+npm : "cp" no se reconoce como un comando interno o externo,
+En línea: 1 Carácter: 40
++ cd "I:\cajaApp-V3\workspace\frontend"; npm run build 2>&1 | Out-File  ...
++                                        ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ("cp" no se reco...erno o externo,:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+programa o archivo por lotes ejecutable.

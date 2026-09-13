@@ -1,0 +1,16 @@
+# 13 - Playwright ZIP Inventory
+
+## File: playwright-results-v1.0.4.zip
+- **SHA-256**: [computed at test runtime]
+- **Size**: 4,503,136 bytes
+
+## Contents
+
+### test-results/salary-receipts.real-Recib-eae0e--acepta-y-anula-un-PDF-real-chromium/
+- test-failed-1.png (screenshot at failure point)
+- video.webm (recording of test execution)
+- trace.zip (Playwright trace for debugging)
+- error-context.md (error details and stack trace)
+
+### Note
+The test failed at the preview assertion (line 86) where it expected "Sueldo básico" but the content did not contain this text.

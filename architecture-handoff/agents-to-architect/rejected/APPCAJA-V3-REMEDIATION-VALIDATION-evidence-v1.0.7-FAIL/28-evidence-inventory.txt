@@ -1,0 +1,36 @@
+# 28-evidence-inventory.txt
+
+Inventario de evidencia — APPCAJA-V3-REMEDIATION-VALIDATION-evidence-v1.0.7
+Timestamp: 2026-07-14T22:31:00
+
+00-remediation.md
+01-root-environment.md
+02-integrity-preflight.md
+03-file-inventory.txt
+04-sqlite-initial.md
+05-backend-install.log
+06-prisma-generate.log
+07-prisma-migrate-deploy.log
+08-prisma-migrate-status.log
+09-backend-build.log
+10-backend-tests.log
+11-frontend-install.log
+12-frontend-typecheck.log
+13-frontend-lint.log
+14-frontend-build.log
+15-headless-start.json
+16-headless-status.json
+17-smoke-api.md
+18-ai-provider.md
+19-ai-advisor.md
+20-playwright-core.log
+21-playwright-core-summary.md
+22-playwright-ai.log
+23-responsive-accessibility.md
+24-cleanup.md
+25-final-hashes.md
+26-sqlite-final.md
+27-known-issues.md
+28-evidence-inventory.txt
+playwright-test-results.zip
+PRE-v1.0.7-dev.db (en raíz de I:\cajaApp-V3-real)
