@@ -151,17 +151,17 @@
 
 ### Tests for User Story 5
 
-- [ ] T060 [P] [US5] Escribir tests de upload MIME/tamaño/ownership/storage path y delete cascade en `workspace/backend/tests/agent-chat/attachments.test.ts`.
-- [ ] T061 [P] [US5] Escribir tests de import tools para cards/debit/salary manteniendo draft-first en `workspace/backend/tests/agent-chat/import-tools.test.ts`.
-- [ ] T062 [P] [US5] Extender Playwright con attachment PDF/CSV, preview y accept R3 AC-07 en `workspace/frontend/tests/agent-chat.spec.ts`.
+- [X] T060 [P] [US5] Escribir tests de upload MIME/tamaño/ownership/storage path y delete cascade en `workspace/backend/tests/agent-chat/attachments.test.ts`.
+- [X] T061 [P] [US5] Escribir tests de import tools para cards/debit/salary manteniendo draft-first en `workspace/backend/tests/agent-chat/import-tools.test.ts`.
+- [X] T062 [P] [US5] Extender Playwright con attachment PDF/CSV, preview y accept R3 AC-07 en `workspace/frontend/tests/agent-chat.spec.ts`.
 
 ### Implementation for User Story 5
 
-- [ ] T063 [US5] Implementar staging local seguro, hash, ownership y asociación a mensajes en `workspace/backend/src/modules/agent-chat/agent-chat.service.ts`.
-- [ ] T064 [US5] Agregar endpoint multipart de attachments y validaciones en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`, `agent-chat.routes.ts` y `agent-chat.schemas.ts`.
-- [ ] T065 [US5] Registrar tools card/debit/salary upload/update + backup.validate/reconciliation.scan/health snapshot en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts` usando `attachmentId` exclusivamente.
-- [ ] T066 [P] [US5] Implementar chip/selector de PDF/CSV y upload en `workspace/frontend/src/components/finance/agent/attachment-chip.tsx` y `agent-composer.tsx`.
-- [ ] T067 [US5] Mostrar progreso/draft generado y mantener accept como Approval Card en `agent-chat-panel.tsx`; cerrar tests US5.
+- [X] T063 [US5] Implementar staging local seguro, hash, ownership y asociación a mensajes en `workspace/backend/src/modules/agent-chat/agent-chat.service.ts`.
+- [X] T064 [US5] Agregar endpoint multipart de attachments y validaciones en `workspace/backend/src/modules/agent-chat/agent-chat.controller.ts`, `agent-chat.routes.ts` y `agent-chat.schemas.ts`.
+- [X] T065 [US5] Registrar tools card/debit/salary upload/update + backup.validate/reconciliation.scan/health snapshot en `workspace/backend/src/modules/agent-chat/agent-tool-registry.ts` usando `attachmentId` exclusivamente.
+- [X] T066 [P] [US5] Implementar chip/selector de PDF/CSV y upload en `workspace/frontend/src/components/finance/agent/attachment-chip.tsx` y `agent-composer.tsx`.
+- [X] T067 [US5] Mostrar progreso/draft generado y mantener accept como Approval Card en `agent-chat-panel.tsx`; cerrar tests US5.
 
 **Checkpoint**: documentos se importan desde chat sin saltar draft/review/accept ni exponer filesystem.
 

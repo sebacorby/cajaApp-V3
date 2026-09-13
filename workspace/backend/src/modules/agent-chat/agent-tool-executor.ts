@@ -7,6 +7,7 @@ import { computeArgumentsHash } from "./agent-approval.service.js";
 export interface AgentToolRequest {
   name: string;
   arguments: AgentJsonValue;
+  conversationId?: string;
   explicitIntent?: boolean;
   toolCallId?: string;
   idempotencyKey?: string;
@@ -41,6 +42,7 @@ export interface ExecutedAgentTool {
   name: string;
   riskClass: AgentRiskClass;
   arguments: AgentJsonValue;
+  conversationId?: string;
   result: AgentJsonValue;
   entityRefs: AgentEntityRef[];
 }
@@ -129,7 +131,7 @@ export class AgentToolExecutor {
         }
       }
 
-      const raw = await tool.handler(parsed.data);
+      const raw = await tool.handler(parsed.data, { conversationId: call.conversationId });
       const result = tool.resultProjector(raw);
       const executed = {
         name: tool.name,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AgentComposer } from "./agent-composer";
+import { AgentComposer, type ComposerAttachment } from "./agent-composer";
 import { AgentEmptyState } from "./agent-empty-state";
 import { ApprovalCard } from "./approval-card";
 import { ConversationDrawer } from "./conversation-drawer";
@@ -11,11 +11,15 @@ import {
   approveAgentToolCall,
   cancelAgentRun,
   createAgentConversation,
+  deleteAgentAttachment,
   getAgentConversation,
+  listAgentAttachments,
   listAgentConversations,
   rejectAgentToolCall,
   sendAgentMessage,
   subscribeAgentRun,
+  uploadAgentAttachment,
+  type AgentAttachment,
   type AgentConversation,
   type AgentConversationSummary,
   type AgentToolCallView,
@@ -28,6 +32,22 @@ const AGENT_NAV_SECTIONS = new Set<SectionId>([
 ]);
 const SEARCH_TARGET_SECTIONS = new Set(["movimientos", "tarjetas", "ingresos", "presupuestos", "objetivos"]);
 const SEARCH_RECORD_TYPES = new Set(["movement", "card_statement", "income_source", "budget", "goal"]);
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+type PanelAttachment = ComposerAttachment & {
+  id?: string;
+  conversationId?: string;
+};
+
+function stagedAttachmentView(attachment: AgentAttachment): PanelAttachment {
+  return {
+    key: attachment.id,
+    id: attachment.id,
+    conversationId: attachment.conversationId,
+    fileName: attachment.fileName,
+    status: attachment.status,
+  };
+}
 
 function toUiMessages(conversation: AgentConversation | null): AgentUiMessage[] {
   if (!conversation) return [];
@@ -67,6 +87,7 @@ export function AgentChatPanel() {
   const [conversations, setConversations] = useState<AgentConversationSummary[]>([]);
   const [conversation, setConversation] = useState<AgentConversation | null>(null);
   const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<PanelAttachment[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +102,15 @@ export function AgentChatPanel() {
   const loadConversation = useCallback(async (id: string) => {
     const result = await getAgentConversation(id);
     setConversation(result);
+  }, []);
+
+  const refreshAttachments = useCallback(async (id: string) => {
+    const result = await listAgentAttachments(id);
+    const persisted = result.items.filter((item) => item.status === "staged").map(stagedAttachmentView);
+    setAttachments((current) => [
+      ...current.filter((item) => item.status === "uploading" || item.status === "error"),
+      ...persisted,
+    ]);
   }, []);
 
   useEffect(() => {
@@ -98,13 +128,16 @@ export function AgentChatPanel() {
 
   useEffect(() => {
     if (!open || !activeId) {
-      if (!activeId) setConversation(null);
+      if (!activeId) {
+        setConversation(null);
+        setAttachments([]);
+      }
       return;
     }
-    loadConversation(activeId).catch((cause) => {
+    Promise.all([loadConversation(activeId), refreshAttachments(activeId)]).catch((cause) => {
       setError(cause instanceof Error ? cause.message : "No se pudo cargar la conversación");
     });
-  }, [activeId, loadConversation, open]);
+  }, [activeId, loadConversation, open, refreshAttachments]);
 
   const baseMessages = useMemo(() => toUiMessages(conversation), [conversation]);
   const messages = useMemo(() => {
@@ -117,6 +150,7 @@ export function AgentChatPanel() {
     setConversation(null);
     setStreamText("");
     setDraft("");
+    setAttachments([]);
     setDrawerOpen(false);
     setError(null);
   }, [setActiveId]);
@@ -126,8 +160,8 @@ export function AgentChatPanel() {
     setDrawerOpen(false);
     setStreamText("");
     setError(null);
-    await loadConversation(id);
-  }, [loadConversation, setActiveId]);
+    await Promise.all([loadConversation(id), refreshAttachments(id)]);
+  }, [loadConversation, refreshAttachments, setActiveId]);
 
   const ensureConversation = useCallback(async (): Promise<string> => {
     if (activeId) return activeId;
@@ -138,15 +172,66 @@ export function AgentChatPanel() {
     return created.id;
   }, [activeId, setActiveId]);
 
+  const handleFilesSelected = useCallback(async (files: File[]) => {
+    setError(null);
+    const seed = Date.now();
+    const prepared = files.map((file, index) => {
+      const key = `${seed}-${index}-${file.name}`;
+      const extension = file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() : "";
+      if (extension !== "pdf" && extension !== "csv") {
+        return { file, view: { key, fileName: file.name, status: "error" as const, error: "Solo se admiten archivos PDF o CSV." } };
+      }
+      if (file.size === 0) {
+        return { file, view: { key, fileName: file.name, status: "error" as const, error: "El archivo está vacío." } };
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        return { file, view: { key, fileName: file.name, status: "error" as const, error: "El archivo supera el límite de 10 MiB." } };
+      }
+      return { file, view: { key, fileName: file.name, status: "uploading" as const } };
+    });
+
+    setAttachments((current) => [...current, ...prepared.map((item) => item.view)]);
+    const uploadable = prepared.filter((item) => item.view.status === "uploading");
+    if (uploadable.length === 0) return;
+
+    let conversationId: string;
+    try {
+      conversationId = await ensureConversation();
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "No se pudo crear la conversación";
+      setAttachments((current) => current.map((item) =>
+        uploadable.some((candidate) => candidate.view.key === item.key) ? { ...item, status: "error", error: message } : item,
+      ));
+      return;
+    }
+
+    for (const item of uploadable) {
+      try {
+        const uploaded = await uploadAgentAttachment(conversationId, item.file);
+        setAttachments((current) => current.map((attachment) =>
+          attachment.key === item.view.key ? stagedAttachmentView(uploaded) : attachment,
+        ));
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : "No se pudo adjuntar el archivo";
+        setAttachments((current) => current.map((attachment) =>
+          attachment.key === item.view.key ? { ...attachment, status: "error", error: message } : attachment,
+        ));
+      }
+    }
+  }, [ensureConversation]);
+
   const send = useCallback(async () => {
     const content = draft.trim();
-    if (!content || runId) return;
+    const attachmentIds = attachments
+      .filter((item) => item.status === "staged" && item.id)
+      .map((item) => item.id as string);
+    if ((!content && attachmentIds.length === 0) || runId) return;
     setError(null);
     setStreamText("");
     try {
       const conversationId = await ensureConversation();
       setDraft("");
-      const started = await sendAgentMessage(conversationId, content);
+      const started = await sendAgentMessage(conversationId, content, attachmentIds);
       setRunId(started.runId);
       await loadConversation(conversationId);
       const unsubscribe = subscribeAgentRun(
@@ -158,6 +243,7 @@ export function AgentChatPanel() {
           }
           if (event.type === "tool.completed" || event.type === "tool.failed") {
             loadConversation(conversationId).catch(() => undefined);
+            refreshAttachments(conversationId).catch(() => undefined);
           }
           if (event.type === "approval.required") {
             setPendingApproval({
@@ -191,6 +277,7 @@ export function AgentChatPanel() {
             setStreamText("");
             setPendingApproval(null);
             loadConversation(conversationId).catch(() => undefined);
+            refreshAttachments(conversationId).catch(() => undefined);
             refreshList().catch(() => undefined);
             if (event.type === "run.failed") {
               setError(typeof event.payload.message === "string" ? event.payload.message : "El agente no pudo completar la respuesta");
@@ -203,7 +290,21 @@ export function AgentChatPanel() {
       setRunId(null);
       setError(cause instanceof Error ? cause.message : "No se pudo enviar el mensaje");
     }
-  }, [draft, ensureConversation, loadConversation, navigateToSearchResult, refreshList, runId, setSection]);
+  }, [attachments, draft, ensureConversation, loadConversation, navigateToSearchResult, refreshAttachments, refreshList, runId, setSection]);
+
+  const removeAttachment = useCallback(async (key: string) => {
+    const target = attachments.find((item) => item.key === key);
+    if (!target) return;
+    if (target.id && target.conversationId) {
+      try {
+        await deleteAgentAttachment(target.conversationId, target.id);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "No se pudo quitar el archivo");
+        return;
+      }
+    }
+    setAttachments((current) => current.filter((item) => item.key !== key));
+  }, [attachments]);
 
   const stop = useCallback(async () => {
     if (!runId) return;
@@ -289,7 +390,10 @@ export function AgentChatPanel() {
       <AgentComposer
         value={draft}
         running={Boolean(runId)}
+        attachments={attachments}
         onChange={setDraft}
+        onFilesSelected={(files) => { void handleFilesSelected(files); }}
+        onRemoveAttachment={(key) => { void removeAttachment(key); }}
         onSend={() => { void send(); }}
         onStop={() => { void stop(); }}
       />

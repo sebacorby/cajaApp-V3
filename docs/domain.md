@@ -31,6 +31,7 @@ reference: `docs/technical.md`.
   entities (goals with contributions, per-category budgets).
 - **FinancialHealthSnapshot, AiAdvisorInteraction**: health snapshots;
   explain-only advisor turns with citations.
+- **AgentConversation / AgentMessage / AgentRun / AgentToolCall / AgentApproval / AgentAttachment**: persistent conversational-agent state, streamed runs, governed tool execution, exact critical approvals, and conversation-owned staged PDF/CSV references.
 - **ReconciliationCase (+ Participant)**: reversible duplicate/relationship
   cases across sources (frozen detector + manager).
 - **MonthClose (+ Activity)**: monthly close aggregate and its activities.
@@ -75,6 +76,7 @@ reference: `docs/technical.md`.
 16. **Global search**: cross-entity search (`/api/search`).
 17. **Settings + privacy**: local settings, `hideAmounts` masking via shared
     `Amount` component, persisted theme (`/api/settings`).
+18. **Conversational agent**: persistent chat remains separate from AI Advisor; current CajaApp facts come from registered tools, normal explicit writes execute through existing domain services, critical R3/R4 actions wait for exact approval, and PDF/CSV attachments are staged per conversation. Import initiation creates existing drafts/previews first; definitive acceptance stays a separate approval-gated step. Failed pre-draft imports can reuse the same still-valid staged attachment without re-uploading it.
 
 ## Domain Terminology
 
@@ -86,7 +88,7 @@ category + rules / income (`ingreso`, real vs projected) / dashboard +
 alerts / goal (`objetivo`) / budget (`presupuesto`) / future commitments
 (`deuda futura`) / reconciliation (`conciliación`) / month close
 (`cierre mensual`) / backup-restore (`respaldo`) / financial health
-(`salud financiera`) / advisor (`asesor IA`) / exchange rate
+(`salud financiera`) / advisor (`asesor IA`, explain-only) / conversational agent (`Agente IA`) / tool call / approval / attachment staging / exchange rate
 (`cotización USD/ARS`) / hideAmounts (privacy masking).
 
 ---

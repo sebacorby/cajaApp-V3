@@ -77,6 +77,7 @@ toggle, toggle-group, tooltip. Variants follow shadcn/new-york defaults
 
 Reusable finance components (`workspace/frontend/src/components/finance/`):
 layout (`app-shell`, `brand`, `header`, `sidebar`, `sidebar-data-quality`),
+agent (`agent-chat-panel`, `agent-composer`, `attachment-chip`, tool/approval cards, conversation/history/activity surfaces),
 `shared/amount.tsx` (money display + `hideAmounts` masking),
 `shared/summary-cards.tsx`, sections (16: dashboard, tarjetas, ingresos,
 movimientos, importaciones, conciliacion, cierres, respaldo, presupuestos,
@@ -102,6 +103,7 @@ alerts (alert-center), preferences (app-preferences-provider), search
   `--chart-1..5` palette (esmeralda, teal, ámbar, rosa, violeta).
 - Section navigation through `SectionRouter` inside `AppShell` (sidebar +
   header + brand), single-route app.
+- The conversational `Agente IA` is a global floating surface mounted above normal section content: launcher at the lower-right, desktop panel / mobile full-screen surface, sticky composer, attachment chips, tool-status cards and explicit approval cards. It reuses existing semantic tokens (`primary`, `card`, `border`, `muted`, `destructive`) rather than introducing a parallel token set.
 
 ## Register
 

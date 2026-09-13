@@ -8,6 +8,7 @@ function prismaMock() {
       update: vi.fn(), delete: vi.fn(),
     },
     agentMessage: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
+    agentAttachment: { findMany: vi.fn().mockResolvedValue([]) },
     $transaction: vi.fn(),
   };
 }

@@ -1,5 +1,13 @@
 # CajaApp V3 — CHANGELOG
 
+## 2026-09-13 — 001-chat-con-ia
+
+- Verdict: PASS, 1 round (authorized T060-T067 / FEAT-024 delivery)
+- Features added (features/): FEAT-020-global-agent-conversation, FEAT-021-real-data-and-navigation, FEAT-022-normal-actions, FEAT-023-critical-approvals, FEAT-024-document-imports-from-chat
+- Docs updated: `docs/technical.md` (agent module and tests), `docs/domain.md` (agent entities and governed document-import flow), `docs/design.md` (global agent components and presentation conventions)
+- Commits: none recorded
+- Deprecated: none
+
 ## 2026-09-12 — Grounding approved (design remediation + canvas reflow)
 
 - Ground snapshot: specs/000-grounding/ (technical.md, domain.md, design.md, 19 features)

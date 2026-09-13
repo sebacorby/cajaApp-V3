@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const API_BASE_URL = process.env.CAJAAPP_API_BASE_URL ?? "http://127.0.0.1:11436";
 const PROVIDER_PORT = Number(process.env.CAJAAPP_AGENT_FAKE_PROVIDER_PORT ?? 11501);
@@ -139,6 +139,7 @@ test("Agente IA: read tools reales, multi-tool, navegación y tool inválida", a
   let conversationId: string | null = null;
   try {
     await page.goto("/");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Abrir Agente IA" }).click();
     const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
     const sendButton = page.getByRole("button", { name: "Enviar mensaje" });
@@ -286,4 +287,368 @@ test("Agente IA: Approval Card R3 confirma una vez y cancelar no muta", async ({
     }
     criticalMovementId = "00000000-0000-4000-8000-000000000000";
   }
+});
+
+type Us5Attachment = {
+  id: string;
+  conversationId: string;
+  messageId: string | null;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+  status: "staged" | "consumed";
+  createdAt: string;
+};
+
+type Us5MockOptions = { failFirstImport?: boolean };
+
+async function installUs5MockApi(page: Page, options: Us5MockOptions = {}) {
+  const conversationId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const attachments: Us5Attachment[] = [];
+  const postedMessages: Array<{ content: string; attachmentIds: string[] }> = [];
+  let messages: Array<Record<string, unknown>> = [];
+  let uploadRequests = 0;
+  let approveRequests = 0;
+  let importAttempts = 0;
+
+  const conversation = () => ({
+    id: conversationId,
+    title: "Nuevo chat",
+    status: "active",
+    lastProvider: "fake",
+    lastModel: "fake-model",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    archivedAt: null,
+    messages,
+  });
+
+  const eventStream = (runId: string, events: Array<{ type: string; payload: Record<string, unknown> }>) => {
+    const now = new Date().toISOString();
+    return events.map((event, index) => {
+      const sequence = index + 1;
+      return `id: ${sequence}\nevent: ${event.type}\ndata: ${JSON.stringify({ runId, sequence, timestamp: now, type: event.type, payload: event.payload })}\n\n`;
+    }).join("");
+  };
+
+  const toolMessage = (
+    id: string,
+    name: string,
+    status: string,
+    attachmentId?: string,
+    result?: Record<string, unknown>,
+  ) => ({
+    id,
+    sequence: messages.length + 1,
+    role: "tool",
+    content: {
+      text: result ? JSON.stringify(result) : "",
+      toolCall: {
+        id,
+        providerCallId: `${id}-provider`,
+        name,
+        riskClass: name.includes("accept") ? "R3" : "R2",
+        status,
+        arguments: attachmentId ? { attachmentId } : { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" },
+        result,
+      },
+    },
+    createdAt: new Date().toISOString(),
+  });
+
+  await page.route("**/api/agent/**", async (route) => {
+    const url = new URL(route.request().url());
+    const method = route.request().method();
+
+    if (method === "POST" && url.pathname === "/api/agent/conversations") {
+      return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(conversation()) });
+    }
+    if (method === "GET" && url.pathname === "/api/agent/conversations") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], nextCursor: null }) });
+    }
+    if (method === "GET" && url.pathname === `/api/agent/conversations/${conversationId}`) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(conversation()) });
+    }
+    if (method === "GET" && url.pathname === `/api/agent/conversations/${conversationId}/attachments`) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: attachments }) });
+    }
+    if (method === "POST" && url.pathname === `/api/agent/conversations/${conversationId}/attachments`) {
+      uploadRequests += 1;
+      const raw = route.request().postDataBuffer()?.toString("utf8") ?? "";
+      const match = raw.match(/filename="([^"]+)"/i);
+      const fileName = match?.[1] ?? `attachment-${uploadRequests}.csv`;
+      const lower = fileName.toLowerCase();
+      const attachment: Us5Attachment = {
+        id: `00000000-0000-4000-8000-${String(uploadRequests).padStart(12, "0")}`,
+        conversationId,
+        messageId: null,
+        fileName,
+        mimeType: lower.endsWith(".pdf") ? "application/pdf" : "text/csv",
+        sizeBytes: Math.max(1, route.request().postDataBuffer()?.length ?? 1),
+        sha256: String(uploadRequests).repeat(64).slice(0, 64),
+        status: "staged",
+        createdAt: new Date().toISOString(),
+      };
+      attachments.push(attachment);
+      return route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(attachment) });
+    }
+    if (method === "DELETE" && url.pathname.startsWith(`/api/agent/conversations/${conversationId}/attachments/`)) {
+      const attachmentId = url.pathname.split("/").at(-1);
+      const index = attachments.findIndex((item) => item.id === attachmentId);
+      if (index >= 0) attachments.splice(index, 1);
+      return route.fulfill({ status: 204, body: "" });
+    }
+    if (method === "POST" && url.pathname === `/api/agent/conversations/${conversationId}/messages`) {
+      const body = route.request().postDataJSON() as { content?: string; attachmentIds?: string[] };
+      const normalized = { content: body.content ?? "", attachmentIds: body.attachmentIds ?? [] };
+      postedMessages.push(normalized);
+      messages.push({
+        id: `user-${postedMessages.length}`,
+        sequence: messages.length + 1,
+        role: "user",
+        content: { text: normalized.content, attachmentIds: normalized.attachmentIds },
+        createdAt: new Date().toISOString(),
+      });
+      const lower = normalized.content.toLowerCase();
+      const runId = !normalized.content.trim()
+        ? "run-us5-intent"
+        : lower.includes("acept")
+          ? "run-us5-accept"
+          : lower.includes("reintent")
+            ? "run-us5-retry"
+            : lower.includes("todos")
+              ? "run-us5-multi"
+              : options.failFirstImport && importAttempts === 0
+                ? "run-us5-fail"
+                : "run-us5-import";
+      importAttempts += runId.includes("import") || runId.includes("fail") ? 1 : 0;
+      return route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({ runId, status: "running" }) });
+    }
+    if (method === "POST" && url.pathname.includes("/api/agent/tool-calls/") && url.pathname.endsWith("/approve")) {
+      approveRequests += 1;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "approved" }) });
+    }
+    if (method === "POST" && url.pathname.includes("/api/agent/tool-calls/") && url.pathname.endsWith("/reject")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "rejected" }) });
+    }
+    if (method === "GET" && url.pathname.startsWith("/api/agent/runs/") && url.pathname.endsWith("/events")) {
+      const runId = url.pathname.split("/")[4];
+      const staged = attachments.filter((item) => item.status === "staged");
+      const events: Array<{ type: string; payload: Record<string, unknown> }> = [];
+
+      if (runId === "run-us5-intent") {
+        const text = "¿Qué querés hacer con el archivo adjunto?";
+        messages.push({
+          id: "assistant-intent", sequence: messages.length + 1, role: "assistant",
+          content: { text }, createdAt: new Date().toISOString(),
+        });
+        events.push({ type: "assistant.delta", payload: { text } });
+        events.push({ type: "assistant.completed", payload: { text } });
+        events.push({ type: "run.completed", payload: {} });
+      } else if (runId === "run-us5-fail") {
+        const attachment = staged[0];
+        messages.push(toolMessage("tool-fail", "debit_import.preview_attachment", "failed", attachment?.id));
+        const text = "La importación falló antes de crear un preview. Podés reintentar con el mismo archivo.";
+        messages.push({ id: "assistant-fail", sequence: messages.length + 1, role: "assistant", content: { text }, createdAt: new Date().toISOString() });
+        events.push({ type: "tool.failed", payload: { toolCallId: "tool-fail", name: "debit_import.preview_attachment", code: "IMPORT_FAILED" } });
+        events.push({ type: "assistant.delta", payload: { text } });
+        events.push({ type: "run.completed", payload: {} });
+      } else if (runId === "run-us5-retry") {
+        const attachment = staged[0];
+        if (attachment) attachment.status = "consumed";
+        const result = { importId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", status: "preview_ready" };
+        messages.push(toolMessage("tool-retry", "debit_import.preview_attachment", "succeeded", attachment?.id, result));
+        const text = "Preview de débito listo para revisar.";
+        messages.push({ id: "assistant-retry", sequence: messages.length + 1, role: "assistant", content: { text }, createdAt: new Date().toISOString() });
+        events.push({ type: "tool.completed", payload: { toolCallId: "tool-retry", name: "debit_import.preview_attachment", result } });
+        events.push({ type: "assistant.delta", payload: { text } });
+        events.push({ type: "run.completed", payload: {} });
+      } else if (runId === "run-us5-multi") {
+        for (const [index, attachment] of staged.entries()) {
+          attachment.status = "consumed";
+          const isPdf = attachment.fileName.toLowerCase().endsWith(".pdf");
+          const name = isPdf ? "card_import.upload_attachment" : "debit_import.preview_attachment";
+          const result = isPdf
+            ? { draftId: `card-draft-${index}`, status: "preview_ready" }
+            : { importId: `debit-import-${index}`, status: "preview_ready" };
+          messages.push(toolMessage(`tool-multi-${index}`, name, "succeeded", attachment.id, result));
+          events.push({ type: "tool.completed", payload: { toolCallId: `tool-multi-${index}`, name, result } });
+        }
+        const text = "Los dos documentos quedaron listos como workflows independientes.";
+        messages.push({ id: "assistant-multi", sequence: messages.length + 1, role: "assistant", content: { text }, createdAt: new Date().toISOString() });
+        events.push({ type: "assistant.delta", payload: { text } });
+        events.push({ type: "run.completed", payload: {} });
+      } else if (runId === "run-us5-import") {
+        const attachment = staged[0];
+        if (attachment) attachment.status = "consumed";
+        const isPdf = attachment?.fileName.toLowerCase().endsWith(".pdf") ?? true;
+        const name = isPdf ? "card_import.upload_attachment" : "debit_import.preview_attachment";
+        const result = isPdf
+          ? { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", status: "preview_ready" }
+          : { importId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", status: "preview_ready" };
+        messages.push(toolMessage("tool-import", name, "succeeded", attachment?.id, result));
+        const text = "Draft listo para revisar.";
+        messages.push({ id: "assistant-import", sequence: messages.length + 1, role: "assistant", content: { text }, createdAt: new Date().toISOString() });
+        events.push({ type: "tool.completed", payload: { toolCallId: "tool-import", name, result } });
+        events.push({ type: "assistant.delta", payload: { text } });
+        events.push({ type: "run.completed", payload: {} });
+      } else if (runId === "run-us5-accept") {
+        messages.push(toolMessage("tool-accept", "card_import.accept_draft", "awaiting_approval"));
+        events.push({ type: "approval.required", payload: {
+          toolCallId: "tool-accept",
+          name: "card_import.accept_draft",
+          riskClass: "R3",
+          arguments: { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" },
+          impact: { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", warning: "Materializa movimientos definitivos." },
+        } });
+      }
+
+      return route.fulfill({ status: 200, contentType: "text/event-stream", body: eventStream(runId, events) });
+    }
+
+    return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ code: "NOT_FOUND" }) });
+  });
+
+  return {
+    conversationId,
+    attachments,
+    postedMessages,
+    get uploadRequests() { return uploadRequests; },
+    get approveRequests() { return approveRequests; },
+  };
+}
+
+async function openUs5Agent(page: Page, options: Us5MockOptions = {}) {
+  const state = await installUs5MockApi(page, options);
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+  await expect(page.getByTestId("agent-chat-panel")).toBeVisible();
+  return state;
+}
+
+test("FEAT-024 — Attach a supported document and request import", async ({ page }) => {
+  const state = await openUs5Agent(page);
+  const input = page.getByTestId("agent-attachment-input");
+  await expect(page.getByRole("button", { name: "Adjuntar archivo" })).toBeEnabled();
+  await input.setInputFiles({
+    name: "resumen.pdf", mimeType: "application/octet-stream", buffer: Buffer.from("%PDF-us5"),
+  });
+  await expect(page.getByTestId("agent-attachment-chip").filter({ hasText: "resumen.pdf" }))
+    .toHaveAttribute("data-status", "staged");
+
+  await page.getByRole("textbox", { name: "Mensaje para Agente IA" }).fill("Importá este resumen adjunto");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+
+  await expect.poll(() => state.postedMessages.at(-1)?.attachmentIds ?? []).toHaveLength(1);
+  await expect(page.getByTestId("agent-tool-card").filter({ hasText: "card_import.upload_attachment" }))
+    .toHaveAttribute("data-status", "succeeded");
+  await expect(page.getByText("Draft listo para revisar.", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("agent-approval-card")).toHaveCount(0);
+});
+
+
+test("FEAT-024 — Do not import an attachment without user intent", async ({ page }) => {
+  const state = await openUs5Agent(page);
+  const input = page.getByTestId("agent-attachment-input");
+  await input.setInputFiles({ name: "resumen.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-us5") });
+  await expect(page.getByTestId("agent-attachment-chip")).toHaveAttribute("data-status", "staged");
+
+  const send = page.getByRole("button", { name: "Enviar mensaje" });
+  await expect(send).toBeEnabled();
+  await send.click();
+
+  await expect.poll(() => state.postedMessages.at(-1)?.content).toBe("");
+  await expect.poll(() => state.postedMessages.at(-1)?.attachmentIds ?? []).toHaveLength(1);
+  await expect(page.getByTestId("agent-tool-card")).toHaveCount(0);
+  await expect(page.getByText("¿Qué querés hacer con el archivo adjunto?", { exact: true })).toBeVisible();
+});
+
+test("FEAT-024 — Process multiple requested attachments", async ({ page }) => {
+  const state = await openUs5Agent(page);
+  const input = page.getByTestId("agent-attachment-input");
+  await input.setInputFiles([
+    { name: "resumen.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-us5") },
+    { name: "debito.csv", mimeType: "text/csv", buffer: Buffer.from("Fecha;Descripción;Débito;Crédito;Referencia\n11/07/2026;TEST;10;;A-1") },
+  ]);
+  await expect(page.getByTestId("agent-attachment-chip")).toHaveCount(2);
+  await page.getByRole("textbox", { name: "Mensaje para Agente IA" }).fill("Importá todos los adjuntos");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+
+  await expect.poll(() => state.postedMessages.at(-1)?.attachmentIds ?? []).toHaveLength(2);
+  await expect(page.getByTestId("agent-tool-card").filter({ hasText: "card_import.upload_attachment" }))
+    .toHaveAttribute("data-status", "succeeded");
+  await expect(page.getByTestId("agent-tool-card").filter({ hasText: "debit_import.preview_attachment" }))
+    .toHaveAttribute("data-status", "succeeded");
+  await expect(page.getByTestId("agent-approval-card")).toHaveCount(0);
+});
+
+
+test("FEAT-024 — Reuse a valid attachment after an import failure", async ({ page }) => {
+  const state = await openUs5Agent(page, { failFirstImport: true });
+  const input = page.getByTestId("agent-attachment-input");
+  await input.setInputFiles({
+    name: "debito.csv", mimeType: "text/csv",
+    buffer: Buffer.from("Fecha;Descripción;Débito;Crédito;Referencia\n11/07/2026;TEST;10;;A-1"),
+  });
+  const chip = page.getByTestId("agent-attachment-chip").filter({ hasText: "debito.csv" });
+  await expect(chip).toHaveAttribute("data-status", "staged");
+
+  const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
+  await composer.fill("Importá este archivo");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+  await expect(page.getByTestId("agent-tool-card").filter({ hasText: "debit_import.preview_attachment" }).last())
+    .toHaveAttribute("data-status", "failed");
+  await expect(chip).toHaveAttribute("data-status", "staged");
+  const firstId = state.postedMessages.at(-1)?.attachmentIds[0];
+
+  await composer.fill("Reintentá la importación del mismo archivo");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+  await expect.poll(() => state.postedMessages.at(-1)?.attachmentIds[0]).toBe(firstId);
+  await expect(page.getByTestId("agent-tool-card").filter({ hasText: "debit_import.preview_attachment" }).last())
+    .toHaveAttribute("data-status", "succeeded");
+  await expect(page.getByText("Preview de débito listo para revisar.", { exact: true })).toBeVisible();
+});
+
+
+test("FEAT-024 — Reject an unsupported or oversized attachment", async ({ page }) => {
+  const state = await openUs5Agent(page);
+  const input = page.getByTestId("agent-attachment-input");
+
+  await input.setInputFiles({ name: "foto.png", mimeType: "image/png", buffer: Buffer.from("png") });
+  const unsupported = page.getByTestId("agent-attachment-chip").filter({ hasText: "foto.png" });
+  await expect(unsupported).toHaveAttribute("data-status", "error");
+  await expect(unsupported).toContainText("PDF o CSV");
+  expect(state.uploadRequests).toBe(0);
+  await page.getByRole("button", { name: "Quitar foto.png" }).click();
+
+  await input.setInputFiles({
+    name: "enorme.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.alloc(10 * 1024 * 1024 + 1, 65),
+  });
+  const oversized = page.getByTestId("agent-attachment-chip").filter({ hasText: "enorme.csv" });
+  await expect(oversized).toHaveAttribute("data-status", "error");
+  await expect(oversized).toContainText("10 MiB");
+  expect(state.uploadRequests).toBe(0);
+});
+
+test("FEAT-024 — Require approval before definitive acceptance", async ({ page }) => {
+  const state = await openUs5Agent(page);
+  const input = page.getByTestId("agent-attachment-input");
+  await input.setInputFiles({ name: "resumen.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-us5") });
+  const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
+
+  await composer.fill("Importá este resumen adjunto");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+  await expect(page.getByText("Draft listo para revisar.", { exact: true })).toBeVisible();
+
+  await composer.fill("Aceptá el draft definitivamente");
+  await page.getByRole("button", { name: "Enviar mensaje" }).click();
+  const approval = page.getByTestId("agent-approval-card");
+  await expect(approval).toBeVisible();
+  await expect(approval).toHaveAttribute("data-risk-class", "R3");
+  await expect(approval).toContainText("Materializa movimientos definitivos.");
+  expect(state.approveRequests).toBe(0);
 });

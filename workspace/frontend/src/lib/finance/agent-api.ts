@@ -49,6 +49,18 @@ export interface AgentConversation extends AgentConversationSummary {
   messages: AgentMessage[];
 }
 
+export interface AgentAttachment {
+  id: string;
+  conversationId: string;
+  messageId: string | null;
+  fileName: string;
+  mimeType: "application/pdf" | "text/csv";
+  sizeBytes: number;
+  sha256: string;
+  status: "staged" | "consumed";
+  createdAt: string;
+}
+
 export type AgentEvent = {
   runId: string;
   sequence: number;
@@ -101,10 +113,32 @@ export async function deleteAgentConversation(id: string): Promise<void> {
   if (!response.ok) await parseResponse(response);
 }
 
-export async function sendAgentMessage(conversationId: string, content: string): Promise<{ runId: string; status: AgentRunStatus }> {
+export async function uploadAgentAttachment(conversationId: string, file: File): Promise<AgentAttachment> {
+  const body = new FormData();
+  body.append("file", file);
+  return parseResponse(await fetch(`${API_BASE_URL}/api/agent/conversations/${conversationId}/attachments`, {
+    method: "POST",
+    body,
+  }));
+}
+
+export async function listAgentAttachments(conversationId: string): Promise<{ items: AgentAttachment[] }> {
+  return parseResponse(await fetch(`${API_BASE_URL}/api/agent/conversations/${conversationId}/attachments`, { cache: "no-store" }));
+}
+
+export async function deleteAgentAttachment(conversationId: string, attachmentId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/agent/conversations/${conversationId}/attachments/${attachmentId}`, { method: "DELETE" });
+  if (!response.ok) await parseResponse(response);
+}
+
+export async function sendAgentMessage(
+  conversationId: string,
+  content: string,
+  attachmentIds: string[] = [],
+): Promise<{ runId: string; status: AgentRunStatus }> {
   return parseResponse(await fetch(`${API_BASE_URL}/api/agent/conversations/${conversationId}/messages`, {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ content, attachmentIds: [] }),
+    body: JSON.stringify({ content, attachmentIds }),
   }));
 }
 

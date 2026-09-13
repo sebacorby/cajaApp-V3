@@ -35,6 +35,11 @@ export const agentConversationParamsSchema = z.object({
   id: agentIdSchema,
 });
 
+export const agentAttachmentParamsSchema = z.object({
+  id: agentIdSchema,
+  attachmentId: agentIdSchema,
+});
+
 export const agentRunParamsSchema = z.object({
   runId: agentIdSchema,
 });

@@ -1,6 +1,8 @@
+import "@fastify/multipart";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { validateData } from "../../shared/validation.js";
 import {
+  agentAttachmentParamsSchema,
   agentConversationParamsSchema,
   agentRunParamsSchema,
   agentToolCallParamsSchema,
@@ -62,6 +64,30 @@ export const agentChatController: FastifyPluginAsync = async (app: FastifyInstan
     return reply.status(204).send();
   });
 
+  app.post("/conversations/:id/attachments", async (request, reply) => {
+    const params = validateData(agentConversationParamsSchema, request.params);
+    const upload = await request.file();
+    if (!upload || upload.fieldname !== "file") {
+      return reply.status(400).send({ code: "FILE_REQUIRED", message: "Multipart field 'file' is required" });
+    }
+    const attachment = await agentChatService.stageAttachment(params.id, {
+      filename: upload.filename,
+      mimetype: upload.mimetype,
+      buffer: await upload.toBuffer(),
+    });
+    return reply.status(201).send(attachment);
+  });
+
+  app.get("/conversations/:id/attachments", async (request, reply) => {
+    const params = validateData(agentConversationParamsSchema, request.params);
+    return reply.send({ items: await agentChatService.listAttachments(params.id) });
+  });
+
+  app.delete("/conversations/:id/attachments/:attachmentId", async (request, reply) => {
+    const params = validateData(agentAttachmentParamsSchema, request.params);
+    await agentChatService.deleteAttachment(params.id, params.attachmentId);
+    return reply.status(204).send();
+  });
   app.post("/conversations/:id/messages", async (request, reply) => {
     const params = validateData(agentConversationParamsSchema, request.params);
     const body = validateData(createAgentMessageBodySchema, request.body) as {

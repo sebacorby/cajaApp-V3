@@ -22,7 +22,9 @@ import { manualPurchasesService } from "../manual-purchases/manual-purchases.ser
 import { importsService } from "../imports/imports.service.js";
 import { importCenterService } from "../import-center/import-center.service.js";
 import { debitImportsService } from "../debit-imports/debit-imports.service.js";
+import { debitImportRowUpdateSchema } from "../debit-imports/debit-imports.schemas.js";
 import { salaryReceiptsService } from "../salary-receipts/salary-receipts.service.js";
+import { salaryReceiptPreviewSchema } from "../salary-receipts/salary-receipts.schemas.js";
 import { incomesService } from "../incomes/incomes.service.js";
 import { createIncomeEventSchema, createIncomeSourceSchema, updateIncomeSourceSchema } from "../incomes/incomes.schemas.js";
 import { budgetsService } from "../budgets/budgets.service.js";
@@ -32,12 +34,13 @@ import { changeGoalStatusSchema, createGoalContributionSchema, createGoalSchema,
 import { futureService } from "../future/future.service.js";
 import { reportsService } from "../reports/reports.service.js";
 import { reconciliationService } from "../reconciliation/reconciliation.service.js";
-import { resolveReconciliationSchema } from "../reconciliation/reconciliation.schemas.js";
+import { resolveReconciliationSchema, scanReconciliationSchema } from "../reconciliation/reconciliation.schemas.js";
 import { financialHealthService } from "../financial-health/financial-health.service.js";
 import { monthCloseService } from "../month-close/month-close.service.js";
 import { backupRestoreService } from "../backup-restore/backup-restore.service.js";
 import { settingsService } from "../settings/settings.service.js";
 import { updateSettingsSchema } from "../settings/settings.schemas.js";
+import { agentChatService } from "./agent-chat.service.js";
 
 export const AGENT_READ_TOOL_NAMES = [
   "app.search",
@@ -102,6 +105,15 @@ export const AGENT_R2_TOOL_NAMES = [
   "cards.set_exchange_rate",
   "cards.create_manual_purchase",
   "backup.create",
+  "card_import.upload_attachment",
+  "card_import.update_draft",
+  "debit_import.preview_attachment",
+  "debit_import.update_row",
+  "salary_receipt.import_attachment",
+  "salary_receipt.update_draft",
+  "backup.validate",
+  "reconciliation.scan",
+  "financial_health.create_snapshot",
   "settings.update",
 ] as const;
 
@@ -134,6 +146,10 @@ export const AGENT_R4_TOOL_NAMES = ["backup.restore"] as const;
 
 export const AGENT_TOOL_NAMES = [...AGENT_READ_TOOL_NAMES, ...AGENT_R2_TOOL_NAMES, ...AGENT_R3_TOOL_NAMES, ...AGENT_R4_TOOL_NAMES] as const;
 
+export interface AgentToolContext {
+  conversationId?: string;
+}
+
 export interface AgentToolRegistryEntry {
   name: string;
   description: string;
@@ -141,7 +157,7 @@ export interface AgentToolRegistryEntry {
   riskClass: AgentRiskClass;
   parallelSafe: boolean;
   requiresExplicitIntent: boolean;
-  handler: (args: unknown) => Promise<unknown>;
+  handler: (args: unknown, context: AgentToolContext) => Promise<unknown>;
   resultProjector: (result: unknown) => AgentJsonValue;
   auditEntityRefs: (result: unknown, args: unknown) => AgentEntityRef[];
   impactSummary?: (args: unknown) => unknown | Promise<unknown>;
@@ -269,7 +285,7 @@ function makeWriteTool(
   name: string,
   description: string,
   inputSchema: ZodTypeAny,
-  handler: (args: any) => Promise<unknown>,
+  handler: (args: any, context: AgentToolContext) => Promise<unknown>,
   auditEntityRefs: AgentToolRegistryEntry["auditEntityRefs"] = refsNone,
 ): AgentToolRegistryEntry {
   return {
@@ -428,6 +444,11 @@ const goalStatusToolSchema = z.object({ goalId: uuidSchema, change: changeGoalSt
 const goalContributionToolSchema = z.object({ goalId: uuidSchema, contribution: createGoalContributionSchema });
 const manualPurchaseToolSchema = z.object({ statementId: uuidSchema, purchase: manualPurchaseSchema });
 const backupCreateSchema = z.object({ label: z.string().trim().min(1).max(80).optional() });
+const attachmentIdToolSchema = z.object({ attachmentId: uuidSchema }).strict();
+const cardUpdateDraftToolSchema = z.object({ draftId: uuidSchema, preview: cardStatementPreviewSchema }).strict();
+const debitUpdateRowToolSchema = z.object({ importId: uuidSchema, rowId: uuidSchema, changes: debitImportRowUpdateSchema }).strict();
+const salaryUpdateDraftToolSchema = z.object({ draftId: uuidSchema, preview: salaryReceiptPreviewSchema }).strict();
+const backupValidateToolSchema = z.object({ backupId: uuidSchema }).strict();
 
 function csvArtifactProjector(result: unknown): AgentJsonValue {
   const row = result as { fileName?: unknown; records?: unknown; csv?: unknown };
@@ -438,6 +459,24 @@ function csvArtifactProjector(result: unknown): AgentJsonValue {
   });
 }
 
+function requireConversationContext(context: AgentToolContext): string {
+  if (!context.conversationId) {
+    throw Object.assign(new Error("Agent tool requires conversation ownership context"), {
+      code: "AGENT_TOOL_CONTEXT_REQUIRED",
+    });
+  }
+  return context.conversationId;
+}
+
+async function consumeAfterSuccess<T>(
+  conversationId: string,
+  attachmentId: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  const result = await action();
+  await agentChatService.consumeAttachment(conversationId, attachmentId);
+  return result;
+}
 function backupArtifactProjector(result: unknown): AgentJsonValue {
   const row = result as { fileName?: unknown; buffer?: unknown };
   return projectAgentResult({
@@ -569,7 +608,48 @@ const entries: AgentToolRegistryEntry[] = [
     (args) => manualPurchasesService.createPurchase(args.statementId, args.purchase), refFromArg("card_statement", "tarjetas", "statementId")),
   makeWriteTool("backup.create", "Crea un backup manual mediante el servicio gobernado de CajaApp.", backupCreateSchema,
     (args) => backupRestoreService.create(args.label), refFromResult("backup", "respaldo")),
-  makeWriteTool("settings.update", "Actualiza preferencias locales de CajaApp.", updateSettingsSchema,
+  makeWriteTool("card_import.upload_attachment", "Prepara un draft de resumen de tarjeta desde un attachment de esta conversación.", attachmentIdToolSchema,
+    async (args, context) => {
+      const conversationId = requireConversationContext(context);
+      const attachment = await agentChatService.resolveAttachment(conversationId, args.attachmentId);
+      return consumeAfterSuccess(conversationId, args.attachmentId, () => importsService.startImport({
+        filename: attachment.fileName,
+        mimetype: attachment.mimeType,
+        file: attachment.buffer,
+      }));
+    }, refFromResult("card_import_draft", "tarjetas", "draftId")),
+  makeWriteTool("card_import.update_draft", "Actualiza un draft de tarjeta sin aceptarlo definitivamente.", cardUpdateDraftToolSchema,
+    (args) => cardsService.updateDraft(args.draftId, args.preview), refFromArg("card_import_draft", "tarjetas", "draftId")),
+  makeWriteTool("debit_import.preview_attachment", "Crea un preview de débito CSV desde un attachment de esta conversación.", attachmentIdToolSchema,
+    async (args, context) => {
+      const conversationId = requireConversationContext(context);
+      const attachment = await agentChatService.resolveAttachment(conversationId, args.attachmentId);
+      return consumeAfterSuccess(conversationId, args.attachmentId, () => debitImportsService.createPreview({
+        fileName: attachment.fileName,
+        mimeType: attachment.mimeType,
+        buffer: attachment.buffer,
+      }));
+    }, refFromResult("debit_import", "importaciones")),
+  makeWriteTool("debit_import.update_row", "Actualiza una fila de un draft de débito sin aceptarlo.", debitUpdateRowToolSchema,
+    (args) => debitImportsService.updateRow(args.importId, args.rowId, args.changes), refFromArg("debit_import", "importaciones", "importId")),
+  makeWriteTool("salary_receipt.import_attachment", "Prepara un draft de recibo de sueldo desde un attachment PDF de esta conversación.", attachmentIdToolSchema,
+    async (args, context) => {
+      const conversationId = requireConversationContext(context);
+      const attachment = await agentChatService.resolveAttachment(conversationId, args.attachmentId);
+      return consumeAfterSuccess(conversationId, args.attachmentId, () => salaryReceiptsService.importPdf({
+        filename: attachment.fileName,
+        mimetype: attachment.mimeType,
+        file: attachment.buffer,
+      }));
+    }, refFromResult("salary_receipt_draft", "ingresos")),
+  makeWriteTool("salary_receipt.update_draft", "Actualiza un draft de recibo de sueldo sin aceptarlo definitivamente.", salaryUpdateDraftToolSchema,
+    (args) => salaryReceiptsService.updateDraft(args.draftId, args.preview), refFromArg("salary_receipt_draft", "ingresos", "draftId")),
+  makeWriteTool("backup.validate", "Valida un backup persistido por identificador sin aceptar paths arbitrarios.", backupValidateToolSchema,
+    (args) => backupRestoreService.validateStored(args.backupId), refFromArg("backup", "respaldo", "backupId")),
+  makeWriteTool("reconciliation.scan", "Ejecuta el escaneo determinístico de conciliación solicitado.", scanReconciliationSchema.strict(),
+    (args) => reconciliationService.scan(args)),
+  makeWriteTool("financial_health.create_snapshot", "Crea un snapshot persistido de salud financiera para un rango solicitado.", rangeSchema.strict(),
+    (args) => financialHealthService.saveSnapshot(args), refFromResult("financial_health_snapshot", "salud", "snapshotId")),  makeWriteTool("settings.update", "Actualiza preferencias locales de CajaApp.", updateSettingsSchema,
     (args) => settingsService.updateSettings(args)),
   makeCriticalTool("card_import.accept_draft", "Acepta definitivamente un borrador de resumen de tarjeta revisado.", z.object({ draftId: uuidSchema, preview: cardStatementPreviewSchema }),
     (args) => cardsService.acceptDraft(args.draftId, args.preview), "R3", refFromArg("card_statement", "tarjetas", "draftId")),

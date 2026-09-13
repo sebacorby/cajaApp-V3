@@ -76,6 +76,7 @@ Backend (`workspace/backend/src/`, Fastify plugins registered in `app.ts`):
 | `modules/goals` | Savings goals, contributions, activities | HTTP `/api/goals/*` |
 | `modules/financial-health` | Health snapshots | HTTP `/api/financial-health/*` |
 | `modules/ai-advisor` | Explain-only financial advisor with citations + isolated simulations | HTTP `/api/ai-advisor/*` |
+| `modules/agent-chat` | Persistent conversational agent: messages/runs, closed tool registry, R0-R4 authorization, PDF/CSV attachment staging and import initiation | HTTP `/api/agent/*`; invokes existing domain services, never model→Prisma/SQL or loopback HTTP |
 | `modules/global-search` | Cross-entity search | HTTP `/api/search/*` |
 | `modules/settings` | Local settings incl. `hideAmounts`, theme persistence | HTTP `/api/settings/*` |
 
@@ -87,8 +88,9 @@ Frontend (`workspace/frontend/src/`, Next.js App Router, single `page.tsx`):
 | `app/page.tsx` | Home: `AppShell` + `SectionRouter` (client component, section navigation) | renders finance sections |
 | `components/finance/sections/` | 16 sections: asesor-ia, cierres, conciliacion, configuracion, dashboard, deuda-futura, importaciones, ingresos, movimientos, objetivos, presupuestos, reportes, respaldo, salud-financiera, tarjetas + `section-router.tsx` | call `lib/finance/*-api.ts` |
 | `components/finance/` | Domain widgets: alerts, card-statements (11 files: import/preview/accepted/history/sheets), categories, charts (donut/evolution/sparkline), dashboard, goals, imports sheets, layout (app-shell/brand/header/sidebar), preferences, search, transactions | composed by sections |
+| `components/finance/agent/` | Global conversational agent UI: floating launcher/panel, conversation stream, composer, attachment chips, tool cards, approval cards, history/activity surfaces | `lib/finance/agent-api.ts`; stays mounted across section navigation |
 | `components/ui/` | 48 shadcn primitives (button, dialog, sheet, table, tabs, chart, sidebar, sonner, etc.) | composed by finance components |
-| `lib/finance/` | 24 modules: `*-api.ts` client per domain + `money.ts`, `financial-amount.ts`, `nav.ts`, `ui-store.ts`, `icons.ts` | fetch backend REST |
+| `lib/finance/` | Domain API clients plus `money.ts`, `financial-amount.ts`, `nav.ts`, `ui-store.ts`, `icons.ts`; `agent-api.ts` covers conversations/messages/runs/attachments/approvals | fetch backend REST/SSE |
 | `lib/` | `db.ts`, `utils.ts`, `error-message.ts` | shared helpers |
 | `hooks/` | `use-mobile`, `use-toast` | UI state |
 
@@ -123,9 +125,9 @@ of the product — out of grounding scope).
 ## Test Setup
 
 - Backend: Vitest 3 (`vitest run` via `npm test`, `npm run check` = build +
-  test). 30 specs under `workspace/backend/tests/` mirroring modules
+  test). Specs under `workspace/backend/tests/` mirror modules
   (`imports/`, `cards/`, `salary-receipts/`, `movements/`, `reconciliation/`,
-  `month-close/`, `backup-restore/`, `ai-advisor/`, `quality/`, ...).
+  `month-close/`, `backup-restore/`, `ai-advisor/`, `agent-chat/`, `quality/`, ...).
   Fixture pattern: golden fixtures (`cards/card-statement.golden-fixture`),
   contract tests (`pdf-import-contract`, `frontend-runtime-contract`),
   sanitized example PDFs/JSON in `contracts/examples/`.
@@ -133,8 +135,9 @@ of the product — out of grounding scope).
   `testDir ./tests`, `testMatch **/*.spec.ts`, ignore `* (1).spec.ts` /
   `* copy.spec.ts`, `fullyParallel: false`, `workers: 1`, `retries: 0`,
   timeout 12min, baseURL `http://127.0.0.1:11437` (override via
-  `CAJAAPP_FRONTEND_BASE_URL`/`PLAYWRIGHT_BASE_URL`). 29 specs: domain specs
-  at `tests/` root + `tests/e2e/` flows. Full evidence chain (list/html/json
+  `CAJAAPP_FRONTEND_BASE_URL`/`PLAYWRIGHT_BASE_URL`). 31 specs: domain specs
+  at `tests/` root + `tests/e2e/` flows, including agent chat regression and
+  real document-import E2E coverage. Full evidence chain (list/html/json
   reporters, `test-results/`, `playwright-report/`).
 - Helpers: `run-playwright.ps1` (root), `cajaapp-headless-up.ps1` (headless
   bring-up + gates), `detect-env.sh`.

@@ -112,11 +112,11 @@ export class AgentRunnerService {
   }
 
   private explicitMutationIntent(userText: string, toolName: string): boolean {
-    const action = /(?:^|\s)(registr(?:a|á|ar)|cre(?:a|á|ar)|agreg(?:a|á|ar)|añad(?:e|í|ir)|cambi(?:a|á|ar)|edit(?:a|á|ar)|actualiz(?:a|á|ar)|asign(?:a|á|ar)|establec(?:e|é|er)|configur(?:a|á|ar)|pon(?:é|e|er)|aport(?:a|á|ar)|gener(?:a|á|ar)|guard(?:a|á|ar)|ocult(?:a|á|ar)|mostr(?:a|á|ar)|activ(?:a|á|ar)|desactiv(?:a|á|ar)|paus(?:a|á|ar)|reanud(?:a|á|ar)|cerr(?:a|á|ar)|create|update|set|add|register|assign|save)(?=\s|$|[.,;:!?])/i.test(userText);
+    const action = /(?:^|\s)(registr(?:a|á|ar)|cre(?:a|á|ar)|agreg(?:a|á|ar)|añad(?:e|í|ir)|cambi(?:a|á|ar)|edit(?:a|á|ar)|actualiz(?:a|á|ar)|asign(?:a|á|ar)|establec(?:e|é|er)|configur(?:a|á|ar)|pon(?:é|e|er)|aport(?:a|á|ar)|gener(?:a|á|ar)|guard(?:a|á|ar)|ocult(?:a|á|ar)|mostr(?:a|á|ar)|activ(?:a|á|ar)|desactiv(?:a|á|ar)|paus(?:a|á|ar)|reanud(?:a|á|ar)|cerr(?:a|á|ar)|create|update|set|add|register|assign|save|import(?:a|á|ar)?|prepar(?:a|á|ar)|previsualiz(?:a|á|ar)|valid(?:a|á|ar)|escane(?:a|á|ar)|scan|validate|import|prepare|preview)(?=\s|$|[.,;:!?])/i.test(userText);
     if (!action) return false;
 
     const ambiguousReference = /\b(ese|esa|eso|este|esta|aquel|aquella)\b/i.test(userText);
-    const targeted = /^(movements\.update_manual|categories\.update|categories\.assign|incomes\.update_source|budgets\.update|budgets\.set_status|goals\.update|goals\.set_status|goals\.add_contribution|cards\.create_manual_purchase)$/.test(toolName);
+    const targeted = /^(movements\.update_manual|categories\.update|categories\.assign|incomes\.update_source|budgets\.update|budgets\.set_status|goals\.update|goals\.set_status|goals\.add_contribution|cards\.create_manual_purchase|card_import\.update_draft|debit_import\.update_row|salary_receipt\.update_draft)$/.test(toolName);
     const explicitId = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i.test(userText);
     if (targeted && ambiguousReference && !explicitId) return false;
 
@@ -128,6 +128,11 @@ export class AgentRunnerService {
       goals: /\b(objetivo|meta|aporte)\b/i,
       cards: /\b(tarjeta|compra|cotizaci(?:ó|o)n|d[oó]lar|usd|ars|tipo de cambio)\b/i,
       backup: /\b(backup|respaldo)\b/i,
+      card_import: /\b(tarjeta|resumen|extracto|pdf|adjunto|attachment|draft|borrador)\b/i,
+      debit_import: /\b(débito|debito|csv|banco|adjunto|attachment|fila|importaci(?:ó|o)n)\b/i,
+      salary_receipt: /\b(recibo|sueldo|salario|pdf|adjunto|attachment|draft|borrador)\b/i,
+      reconciliation: /\b(conciliaci(?:ó|o)n|conciliar|scan|escaneo)\b/i,
+      financial_health: /\b(salud financiera|snapshot|salud)\b/i,
       settings: /\b(configuraci(?:ó|o)n|preferencia|tema|moneda|importe|monto)\b/i,
     };
     const prefix = toolName.split(".")[0];
@@ -336,6 +341,7 @@ export class AgentRunnerService {
             request: {
               name: providerCall.name,
               arguments: executionArguments,
+              conversationId,
               explicitIntent: definition.requiresExplicitIntent
                 ? this.explicitIntentFor(latestUserText, providerCall.name, definition.riskClass)
                 : undefined,
