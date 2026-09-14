@@ -1,5 +1,21 @@
 import { CheckCircle2, CircleDashed, XCircle } from "lucide-react";
 import type { AgentToolCallView } from "@/lib/finance/agent-api";
+import { useAppPreferences } from "@/components/finance/preferences/app-preferences-provider";
+
+const AMOUNT_KEY = /(amount|balance|total|expense|income|spent|budget|ars|usd|saldo|monto|importe|gasto|ingreso)/i;
+
+function maskAmounts(value: unknown, sensitive = false): unknown {
+  if (value === null || value === undefined) return value;
+  if (sensitive && (typeof value === "string" || typeof value === "number")) return "••••";
+  if (Array.isArray(value)) return value.map((item) => maskAmounts(item, sensitive));
+  if (typeof value === "object") {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      key,
+      maskAmounts(item, sensitive || AMOUNT_KEY.test(key)),
+    ]));
+  }
+  return value;
+}
 
 function statusLabel(status: string, riskClass: string): string {
   if (status === "awaiting_approval") return "Aprobación requerida";
@@ -17,14 +33,15 @@ function StatusIcon({ status }: { status: string }) {
   return <CircleDashed className="size-4 animate-pulse text-muted-foreground" aria-hidden="true" />;
 }
 
-function details(call: AgentToolCallView): string {
+function details(call: AgentToolCallView, hideAmounts: boolean): string {
   if (call.status === "failed") return call.errorMessage || call.errorCode || "La operación no pudo completarse.";
   if (call.result === undefined) return "CajaApp está procesando esta consulta.";
-  const serialized = JSON.stringify(call.result, null, 2);
+  const serialized = JSON.stringify(hideAmounts ? maskAmounts(call.result) : call.result, null, 2);
   return serialized.length > 1_800 ? `${serialized.slice(0, 1_800)}\n…` : serialized;
 }
 
 export function ToolCallCard({ call }: { call: AgentToolCallView }) {
+  const { settings } = useAppPreferences();
   return (
     <article
       data-testid="agent-tool-card"
@@ -46,7 +63,7 @@ export function ToolCallCard({ call }: { call: AgentToolCallView }) {
       <details className="mt-2 rounded-lg bg-muted/50 px-2.5 py-2">
         <summary className="cursor-pointer select-none font-medium">Detalle</summary>
         <pre className="mt-2 max-h-44 overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-muted-foreground">
-          {details(call)}
+          {details(call, settings.hideAmounts)}
         </pre>
       </details>
     </article>

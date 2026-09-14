@@ -175,18 +175,18 @@
 
 ### Tests for User Story 6
 
-- [ ] T068 [P] [US6] Escribir tests de context assembly, recent messages, summary y entity refs en `workspace/backend/tests/agent-chat/memory.test.ts`.
-- [ ] T069 [P] [US6] Extender tests runner con max steps, provider failure, restart snapshot y `cancelled_after_tool` en `workspace/backend/tests/agent-chat/runner.test.ts`.
-- [ ] T070 [P] [US6] Extender Playwright con reload/reconnect/minimized activity/masking AC-09/10/11/18/19 en `workspace/frontend/tests/agent-chat.spec.ts`.
+- [X] T068 [P] [US6] Escribir tests de context assembly, recent messages, summary y entity refs en `workspace/backend/tests/agent-chat/memory.test.ts`.
+- [X] T069 [P] [US6] Extender tests runner con max steps, provider failure, restart snapshot y `cancelled_after_tool` en `workspace/backend/tests/agent-chat/runner.test.ts`.
+- [X] T070 [P] [US6] Extender Playwright con reload/reconnect/minimized activity/masking AC-09/10/11/18/19 en `workspace/frontend/tests/agent-chat.spec.ts`.
 
 ### Implementation for User Story 6
 
-- [ ] T071 [US6] Implementar memoria, resumen versionado y preservación de entity refs/pending actions en `workspace/backend/src/modules/agent-chat/agent-memory.service.ts`.
-- [ ] T072 [US6] Implementar armado de contexto con settings locales, prompt versionado, summary, recent messages y catálogo de tools en `workspace/backend/src/modules/agent-chat/agent-context.service.ts`.
-- [ ] T073 [US6] Integrar límites `AGENT_MAX_*`, max steps, recovery de snapshot y cancelación robusta en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
-- [ ] T074 [US6] Persistir y exponer provider/model, tool count, tokens, errores sanitizados y `lastEventSequence` en runs.
-- [ ] T075 [P] [US6] Completar `activity-panel.tsx` con detalles técnicos sanitizados, estado minimizado y badge del launcher.
-- [ ] T076 [US6] Implementar reconexión con snapshot + `Last-Event-ID`, dedupe `(runId, sequence)` y continuidad al cambiar sección en `agent-chat-panel.tsx`/`agent-api.ts`.
+- [X] T071 [US6] Implementar memoria, resumen versionado y preservación de entity refs/pending actions en `workspace/backend/src/modules/agent-chat/agent-memory.service.ts`.
+- [X] T072 [US6] Implementar armado de contexto con settings locales, prompt versionado, summary, recent messages y catálogo de tools en `workspace/backend/src/modules/agent-chat/agent-context.service.ts`.
+- [X] T073 [US6] Integrar límites `AGENT_MAX_*`, max steps, recovery de snapshot y cancelación robusta en `workspace/backend/src/modules/agent-chat/agent-runner.service.ts`.
+- [X] T074 [US6] Persistir y exponer provider/model, tool count, tokens, errores sanitizados y `lastEventSequence` en runs.
+- [X] T075 [P] [US6] Completar `activity-panel.tsx` con detalles técnicos sanitizados, estado minimizado y badge del launcher.
+- [X] T076 [US6] Implementar reconexión con snapshot + `Last-Event-ID`, dedupe `(runId, sequence)` y continuidad al cambiar sección en `agent-chat-panel.tsx`/`agent-api.ts`.
 
 **Checkpoint**: conversaciones/referencias sobreviven restart y las reconexiones no repiten tools exitosas.
 

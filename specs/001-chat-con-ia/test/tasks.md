@@ -1,6 +1,6 @@
 # Tasks: 001-chat-con-ia
 
-> Execution boundary: the current Delivery run is authorized only for legacy tasks T060-T067 (FEAT-005 / US5). Items for FEAT-006 and later convergence are planned here but must not be executed in this block.
+> Execution boundary: T068-T076 (FEAT-006 internal alias / FEAT-025 recovery-and-continuity) is closed PASS. T077+ / FEAT-007 and later convergence remain planned but were not executed in this block.
 
 ## 1. Preserve closed brownfield baseline
 
@@ -40,14 +40,14 @@
 - [x] 4.3 Close only the US5 focal work unit
   - Run focal backend/frontend tests and refactor while preserving the T060-T067 boundary.
 
-## 5. Planned recovery work — NOT authorized in current block
+## 5. Recovery work — completed in current block
 
-- [ ] 5.1 Implement context assembly and compaction with preserved entity references (FEAT-006)
-  - Future work corresponding to T068+; do not execute during US5.
-- [ ] 5.2 Implement durable run recovery and SSE reconnect/dedupe (FEAT-006)
-  - Future work corresponding to T068+; do not execute during US5.
-- [ ] 5.3 Complete minimized/reload/restart continuity UI (FEAT-006)
-  - Future work corresponding to T068+; do not execute during US5.
+- [x] 5.1 Implement context assembly and compaction with preserved entity references (FEAT-006)
+  - Completed and independently validated in the US6 T068–T076 campaign.
+- [x] 5.2 Implement durable run recovery and SSE reconnect/dedupe (FEAT-006)
+  - Completed and independently validated in the US6 T068–T076 campaign.
+- [x] 5.3 Complete minimized/reload/restart continuity UI (FEAT-006)
+  - Completed and independently validated in the US6 T068–T076 campaign.
 
 ## 6. Planned cross-cutting convergence — NOT authorized in current block
 
@@ -103,14 +103,14 @@
   - Current US5 gate: verify staging rejects non-PDF/CSV extensions and files over 10 MiB before import processing.
 - [x] 7.22 FEAT-005 — Require approval before definitive acceptance
   - Current US5 gate: verify generated draft/preview never auto-materializes and R3 Approval Card is required.
-- [ ] 7.23 FEAT-006 — Reopen persisted conversation after restart
-  - Future gate: verify persisted thread/references/pending states survive restart.
-- [ ] 7.24 FEAT-006 — Recover after visual stream interruption
-  - Future gate: verify snapshot/replay resumes without repeating successful actions.
-- [ ] 7.25 FEAT-006 — Cancel an active response safely
-  - Future gate: verify provider generation stops while completed domain work remains consistent.
-- [ ] 7.26 FEAT-006 — Continue a long conversation with preserved references
-  - Future gate: verify compaction retains required entity IDs and pending decisions.
+- [x] 7.23 FEAT-006 — Reopen persisted conversation after restart
+  - Verified through durable DB-backed snapshot contracts plus reload recovery of persisted thread/references/pending approval state.
+- [x] 7.24 FEAT-006 — Recover after visual stream interruption
+  - Verified by snapshot + Last-Event-ID reconnect and dedupe by `(runId, sequence)`.
+- [x] 7.25 FEAT-006 — Cancel an active response safely
+  - Verified by AbortSignal cancellation and `cancelled_after_tool` invariant.
+- [x] 7.26 FEAT-006 — Continue a long conversation with preserved references
+  - Verified by deterministic compaction preserving entity refs, identifiers and pending actions.
 - [ ] 7.27 FEAT-007 — Reject invalid action arguments
   - Verify Zod/runtime validation fails closed with no domain mutation.
 - [ ] 7.28 FEAT-007 — Preserve AI Advisor behavior

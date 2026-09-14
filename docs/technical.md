@@ -76,7 +76,7 @@ Backend (`workspace/backend/src/`, Fastify plugins registered in `app.ts`):
 | `modules/goals` | Savings goals, contributions, activities | HTTP `/api/goals/*` |
 | `modules/financial-health` | Health snapshots | HTTP `/api/financial-health/*` |
 | `modules/ai-advisor` | Explain-only financial advisor with citations + isolated simulations | HTTP `/api/ai-advisor/*` |
-| `modules/agent-chat` | Persistent conversational agent: messages/runs, closed tool registry, R0-R4 authorization, PDF/CSV attachment staging and import initiation | HTTP `/api/agent/*`; invokes existing domain services, never model→Prisma/SQL or loopback HTTP |
+| `modules/agent-chat` | Persistent conversational agent: messages/runs, closed tool registry, R0-R4 authorization, PDF/CSV staging/import initiation, compacted memory/context assembly and durable recovery snapshots | HTTP `/api/agent/*`; SSE reconnect uses durable snapshots + client-consumed `Last-Event-ID`; invokes existing domain services, never model→Prisma/SQL or loopback HTTP |
 | `modules/global-search` | Cross-entity search | HTTP `/api/search/*` |
 | `modules/settings` | Local settings incl. `hideAmounts`, theme persistence | HTTP `/api/settings/*` |
 
@@ -88,9 +88,9 @@ Frontend (`workspace/frontend/src/`, Next.js App Router, single `page.tsx`):
 | `app/page.tsx` | Home: `AppShell` + `SectionRouter` (client component, section navigation) | renders finance sections |
 | `components/finance/sections/` | 16 sections: asesor-ia, cierres, conciliacion, configuracion, dashboard, deuda-futura, importaciones, ingresos, movimientos, objetivos, presupuestos, reportes, respaldo, salud-financiera, tarjetas + `section-router.tsx` | call `lib/finance/*-api.ts` |
 | `components/finance/` | Domain widgets: alerts, card-statements (11 files: import/preview/accepted/history/sheets), categories, charts (donut/evolution/sparkline), dashboard, goals, imports sheets, layout (app-shell/brand/header/sidebar), preferences, search, transactions | composed by sections |
-| `components/finance/agent/` | Global conversational agent UI: floating launcher/panel, conversation stream, composer, attachment chips, tool cards, approval cards, history/activity surfaces | `lib/finance/agent-api.ts`; stays mounted across section navigation |
+| `components/finance/agent/` | Global conversational agent UI: floating launcher/panel, conversation stream, composer, attachment chips, tool/approval cards, durable activity/recovery state and minimized badge | `lib/finance/agent-api.ts`; persists active conversation across reload and stays mounted across section navigation |
 | `components/ui/` | 48 shadcn primitives (button, dialog, sheet, table, tabs, chart, sidebar, sonner, etc.) | composed by finance components |
-| `lib/finance/` | Domain API clients plus `money.ts`, `financial-amount.ts`, `nav.ts`, `ui-store.ts`, `icons.ts`; `agent-api.ts` covers conversations/messages/runs/attachments/approvals | fetch backend REST/SSE |
+| `lib/finance/` | Domain API clients plus `money.ts`, `financial-amount.ts`, `nav.ts`, `ui-store.ts`, `icons.ts`; `agent-api.ts` covers conversations/messages/run snapshots/attachments/approvals/SSE resume | fetch backend REST/SSE with client-side sequence dedupe |
 | `lib/` | `db.ts`, `utils.ts`, `error-message.ts` | shared helpers |
 | `hooks/` | `use-mobile`, `use-toast` | UI state |
 
@@ -121,6 +121,9 @@ of the product — out of grounding scope).
 - Async flow: REST + polling for AI jobs (`GET /import/:draftId/status`,
   worker poll 2s); Playwright `workers: 1`, `retries: 0`, Desktop Chrome,
   trace/screenshot/video on.
+- Agent recovery: summaries are versioned and bounded; `AgentRun.lastEventSequence`
+  is server observability, while browser `Last-Event-ID` advances only after that
+  browser actually processes an event. Replayed events are deduped by `(runId, sequence)`.
 
 ## Test Setup
 

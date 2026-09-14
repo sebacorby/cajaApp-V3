@@ -99,7 +99,16 @@ export class AgentChatService {
       where: { conversationId: id, ...(options.beforeSequence ? { sequence: { lt: options.beforeSequence } } : {}) },
       orderBy: { sequence: "desc" }, take: limit,
     });
-    return { ...conversationDto(row), messages: messages.reverse().map(messageDto) };
+    const activeRun = await this.db.agentRun?.findFirst?.({
+      where: { conversationId: id, status: { in: ["running", "awaiting_approval"] } },
+      orderBy: { startedAt: "desc" },
+      select: { id: true, status: true, lastEventSequence: true },
+    }) ?? null;
+    return {
+      ...conversationDto(row),
+      activeRun: activeRun ? { id: activeRun.id, status: activeRun.status, lastEventSequence: activeRun.lastEventSequence ?? 0 } : null,
+      messages: messages.reverse().map(messageDto),
+    };
   }
 
   async updateConversation(id: string, input: { title?: string; status?: "active" | "archived" }) {
@@ -235,8 +244,19 @@ export class AgentChatService {
     });
   }
 
-  async getProviderMessages(conversationId: string): Promise<AgentChatMessage[]> {
-    const rows = await this.db.agentMessage.findMany({ where: { conversationId }, orderBy: { sequence: "asc" } });
+  async getProviderMessages(
+    conversationId: string,
+    options: { afterSequence?: number; limit?: number } = {},
+  ): Promise<AgentChatMessage[]> {
+    const fetched = await this.db.agentMessage.findMany({
+      where: {
+        conversationId,
+        ...(options.afterSequence ? { sequence: { gt: options.afterSequence } } : {}),
+      },
+      orderBy: { sequence: options.limit ? "desc" : "asc" },
+      ...(options.limit ? { take: options.limit } : {}),
+    });
+    const rows = options.limit ? [...fetched].reverse() : fetched;
     const parsedRows = rows.map((row) => {
       let parsed: any = {};
       try { parsed = JSON.parse(row.contentJson); } catch { parsed = {}; }

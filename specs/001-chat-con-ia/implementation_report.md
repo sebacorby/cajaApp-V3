@@ -177,3 +177,51 @@ Initial `npm run lint` entered Playwright's generated `playwright-report/trace/a
 - Developer E2E used `workspace/backend/prisma/dev-us5-developer-temp.db` and temporary storage; Tester must independently recreate/verify its own temporary campaign and delete all temporary artifacts afterward.
 - Frontend lint baseline after removing generated Playwright reports is 0 errors / 3 historical warnings in `alert-center.tsx`, `sidebar-data-quality.tsx`, and `salud-financiera-section.tsx`.
 - No tests are skipped or quarantined in the final Developer runs.
+## Round 2 — User Story 6 recovery/continuity (T068–T076)
+
+**Date:** 2026-09-13
+**Branch / baseline:** `feat/agent-chat` from `b0295a95bef414e046d83a4e5631ecff39bcc17c`
+**Authorized boundary:** T068–T076 only; T077+ not started.
+
+### Implemented scope
+
+- Added `AgentMemoryService` with versioned deterministic compaction and preservation of entity references, identifiers and pending actions.
+- Added `AgentContextService` combining versioned prompt, local settings, compacted summary, bounded recent messages and closed tool catalog.
+- Extended runner recovery with one-active-run invariant, durable `lastEventSequence`, max-step termination, sanitized provider failures and `cancelled_after_tool`.
+- Extended run snapshots with provider/model, token/tool metrics, tool calls and pending approval state.
+- Added frontend durable active-conversation recovery, minimized activity badge, sanitized technical activity and structured-result amount masking.
+- Added snapshot + SSE recovery, `Last-Event-ID` reconnect and dedupe by `(runId, sequence)` without treating server snapshot sequence as a client-consumed cursor.
+
+### TDD / implementation evidence
+
+| Scope | Evidence | Result |
+|---|---|---|
+| T068/T071/T072 memory + context | `memory.test.ts` | 2/2 PASS after RED on missing services |
+| T069/T073/T074 runner recovery/invariants | `runner.test.ts` + memory focal | 13/13 PASS |
+| T070/T075/T076 browser recovery | detached Playwright US6 scenarios | 3/3 PASS |
+| Regression browser suite | `agent-chat.spec.ts`, workers=1/retries=0 | 13/13 PASS |
+
+### Regression discovered and corrected
+
+The first full browser regression exposed a real event-cursor defect: the frontend used `snapshot.lastEventSequence` as if it meant “last event consumed by this browser”. When the backend advanced before SSE attachment, fast events such as `ui.navigate`, tool cards and assistant deltas could be skipped. The fix keeps snapshot sequence as durable server observability only and builds `Last-Event-ID` exclusively from the last sequence actually processed by the client. The strengthened reconnect scenario now expects first connection cursor empty, reconnect cursor `4`, and rejects duplicate sequence `4` text.
+
+Historical US5 mocks were extended only to model the new `GET /runs/:id` snapshot contract and pending approval snapshot. No production behavior was weakened for old tests.
+
+### Developer gates
+
+| Gate | Result |
+|---|---|
+| exact Node | `v24.18.0` |
+| Prisma validate/generate/status | PASS; 19 migrations current |
+| backend build/typecheck | PASS |
+| backend full Vitest | 42 files, 257/257 PASS |
+| frontend typecheck | PASS |
+| frontend lint | PASS; 0 errors, same 3 historical warnings |
+| frontend production build | PASS |
+| full browser agent regression | 13/13 PASS |
+| real US5 browser→multipart→draft regression | 1/1 PASS on temporary SQLite |
+| temporary SQLite | `integrity_check=ok`; `foreign_key_check=0` |
+| repository whitespace | `git diff --check` exit 0 |
+| real `dev.db` | SHA-256 unchanged: `7270EF53380B59DAA4B0CEDC2ECD2C0121AE0F89F0A6B1C4517DF4691115D219` |
+
+**Developer result:** GREEN for T068–T076. No T077+ work was performed.

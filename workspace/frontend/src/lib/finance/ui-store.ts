@@ -20,6 +20,7 @@ export type SectionId =
   | "configuracion";
 
 export type Period = "mes" | "trimestre" | "semestre" | "anio";
+export type AgentActivityStatus = "idle" | "running" | "awaiting_approval" | "failed";
 
 export type SearchRecordType =
   | "movement"
@@ -69,6 +70,7 @@ interface FinanceUIState {
   searchTarget: SearchNavigationTarget | null;
   agentOpen: boolean;
   activeAgentConversationId: string | null;
+  agentActivityStatus: AgentActivityStatus;
   setSection: (section: SectionId) => void;
   setPeriod: (period: Period) => void;
   requestNewMovement: () => void;
@@ -79,6 +81,7 @@ interface FinanceUIState {
   clearSearchTarget: () => void;
   setAgentOpen: (open: boolean) => void;
   setActiveAgentConversationId: (conversationId: string | null) => void;
+  setAgentActivityStatus: (status: AgentActivityStatus) => void;
 }
 
 function isoDate(year: number, month: number, day: number): string {
@@ -173,6 +176,7 @@ export const useFinanceUI = create<FinanceUIState>((set) => ({
   searchTarget: null,
   agentOpen: false,
   activeAgentConversationId: null,
+  agentActivityStatus: "idle",
   setSection: (section) =>
     set({
       section,
@@ -209,4 +213,5 @@ export const useFinanceUI = create<FinanceUIState>((set) => ({
   clearSearchTarget: () => set({ searchTarget: null }),
   setAgentOpen: (agentOpen) => set({ agentOpen }),
   setActiveAgentConversationId: (activeAgentConversationId) => set({ activeAgentConversationId }),
+  setAgentActivityStatus: (agentActivityStatus) => set({ agentActivityStatus }),
 }));

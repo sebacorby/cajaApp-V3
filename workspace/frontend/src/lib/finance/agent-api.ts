@@ -46,9 +46,38 @@ export interface AgentMessage {
 }
 
 export interface AgentConversation extends AgentConversationSummary {
+  activeRun?: { id: string; status: AgentRunStatus; lastEventSequence: number } | null;
   messages: AgentMessage[];
 }
 
+export interface AgentRunSnapshotToolCall extends AgentToolCallView {
+  ordinal: number;
+  approval?: {
+    id: string;
+    status: "pending" | "approved" | "rejected" | "expired";
+    argumentsHash: string;
+    impact?: unknown;
+    requestedAt: string;
+    resolvedAt: string | null;
+  } | null;
+}
+
+export interface AgentRunSnapshot {
+  id: string;
+  conversationId: string;
+  status: AgentRunStatus;
+  provider: string;
+  model: string;
+  startedAt: string;
+  completedAt: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  toolCallCount: number;
+  lastEventSequence: number;
+  errorCode: string | null;
+  errorMessage: string | null;
+  toolCalls: AgentRunSnapshotToolCall[];
+}
 export interface AgentAttachment {
   id: string;
   conversationId: string;
@@ -142,6 +171,9 @@ export async function sendAgentMessage(
   }));
 }
 
+export async function getAgentRun(runId: string): Promise<AgentRunSnapshot> {
+  return parseResponse(await fetch(`${API_BASE_URL}/api/agent/runs/${runId}`, { cache: "no-store" }));
+}
 export async function cancelAgentRun(runId: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/agent/runs/${runId}/cancel`, { method: "POST" });
   if (!response.ok) await parseResponse(response);
@@ -163,21 +195,52 @@ export async function rejectAgentToolCall(toolCallId: string, reason?: string): 
 export function subscribeAgentRun(
   runId: string,
   onEvent: (event: AgentEvent) => void,
-  onError?: (error: Event) => void,
+  onError?: (error: Error) => void,
+  afterSequence = 0,
 ): () => void {
-  const source = new EventSource(`${API_BASE_URL}/api/agent/runs/${runId}/events`);
-  const eventTypes: AgentEvent["type"][] = [
-    "run.started", "assistant.delta", "tool.proposed", "tool.started", "tool.completed", "tool.failed",
-    "approval.required", "approval.resolved", "ui.navigate",
-    "assistant.completed", "run.completed", "run.cancelled", "run.failed", "heartbeat",
-  ];
-  for (const type of eventTypes) {
-    source.addEventListener(type, (event) => {
-      const parsed = JSON.parse((event as MessageEvent).data) as AgentEvent;
-      onEvent(parsed);
-      if (["run.completed", "run.cancelled", "run.failed"].includes(parsed.type)) source.close();
-    });
-  }
-  if (onError) source.onerror = onError;
-  return () => source.close();
+  const controller = new AbortController();
+  let terminal = false;
+  void (async () => {
+    try {
+      const headers: Record<string, string> = { Accept: "text/event-stream" };
+      if (afterSequence > 0) headers["Last-Event-ID"] = String(afterSequence);
+      const response = await fetch(`${API_BASE_URL}/api/agent/runs/${runId}/events`, {
+        headers,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) throw new Error(`Agent stream HTTP ${response.status}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (!controller.signal.aborted) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+        let boundary = buffer.indexOf("\n\n");
+        while (boundary >= 0) {
+          const block = buffer.slice(0, boundary).replaceAll("\r", "");
+          buffer = buffer.slice(boundary + 2);
+          const data = block.split("\n").filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trim()).join("\n");
+          if (data) {
+            const parsed = JSON.parse(data) as AgentEvent;
+            onEvent(parsed);
+            if (["run.completed", "run.cancelled", "run.failed"].includes(parsed.type)) {
+              terminal = true;
+              controller.abort();
+              return;
+            }
+          }
+          boundary = buffer.indexOf("\n\n");
+        }
+        if (done) break;
+      }
+      if (!terminal && !controller.signal.aborted) throw new Error("Agent stream disconnected");
+    } catch (caught) {
+      if (!controller.signal.aborted && onError) {
+        onError(caught instanceof Error ? caught : new Error("Agent stream failed"));
+      }
+    }
+  })();
+  return () => controller.abort();
 }

@@ -56,6 +56,7 @@ function approvalDeps(toolName = "test.critical"): ApprovalDeps {
     agentRun: {
       create: vi.fn(async ({ data }: { data: object }) => ({ id: RUN_ID, status: "running", ...data })),
       update: vi.fn(async ({ data }: { data: object }) => Object.assign(runRow, data)),
+      findFirst: vi.fn(async () => null),
       findUnique: vi.fn(async () => ({
         id: RUN_ID,
         conversationId: CONVERSATION_ID,
@@ -259,9 +260,16 @@ describe("AgentRunnerService US4 approvals", () => {
     d.chat.getProviderMessages = roundBasedProviderMessages(toolName, userText, argumentsValue);
     const provider = twoRoundProvider(toolName, argumentsValue);
     const registry = new AgentToolRegistry([criticalEntry(toolName, d.handler)]);
+    const context = {
+      build: vi.fn(async () => {
+        const recent = await d.chat.getProviderMessages(CONVERSATION_ID);
+        const latestUserText = [...recent].reverse().find((message: any) => message.role === "user")?.content ?? "";
+        return { messages: [{ role: "system", content: "TEST PROMPT" }, ...recent], latestUserText };
+      }),
+    };
     const runner = new AgentRunnerService({
       db: d.db, chat: d.chat, provider, eventBus: d.eventBus,
-      registry, executor: d.executor, approvals: d.approvals,
+      registry, executor: d.executor, approvals: d.approvals, context,
     } as never);
     return { ...d, runner };
   }

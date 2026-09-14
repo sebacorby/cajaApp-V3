@@ -1,5 +1,5 @@
 import { Bot } from "lucide-react";
-import type { AgentToolCallView } from "@/lib/finance/agent-api";
+import type { AgentRunSnapshot, AgentToolCallView } from "@/lib/finance/agent-api";
 import { ActivityPanel } from "./activity-panel";
 import { MessageContent } from "./message-content";
 import { ToolCallCard } from "./tool-call-card";
@@ -11,11 +11,11 @@ export interface AgentUiMessage {
   toolCall?: AgentToolCallView;
 }
 
-export function MessageList({ messages }: { messages: AgentUiMessage[] }) {
+export function MessageList({ messages, run }: { messages: AgentUiMessage[]; run?: AgentRunSnapshot | null }) {
   const calls = messages.flatMap((message) => message.toolCall ? [message.toolCall] : []);
   return (
     <div className="space-y-4 px-4 py-5" data-testid="agent-message-list">
-      <ActivityPanel calls={calls} />
+      <ActivityPanel calls={calls} run={run} />
       {messages.map((message) => {
         if (message.role === "tool" && message.toolCall) {
           return <ToolCallCard key={message.id} call={message.toolCall} />;

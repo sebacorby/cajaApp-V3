@@ -103,7 +103,7 @@ alerts (alert-center), preferences (app-preferences-provider), search
   `--chart-1..5` palette (esmeralda, teal, ámbar, rosa, violeta).
 - Section navigation through `SectionRouter` inside `AppShell` (sidebar +
   header + brand), single-route app.
-- The conversational `Agente IA` is a global floating surface mounted above normal section content: launcher at the lower-right, desktop panel / mobile full-screen surface, sticky composer, attachment chips, tool-status cards and explicit approval cards. It reuses existing semantic tokens (`primary`, `card`, `border`, `muted`, `destructive`) rather than introducing a parallel token set.
+- The conversational `Agente IA` is a global floating surface mounted above normal section content: launcher at the lower-right, desktop panel / mobile full-screen surface, sticky composer, attachment chips, tool-status cards and explicit approval cards. Active/recovered work is reflected on the minimized launcher badge and activity surface; reload restores the active conversation/run/approval, while structured tool-result amounts honor `hideAmounts`. It reuses existing semantic tokens (`primary`, `card`, `border`, `muted`, `destructive`) rather than introducing a parallel token set.
 
 ## Register
 

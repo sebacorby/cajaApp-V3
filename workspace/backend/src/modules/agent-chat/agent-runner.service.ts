@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import { env } from "../../config/env.js";
@@ -7,6 +5,8 @@ import { getAgentChatProvider } from "../ai/agent/agent-chat-provider.factory.js
 import type { AgentChatProvider, AgentProviderToolCall } from "../ai/agent/agent-chat-provider.js";
 import { agentChatService, type AgentChatService } from "./agent-chat.service.js";
 import { agentEventsService, type AgentEventsService } from "./agent-events.service.js";
+import { agentContextService, type AgentContextService } from "./agent-context.service.js";
+import type { AgentEventType } from "./agent-types.js";
 import { AgentToolRegistry, agentToolRegistry } from "./agent-tool-registry.js";
 import { AgentToolExecutor, agentToolExecutor, type AgentToolRequest, type ExecutedAgentTool } from "./agent-tool-executor.js";
 import { agentApprovalService, type AgentApprovalDecision, type AgentApprovalService } from "./agent-approval.service.js";
@@ -22,9 +22,16 @@ type RunnerDeps = {
   registry?: AgentToolRegistry;
   executor?: AgentToolExecutor;
   approvals?: AgentApprovalService;
+  context?: AgentContextService;
+  maxSteps?: number;
 };
 
-type ActiveRun = { controller: AbortController; task: Promise<void> };
+type ActiveRun = {
+  controller: AbortController;
+  task: Promise<void>;
+  toolInFlight: boolean;
+  cancelledAfterTool: boolean;
+};
 type PreparedToolCall = {
   providerCall: AgentProviderToolCall;
   dbId: string;
@@ -42,6 +49,8 @@ export class AgentRunnerService {
   private readonly registry: AgentToolRegistry;
   private readonly executor: AgentToolExecutor;
   private readonly approvals: AgentApprovalService;
+  private readonly context: AgentContextService;
+  private readonly maxSteps: number;
   private readonly active = new Map<string, ActiveRun>();
 
   constructor(deps: RunnerDeps = {}) {
@@ -52,10 +61,24 @@ export class AgentRunnerService {
     this.registry = deps.registry ?? agentToolRegistry;
     this.executor = deps.executor ?? agentToolExecutor;
     this.approvals = deps.approvals ?? agentApprovalService;
+    this.context = deps.context ?? agentContextService;
+    this.maxSteps = deps.maxSteps ?? env.AGENT_MAX_STEPS_PER_RUN;
   }
 
   async startRun(conversationId: string, input: { content: string; attachmentIds: string[] }) {
     await this.chat.getConversation(conversationId, { limit: 1 });
+    const existing = await this.db.agentRun.findFirst({
+      where: { conversationId, status: { in: ["running", "awaiting_approval"] } },
+      select: { id: true, status: true },
+      orderBy: { startedAt: "desc" },
+    });
+    if (existing) {
+      throw Object.assign(new Error("This conversation already has an active agent run"), {
+        code: "AGENT_RUN_ACTIVE",
+        statusCode: 409,
+        runId: existing.id,
+      });
+    }
     const userMessage = await this.chat.appendMessage(conversationId, "user", {
       text: input.content,
       attachmentIds: input.attachmentIds,
@@ -70,19 +93,22 @@ export class AgentRunnerService {
       },
     });
     const controller = new AbortController();
-    this.eventBus.publish(run.id, "run.started", { conversationId });
+    await this.publish(run.id, "run.started", { conversationId });
+    const active: ActiveRun = { controller, task: Promise.resolve(), toolInFlight: false, cancelledAfterTool: false };
+    this.active.set(run.id, active);
     const task = this.execute(run.id, conversationId, controller.signal);
-    this.active.set(run.id, { controller, task });
+    active.task = task;
     task.catch(() => undefined);
     return { id: run.id, status: run.status };
   }
 
   async cancelRun(runId: string) {
     const active = this.active.get(runId);
+    if (active?.toolInFlight) active.cancelledAfterTool = true;
     active?.controller.abort();
     if (!active) {
       await this.db.agentRun.update({ where: { id: runId }, data: { status: "cancelled", completedAt: new Date() } });
-      this.eventBus.publish(runId, "run.cancelled", {});
+      await this.publish(runId, "run.cancelled", {});
     }
     return { runId, cancelled: true };
   }
@@ -90,21 +116,59 @@ export class AgentRunnerService {
   async waitForRun(runId: string): Promise<void> {
     await this.active.get(runId)?.task;
   }
-
-  async getRun(runId: string) {
-    const run = await this.db.agentRun.findUnique({ where: { id: runId } });
-    if (!run) return null;
-    return {
-      id: run.id, conversationId: run.conversationId, status: run.status,
-      provider: run.provider, model: run.model,
-      startedAt: run.startedAt.toISOString(), completedAt: run.completedAt?.toISOString() ?? null,
-      inputTokens: run.inputTokens ?? null, outputTokens: run.outputTokens ?? null,
-      errorCode: run.errorCode ?? null, errorMessage: run.errorMessage ?? null,
-    };
+  private async publish(runId: string, type: AgentEventType, payload: AgentJsonValue) {
+    const event = this.eventBus.publish(runId, type, payload);
+    await this.db.agentRun.update({
+      where: { id: runId },
+      data: { lastEventSequence: event.sequence },
+    });
+    return event;
   }
 
-  private async loadSystemPrompt(): Promise<string> {
-    return fs.readFile(path.resolve(env.AGENT_PROMPTS_DIR, "01-agent-system.md"), "utf8");
+  async getRun(runId: string) {
+    const run = await this.db.agentRun.findUnique({
+      where: { id: runId },
+      include: { toolCalls: { orderBy: { ordinal: "asc" }, include: { approval: true } } },
+    });
+    if (!run) return null;
+    const parseJson = (value: string | null | undefined): unknown => {
+      if (!value) return undefined;
+      try { return JSON.parse(value); } catch { return undefined; }
+    };
+    return {
+      id: run.id,
+      conversationId: run.conversationId,
+      status: run.status,
+      provider: run.provider,
+      model: run.model,
+      startedAt: run.startedAt.toISOString(),
+      completedAt: run.completedAt?.toISOString() ?? null,
+      inputTokens: run.inputTokens ?? null,
+      outputTokens: run.outputTokens ?? null,
+      toolCallCount: run.toolCallCount ?? 0,
+      lastEventSequence: run.lastEventSequence ?? 0,
+      errorCode: run.errorCode ?? null,
+      errorMessage: run.errorMessage ?? null,
+      toolCalls: (run.toolCalls ?? []).map((call: any) => ({
+        id: call.id,
+        ordinal: call.ordinal,
+        name: call.toolName,
+        riskClass: call.riskClass,
+        status: call.status,
+        arguments: parseJson(call.argumentsJson),
+        result: parseJson(call.resultJson),
+        errorCode: call.errorCode ?? null,
+        errorMessage: call.errorMessage ?? null,
+        approval: call.approval ? {
+          id: call.approval.id,
+          status: call.approval.status,
+          argumentsHash: call.approval.argumentsHash,
+          impact: parseJson(call.approval.impactSummaryJson),
+          requestedAt: call.approval.requestedAt.toISOString(),
+          resolvedAt: call.approval.resolvedAt?.toISOString() ?? null,
+        } : null,
+      })),
+    };
   }
 
   private explicitArtifactIntent(userText: string): boolean {
@@ -223,13 +287,15 @@ export class AgentRunnerService {
 
   private async markToolStarted(runId: string, item: PreparedToolCall): Promise<void> {
     if (item.status === "succeeded") return;
+    const active = this.active.get(runId);
+    if (active) active.toolInFlight = true;
     const definition = this.registry.lookup(item.providerCall.name);
     if (!definition) return;
     await this.db.agentToolCall.update({
       where: { id: item.dbId },
       data: { status: "running" },
     });
-    this.eventBus.publish(runId, "tool.started", {
+    await this.publish(runId, "tool.started", {
       toolCallId: item.dbId,
       name: item.providerCall.name,
       riskClass: definition.riskClass,
@@ -241,22 +307,22 @@ export class AgentRunnerService {
     let totalOutputTokens = 0;
     let ordinal = 0;
     try {
-      const systemPrompt = await this.loadSystemPrompt();
-      for (let step = 0; step < env.AGENT_MAX_STEPS_PER_RUN; step += 1) {
+      for (let step = 0; step < this.maxSteps; step += 1) {
         if (signal.aborted) throw Object.assign(new Error("Agent run aborted"), { name: "AbortError" });
-        const messages = await this.chat.getProviderMessages(conversationId);
-        const latestUserText = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
+        const context = await this.context.build(conversationId);
+        const messages = context.messages;
+        const latestUserText = context.latestUserText;
         let assistantText = "";
         const toolCalls: AgentProviderToolCall[] = [];
 
         for await (const event of this.provider.stream({
-          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          messages,
           tools: this.registry.listProviderTools(),
           signal,
         })) {
           if (event.type === "text-delta") {
             assistantText += event.text;
-            this.eventBus.publish(runId, "assistant.delta", { text: event.text });
+            await this.publish(runId, "assistant.delta", { text: event.text });
           } else if (event.type === "tool-call") {
             toolCalls.push(event.toolCall);
           } else {
@@ -268,7 +334,7 @@ export class AgentRunnerService {
         if (toolCalls.length === 0) {
           if (assistantText) {
             await this.chat.appendMessage(conversationId, "assistant", { text: assistantText });
-            this.eventBus.publish(runId, "assistant.completed", { text: assistantText });
+            await this.publish(runId, "assistant.completed", { text: assistantText });
           }
           await this.db.agentConversation.update({
             where: { id: conversationId },
@@ -281,7 +347,7 @@ export class AgentRunnerService {
               inputTokens: totalInputTokens || undefined, outputTokens: totalOutputTokens || undefined,
             },
           });
-          this.eventBus.publish(runId, "run.completed", {});
+          await this.publish(runId, "run.completed", {});
           return;
         }
 
@@ -316,7 +382,7 @@ export class AgentRunnerService {
               },
             });
           }
-          this.eventBus.publish(runId, "tool.proposed", {
+          await this.publish(runId, "tool.proposed", {
             toolCallId: row.id, providerCallId: providerCall.id, name: providerCall.name,
             riskClass: definition?.riskClass ?? "UNKNOWN", arguments: executionArguments,
           });
@@ -328,7 +394,7 @@ export class AgentRunnerService {
               text: JSON.stringify({ error: failure }),
               toolCall: { id: row.id, providerCallId: providerCall.id, name: providerCall.name, riskClass: "UNKNOWN", status: "failed", arguments: providerCall.arguments, errorCode: failure.code, errorMessage: failure.message },
             });
-            this.eventBus.publish(runId, "tool.failed", { toolCallId: row.id, name: providerCall.name, ...failure });
+            await this.publish(runId, "tool.failed", { toolCallId: row.id, name: providerCall.name, ...failure });
             continue;
           }
 
@@ -375,7 +441,7 @@ export class AgentRunnerService {
                 errorCode: failure.code, errorMessage: failure.message,
               },
             });
-            this.eventBus.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
+            await this.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
             continue;
           }
           const approval = await this.approvals.requestApproval({
@@ -388,7 +454,7 @@ export class AgentRunnerService {
             where: { id: item.dbId },
             data: { status: "awaiting_approval" },
           });
-          this.eventBus.publish(runId, "approval.required", {
+          await this.publish(runId, "approval.required", {
             toolCallId: item.dbId,
             approvalId: approval.id,
             name: definition.name,
@@ -408,7 +474,7 @@ export class AgentRunnerService {
         for (const item of pendingSequence) {
           const decision = await this.waitApprovalDecision(item.dbId, signal);
           decisions.set(item.dbId, decision);
-          this.eventBus.publish(runId, "approval.resolved", {
+          await this.publish(runId, "approval.resolved", {
             toolCallId: item.dbId,
             status: decision.status,
             argumentsHash: decision.argumentsHash,
@@ -470,7 +536,7 @@ export class AgentRunnerService {
                 result: limited.result, entityRefs: outcome.value.entityRefs,
               },
             });
-            this.eventBus.publish(runId, "tool.completed", {
+            await this.publish(runId, "tool.completed", {
               toolCallId: item.dbId,
               name: item.providerCall.name,
               riskClass: outcome.value.riskClass,
@@ -482,7 +548,7 @@ export class AgentRunnerService {
                 section: ref.section ?? null,
               })),
             });
-            if (item.providerCall.name === "ui.navigate") this.eventBus.publish(runId, "ui.navigate", limited.result);
+            if (item.providerCall.name === "ui.navigate") await this.publish(runId, "ui.navigate", limited.result);
           } else {
             const failure = this.safeToolFailure(outcome.reason);
             const rejected = failure.code === "APPROVAL_REJECTED" || failure.code === "APPROVAL_EXPIRED";
@@ -504,7 +570,7 @@ export class AgentRunnerService {
                 errorCode: failure.code, errorMessage: failure.message,
               },
             });
-            this.eventBus.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
+            await this.publish(runId, "tool.failed", { toolCallId: item.dbId, name: item.providerCall.name, ...failure });
           }
         }
         await this.db.agentRun.update({ where: { id: runId }, data: { toolCallCount: ordinal } });
@@ -512,16 +578,20 @@ export class AgentRunnerService {
       throw Object.assign(new Error("Agent run exceeded the maximum number of tool steps"), { code: "AGENT_MAX_STEPS_EXCEEDED" });
     } catch (error) {
       if ((error as Error)?.name === "AbortError" || signal.aborted) {
-        await this.db.agentRun.update({ where: { id: runId }, data: { status: "cancelled", completedAt: new Date(), toolCallCount: ordinal } });
-        this.eventBus.publish(runId, "run.cancelled", {});
+        const active = this.active.get(runId);
+        const status = active?.cancelledAfterTool ? "cancelled_after_tool" : "cancelled";
+        await this.db.agentRun.update({ where: { id: runId }, data: { status, completedAt: new Date(), toolCallCount: ordinal } });
+        await this.publish(runId, "run.cancelled", { status });
         return;
       }
       const code = typeof (error as any)?.code === "string" ? (error as any).code : "AGENT_RUN_FAILED";
-      const message = error instanceof Error ? error.message.slice(0, 500) : "Agent run failed";
+      const message = code === "AGENT_MAX_STEPS_EXCEEDED"
+        ? "Agent run exceeded the maximum number of tool steps"
+        : "El agente no pudo completar la respuesta.";
       await this.db.agentRun.update({
         where: { id: runId }, data: { status: "failed", completedAt: new Date(), toolCallCount: ordinal, errorCode: code, errorMessage: message },
       });
-      this.eventBus.publish(runId, "run.failed", { code, message });
+      await this.publish(runId, "run.failed", { code, message });
     }
   }
 }

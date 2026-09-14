@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentComposer, type ComposerAttachment } from "./agent-composer";
 import { AgentEmptyState } from "./agent-empty-state";
 import { ApprovalCard } from "./approval-card";
@@ -13,6 +13,7 @@ import {
   createAgentConversation,
   deleteAgentAttachment,
   getAgentConversation,
+  getAgentRun,
   listAgentAttachments,
   listAgentConversations,
   rejectAgentToolCall,
@@ -22,6 +23,8 @@ import {
   type AgentAttachment,
   type AgentConversation,
   type AgentConversationSummary,
+  type AgentEvent,
+  type AgentRunSnapshot,
   type AgentToolCallView,
 } from "@/lib/finance/agent-api";
 import { useFinanceUI, type SearchNavigationTarget, type SectionId } from "@/lib/finance/ui-store";
@@ -33,6 +36,7 @@ const AGENT_NAV_SECTIONS = new Set<SectionId>([
 const SEARCH_TARGET_SECTIONS = new Set(["movimientos", "tarjetas", "ingresos", "presupuestos", "objetivos"]);
 const SEARCH_RECORD_TYPES = new Set(["movement", "card_statement", "income_source", "budget", "goal"]);
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const ACTIVE_CONVERSATION_STORAGE_KEY = "cajaapp-agent-active-conversation";
 
 type PanelAttachment = ComposerAttachment & {
   id?: string;
@@ -81,6 +85,7 @@ export function AgentChatPanel() {
   const setActiveId = useFinanceUI((state) => state.setActiveAgentConversationId);
   const setSection = useFinanceUI((state) => state.setSection);
   const navigateToSearchResult = useFinanceUI((state) => state.navigateToSearchResult);
+  const setActivityStatus = useFinanceUI((state) => state.setAgentActivityStatus);
 
   const [mobile, setMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -89,6 +94,9 @@ export function AgentChatPanel() {
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<PanelAttachment[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
+  const [runSnapshot, setRunSnapshot] = useState<AgentRunSnapshot | null>(null);
+  const [streamEpoch, setStreamEpoch] = useState(0);
+  const lastEventRef = useRef<{ runId: string; sequence: number } | null>(null);
   const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendingApproval, setPendingApproval] = useState<{ call: AgentToolCallView; impact?: unknown } | null>(null);
@@ -102,7 +110,12 @@ export function AgentChatPanel() {
   const loadConversation = useCallback(async (id: string) => {
     const result = await getAgentConversation(id);
     setConversation(result);
-  }, []);
+    if (result.activeRun) {
+      setRunId(result.activeRun.id);
+      setActivityStatus(result.activeRun.status === "awaiting_approval" ? "awaiting_approval" : "running");
+    }
+    return result;
+  }, [setActivityStatus]);
 
   const refreshAttachments = useCallback(async (id: string) => {
     const result = await listAgentAttachments(id);
@@ -113,6 +126,14 @@ export function AgentChatPanel() {
     ]);
   }, []);
 
+  useEffect(() => {
+    const persisted = window.localStorage.getItem(ACTIVE_CONVERSATION_STORAGE_KEY);
+    if (persisted && !activeId) setActiveId(persisted);
+  }, [activeId, setActiveId]);
+
+  useEffect(() => {
+    if (activeId) window.localStorage.setItem(ACTIVE_CONVERSATION_STORAGE_KEY, activeId);
+  }, [activeId]);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 639px)");
     const sync = () => setMobile(media.matches);
@@ -127,17 +148,19 @@ export function AgentChatPanel() {
   }, [open, refreshList]);
 
   useEffect(() => {
-    if (!open || !activeId) {
-      if (!activeId) {
-        setConversation(null);
-        setAttachments([]);
-      }
+    if (!activeId) {
+      setConversation(null);
+      setAttachments([]);
+      setRunSnapshot(null);
+      setActivityStatus("idle");
       return;
     }
-    Promise.all([loadConversation(activeId), refreshAttachments(activeId)]).catch((cause) => {
+    const tasks: Promise<unknown>[] = [loadConversation(activeId)];
+    if (open) tasks.push(refreshAttachments(activeId));
+    Promise.all(tasks).catch((cause) => {
       setError(cause instanceof Error ? cause.message : "No se pudo cargar la conversación");
     });
-  }, [activeId, loadConversation, open, refreshAttachments]);
+  }, [activeId, loadConversation, open, refreshAttachments, setActivityStatus]);
 
   const baseMessages = useMemo(() => toUiMessages(conversation), [conversation]);
   const messages = useMemo(() => {
@@ -145,23 +168,155 @@ export function AgentChatPanel() {
     return [...baseMessages, { id: "streaming", role: "assistant" as const, text: streamText }];
   }, [baseMessages, streamText]);
 
+  const applyRunSnapshot = useCallback((snapshot: AgentRunSnapshot) => {
+    setRunSnapshot(snapshot);
+    const pending = snapshot.toolCalls.find((call) =>
+      call.status === "awaiting_approval" && call.approval?.status === "pending",
+    );
+    if (pending) {
+      setPendingApproval({ call: pending, impact: pending.approval?.impact });
+    } else if (snapshot.status !== "awaiting_approval") {
+      setPendingApproval(null);
+    }
+    if (snapshot.status === "awaiting_approval") setActivityStatus("awaiting_approval");
+    else if (snapshot.status === "running") setActivityStatus("running");
+    else if (snapshot.status === "failed") setActivityStatus("failed");
+    else setActivityStatus("idle");
+  }, [setActivityStatus]);
+
+  const handleRunEvent = useCallback((conversationId: string, event: AgentEvent) => {
+    const last = lastEventRef.current;
+    if (last?.runId === event.runId && event.sequence <= last.sequence) return;
+    lastEventRef.current = { runId: event.runId, sequence: event.sequence };
+    setRunSnapshot((current) => current?.id === event.runId
+      ? { ...current, lastEventSequence: event.sequence }
+      : current);
+
+    if (event.type === "run.started") setActivityStatus("running");
+    if (event.type === "assistant.delta") {
+      const text = typeof event.payload.text === "string" ? event.payload.text : "";
+      setStreamText((current) => current + text);
+    }
+    if (event.type === "tool.completed" || event.type === "tool.failed") {
+      void loadConversation(conversationId);
+      void refreshAttachments(conversationId);
+    }
+    if (event.type === "approval.required") {
+      setActivityStatus("awaiting_approval");
+      setPendingApproval({
+        call: {
+          id: typeof event.payload.toolCallId === "string" ? event.payload.toolCallId : "",
+          name: typeof event.payload.name === "string" ? event.payload.name : "",
+          riskClass: typeof event.payload.riskClass === "string" ? event.payload.riskClass : "",
+          status: "awaiting_approval",
+          arguments: event.payload.arguments,
+        },
+        impact: event.payload.impact,
+      });
+    }
+    if (event.type === "approval.resolved") {
+      setPendingApproval((current) => current && current.call.id === event.payload.toolCallId ? null : current);
+      setActivityStatus("running");
+      void loadConversation(conversationId);
+    }
+    if (event.type === "ui.navigate") {
+      const target = navigationTarget(event.payload);
+      if (target) navigateToSearchResult(target);
+      else if (typeof event.payload.section === "string" && AGENT_NAV_SECTIONS.has(event.payload.section as SectionId)) {
+        setSection(event.payload.section as SectionId);
+      }
+    }
+    if (["run.completed", "run.cancelled", "run.failed"].includes(event.type)) {
+      setRunId(null);
+      setStreamText("");
+      setPendingApproval(null);
+      setActivityStatus(event.type === "run.failed" ? "failed" : "idle");
+      void loadConversation(conversationId);
+      void refreshAttachments(conversationId);
+      void refreshList();
+      if (event.type === "run.failed") {
+        setError(typeof event.payload.message === "string" ? event.payload.message : "El agente no pudo completar la respuesta");
+      }
+    }
+  }, [loadConversation, navigateToSearchResult, refreshAttachments, refreshList, setActivityStatus, setSection]);
+
+  useEffect(() => {
+    if (!runId || !activeId) return;
+    let disposed = false;
+    let unsubscribe: () => void = () => {};
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = async (afterSequence = 0) => {
+      try {
+        const snapshot = await getAgentRun(runId);
+        if (disposed) return;
+        applyRunSnapshot(snapshot);
+        const terminal = ["completed", "cancelled", "cancelled_after_tool", "failed"].includes(snapshot.status);
+        if (terminal) {
+          setRunId(null);
+          setStreamText("");
+          await loadConversation(activeId).catch(() => undefined);
+          return;
+        }
+        const last = lastEventRef.current?.runId === runId ? lastEventRef.current.sequence : 0;
+        const resumeFrom = Math.max(afterSequence, last);
+        if (snapshot.status === "awaiting_approval" && streamEpoch === 0) return;
+        unsubscribe = subscribeAgentRun(runId, (event) => handleRunEvent(activeId, event), async () => {
+          if (disposed) return;
+          try {
+            const recovered = await getAgentRun(runId);
+            if (disposed) return;
+            applyRunSnapshot(recovered);
+            if (["completed", "cancelled", "cancelled_after_tool", "failed"].includes(recovered.status)) {
+              setRunId(null);
+              await loadConversation(activeId).catch(() => undefined);
+              return;
+            }
+            if (recovered.status === "awaiting_approval") return;
+            const processed = lastEventRef.current?.runId === runId ? lastEventRef.current.sequence : 0;
+            reconnectTimer = setTimeout(() => { void connect(processed); }, 250);
+          } catch {
+            setError("No se pudo recuperar el estado del Agente IA.");
+          }
+        }, resumeFrom);
+      } catch (cause) {
+        if (!disposed) setError(cause instanceof Error ? cause.message : "No se pudo recuperar el run del Agente IA");
+      }
+    };
+
+    void connect(lastEventRef.current?.runId === runId ? lastEventRef.current.sequence : 0);
+    return () => {
+      disposed = true;
+      unsubscribe();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, [activeId, applyRunSnapshot, handleRunEvent, loadConversation, runId, streamEpoch]);
   const beginNewChat = useCallback(() => {
+    window.localStorage.removeItem(ACTIVE_CONVERSATION_STORAGE_KEY);
     setActiveId(null);
     setConversation(null);
+    setRunId(null);
+    setRunSnapshot(null);
     setStreamText("");
+    setPendingApproval(null);
+    setActivityStatus("idle");
     setDraft("");
     setAttachments([]);
     setDrawerOpen(false);
     setError(null);
-  }, [setActiveId]);
+  }, [setActiveId, setActivityStatus]);
 
   const selectConversation = useCallback(async (id: string) => {
+    setRunId(null);
+    setRunSnapshot(null);
+    setPendingApproval(null);
+    setActivityStatus("idle");
     setActiveId(id);
     setDrawerOpen(false);
     setStreamText("");
     setError(null);
     await Promise.all([loadConversation(id), refreshAttachments(id)]);
-  }, [loadConversation, refreshAttachments, setActiveId]);
+  }, [loadConversation, refreshAttachments, setActiveId, setActivityStatus]);
 
   const ensureConversation = useCallback(async (): Promise<string> => {
     if (activeId) return activeId;
@@ -234,58 +389,9 @@ export function AgentChatPanel() {
       const started = await sendAgentMessage(conversationId, content, attachmentIds);
       setRunId(started.runId);
       await loadConversation(conversationId);
-      const unsubscribe = subscribeAgentRun(
-        started.runId,
-        (event) => {
-          if (event.type === "assistant.delta") {
-            const text = typeof event.payload.text === "string" ? event.payload.text : "";
-            setStreamText((current) => current + text);
-          }
-          if (event.type === "tool.completed" || event.type === "tool.failed") {
-            loadConversation(conversationId).catch(() => undefined);
-            refreshAttachments(conversationId).catch(() => undefined);
-          }
-          if (event.type === "approval.required") {
-            setPendingApproval({
-              call: {
-                id: typeof event.payload.toolCallId === "string" ? event.payload.toolCallId : "",
-                name: typeof event.payload.name === "string" ? event.payload.name : "",
-                riskClass: typeof event.payload.riskClass === "string" ? event.payload.riskClass : "",
-                status: "awaiting_approval",
-                arguments: event.payload.arguments,
-              },
-              impact: event.payload.impact,
-            });
-          }
-          if (event.type === "approval.resolved") {
-            setPendingApproval((current) =>
-              current && current.call.id === event.payload.toolCallId ? null : current,
-            );
-            loadConversation(conversationId).catch(() => undefined);
-          }
-          if (event.type === "ui.navigate") {
-            const target = navigationTarget(event.payload);
-            if (target) {
-              navigateToSearchResult(target);
-            } else if (typeof event.payload.section === "string" && AGENT_NAV_SECTIONS.has(event.payload.section as SectionId)) {
-              setSection(event.payload.section as SectionId);
-            }
-          }
-          if (["run.completed", "run.cancelled", "run.failed"].includes(event.type)) {
-            unsubscribe();
-            setRunId(null);
-            setStreamText("");
-            setPendingApproval(null);
-            loadConversation(conversationId).catch(() => undefined);
-            refreshAttachments(conversationId).catch(() => undefined);
-            refreshList().catch(() => undefined);
-            if (event.type === "run.failed") {
-              setError(typeof event.payload.message === "string" ? event.payload.message : "El agente no pudo completar la respuesta");
-            }
-          }
-        },
-        () => setError("Se interrumpió el stream. Podés reabrir el chat para recuperar el estado."),
-      );
+      setActivityStatus("running");
+      setRunSnapshot(null);
+      lastEventRef.current = { runId: started.runId, sequence: 0 };
     } catch (cause) {
       setRunId(null);
       setError(cause instanceof Error ? cause.message : "No se pudo enviar el mensaje");
@@ -309,7 +415,7 @@ export function AgentChatPanel() {
   const stop = useCallback(async () => {
     if (!runId) return;
     await cancelAgentRun(runId).catch(() => undefined);
-    setRunId(null);
+    setStreamEpoch((value) => value + 1);
   }, [runId]);
 
   const resolveApproval = useCallback(async (approve: boolean) => {
@@ -322,12 +428,14 @@ export function AgentChatPanel() {
         await rejectAgentToolCall(pendingApproval.call.id);
       }
       setPendingApproval((current) => (current?.call.id === pendingApproval.call.id ? null : current));
+      setActivityStatus("running");
+      setStreamEpoch((value) => value + 1);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo resolver la aprobación");
     } finally {
       setApprovalBusy(false);
     }
-  }, [pendingApproval]);
+  }, [pendingApproval, setActivityStatus]);
 
   if (!open) return null;
 
@@ -362,10 +470,10 @@ export function AgentChatPanel() {
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !runSnapshot ? (
           <AgentEmptyState onSelect={setDraft} />
         ) : (
-          <MessageList messages={messages} />
+          <MessageList messages={messages} run={runSnapshot} />
         )}
       </div>
 

@@ -311,6 +311,7 @@ async function installUs5MockApi(page: Page, options: Us5MockOptions = {}) {
   let uploadRequests = 0;
   let approveRequests = 0;
   let importAttempts = 0;
+  let acceptApprovalRequired = false;
 
   const conversation = () => ({
     id: conversationId,
@@ -432,6 +433,48 @@ async function installUs5MockApi(page: Page, options: Us5MockOptions = {}) {
     if (method === "POST" && url.pathname.includes("/api/agent/tool-calls/") && url.pathname.endsWith("/reject")) {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "rejected" }) });
     }
+    if (method === "GET" && url.pathname.startsWith("/api/agent/runs/") && !url.pathname.endsWith("/events")) {
+      const runId = url.pathname.split("/")[4];
+      const awaitingApproval = runId === "run-us5-accept" && acceptApprovalRequired;
+      const toolCalls = awaitingApproval ? [{
+        id: "tool-accept",
+        ordinal: 1,
+        name: "card_import.accept_draft",
+        riskClass: "R3",
+        status: "awaiting_approval",
+        arguments: { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" },
+        errorCode: null,
+        errorMessage: null,
+        approval: {
+          id: "approval-us5-accept",
+          status: "pending",
+          argumentsHash: "us5-accept-hash",
+          impact: { draftId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", warning: "Materializa movimientos definitivos." },
+          requestedAt: new Date().toISOString(),
+          resolvedAt: null,
+        },
+      }] : [];
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: runId,
+          conversationId,
+          status: awaitingApproval ? "awaiting_approval" : "running",
+          provider: "fake",
+          model: "us5-mock",
+          startedAt: new Date().toISOString(),
+          completedAt: null,
+          inputTokens: null,
+          outputTokens: null,
+          toolCallCount: toolCalls.length,
+          lastEventSequence: awaitingApproval ? 1 : 0,
+          errorCode: null,
+          errorMessage: null,
+          toolCalls,
+        }),
+      });
+    }
     if (method === "GET" && url.pathname.startsWith("/api/agent/runs/") && url.pathname.endsWith("/events")) {
       const runId = url.pathname.split("/")[4];
       const staged = attachments.filter((item) => item.status === "staged");
@@ -494,6 +537,7 @@ async function installUs5MockApi(page: Page, options: Us5MockOptions = {}) {
         events.push({ type: "assistant.delta", payload: { text } });
         events.push({ type: "run.completed", payload: {} });
       } else if (runId === "run-us5-accept") {
+        acceptApprovalRequired = true;
         messages.push(toolMessage("tool-accept", "card_import.accept_draft", "awaiting_approval"));
         events.push({ type: "approval.required", payload: {
           toolCallId: "tool-accept",
@@ -651,4 +695,202 @@ test("FEAT-024 — Require approval before definitive acceptance", async ({ page
   await expect(approval).toHaveAttribute("data-risk-class", "R3");
   await expect(approval).toContainText("Materializa movimientos definitivos.");
   expect(state.approveRequests).toBe(0);
+});
+
+
+test("Agente IA US6: reload recupera conversación, run y approval mientras está minimizado", async ({ page }) => {
+  const conversationId = "66666666-6666-4666-8666-666666666666";
+  const runId = "77777777-7777-4777-8777-777777777777";
+  await page.addInitScript(({ id }) => {
+    window.localStorage.setItem("cajaapp-agent-active-conversation", id);
+  }, { id: conversationId });
+  await page.route("**/api/settings", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      displayName: "Javi", locale: "es-AR", timezone: "America/Argentina/Tucuman",
+      defaultCurrency: "ARS", theme: "system", hideAmounts: false, updatedAt: new Date().toISOString(),
+    }),
+  }));
+  await page.route("**/api/agent/conversations**", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/attachments")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+    }
+    if (url.pathname === `/api/agent/conversations/${conversationId}`) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+        id: conversationId, title: "Chat recuperado", status: "active", lastProvider: "fake", lastModel: "recovery",
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), archivedAt: null,
+        activeRun: { id: runId, status: "awaiting_approval", lastEventSequence: 7 },
+        messages: [{
+          id: "message-persisted", sequence: 1, role: "user", content: { text: "Mensaje persistido antes del reload" }, createdAt: new Date().toISOString(),
+        }],
+      }) });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+      items: [{ id: conversationId, title: "Chat recuperado", status: "active", lastProvider: "fake", lastModel: "recovery", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), archivedAt: null }],
+      nextCursor: null,
+    }) });
+  });
+  await page.route(`**/api/agent/runs/${runId}`, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      id: runId, conversationId, status: "awaiting_approval", provider: "fake", model: "recovery",
+      startedAt: new Date().toISOString(), completedAt: null, inputTokens: 20, outputTokens: 4,
+      toolCallCount: 1, lastEventSequence: 7, errorCode: null, errorMessage: null,
+      toolCalls: [{
+        id: "tool-recovered", ordinal: 1, name: "month_close.create", riskClass: "R3",
+        status: "awaiting_approval", arguments: { monthKey: "2026-08" }, result: null,
+        errorCode: null, errorMessage: null,
+        approval: { id: "approval-recovered", status: "pending", argumentsHash: "hash", impact: { message: "Cerrar agosto" }, requestedAt: new Date().toISOString(), resolvedAt: null },
+      }],
+    }),
+  }));
+
+  await page.goto("/");
+  const activity = page.getByTestId("agent-launcher-activity");
+  await expect(activity).toBeVisible();
+  await expect(activity).toHaveAttribute("data-status", "awaiting_approval");
+  await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+  await expect(page.getByText("Mensaje persistido antes del reload", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("agent-approval-card")).toHaveAttribute("data-tool-name", "month_close.create");
+  await expect(page.getByTestId("agent-activity-panel")).toContainText("fake / recovery");
+  await page.getByRole("button", { name: "Minimizar Agente IA" }).click();
+  await expect(page.getByTestId("agent-launcher-activity")).toBeVisible();
+});
+
+test("Agente IA US6: hideAmounts enmascara resultados estructurados recuperados", async ({ page }) => {
+  const conversationId = "88888888-8888-4888-8888-888888888888";
+  await page.addInitScript(({ id }) => {
+    window.localStorage.setItem("cajaapp-agent-active-conversation", id);
+  }, { id: conversationId });
+  await page.route("**/api/settings", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      displayName: "Javi", locale: "es-AR", timezone: "America/Argentina/Tucuman",
+      defaultCurrency: "ARS", theme: "system", hideAmounts: true, updatedAt: new Date().toISOString(),
+    }),
+  }));
+  await page.route("**/api/agent/conversations**", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/attachments")) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+    }
+    if (url.pathname === `/api/agent/conversations/${conversationId}`) {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+        id: conversationId, title: "Privacidad recuperada", status: "active", lastProvider: "fake", lastModel: "mask",
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), archivedAt: null, activeRun: null,
+        messages: [{
+          id: "tool-message-mask", sequence: 1, role: "tool", createdAt: new Date().toISOString(),
+          content: { text: "", toolCall: {
+            id: "tool-mask", name: "dashboard.get_overview", riskClass: "R0", status: "succeeded",
+            arguments: {}, result: { balanceArs: "12345.67", totalExpense: "9876.54", label: "dato seguro" },
+          } },
+        }],
+      }) });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], nextCursor: null }) });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+  const card = page.getByTestId("agent-tool-card").filter({ hasText: "dashboard.get_overview" });
+  await expect(card).toBeVisible();
+  await card.getByText("Detalle").click();
+  await expect(card).not.toContainText("12345.67");
+  await expect(card).not.toContainText("9876.54");
+  await expect(card).toContainText("••••");
+  await expect(card).toContainText("dato seguro");
+});
+
+
+test("Agente IA US6: reconnect usa Last-Event-ID y deduplica por runId sequence", async ({ page }) => {
+  const conversationId = "99999999-9999-4999-8999-999999999999";
+  const runId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+  let streamRequests = 0;
+  const seenLastEventIds: string[] = [];
+  const streamServer = createServer((request, response) => {
+    if (request.method === "OPTIONS") {
+      response.writeHead(204, {
+        "access-control-allow-origin": "http://127.0.0.1:11437",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-headers": "Last-Event-ID",
+      });
+      return response.end();
+    }
+    if (request.url === `/api/agent/runs/${runId}/events`) {
+      streamRequests += 1;
+      seenLastEventIds.push(String(request.headers["last-event-id"] ?? ""));
+      response.writeHead(200, {
+        "content-type": "text/event-stream",
+        "cache-control": "no-cache",
+        "access-control-allow-origin": "http://127.0.0.1:11437",
+      });
+      const event = (sequence: number, text: string) => response.write(`data: ${JSON.stringify({
+        runId, sequence, timestamp: new Date().toISOString(), type: "assistant.delta", payload: { text },
+      })}\n\n`);
+      if (streamRequests === 1) {
+        event(4, "RECUPERADO");
+        return setTimeout(() => response.end(), 80);
+      }
+      event(4, "RECUPERADO");
+      event(5, " OK");
+      return setTimeout(() => {
+        response.write(`data: ${JSON.stringify({
+          runId, sequence: 6, timestamp: new Date().toISOString(), type: "run.completed", payload: {},
+        })}\n\n`);
+        response.end();
+      }, 3_000);
+    }
+    response.writeHead(404, { "access-control-allow-origin": "http://127.0.0.1:11437" });
+    response.end();
+  });
+  await new Promise<void>((resolve) => streamServer.listen(11438, "127.0.0.1", resolve));
+  try {
+    await page.route(`**/api/agent/runs/${runId}/events`, (route) => {
+      void route.continue({ url: route.request().url().replace("127.0.0.1:11436", "127.0.0.1:11438") });
+    });
+    await page.addInitScript(({ id }) => window.localStorage.setItem("cajaapp-agent-active-conversation", id), { id: conversationId });
+    await page.route("**/api/settings", (route) => route.fulfill({
+      status: 200, contentType: "application/json", body: JSON.stringify({
+        displayName: "Javi", locale: "es-AR", timezone: "America/Argentina/Tucuman", defaultCurrency: "ARS",
+        theme: "system", hideAmounts: false, updatedAt: new Date().toISOString(),
+      }),
+    }));
+    await page.route("**/api/agent/conversations**", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/attachments")) {
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) });
+      }
+      if (url.pathname === `/api/agent/conversations/${conversationId}`) {
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+          id: conversationId, title: "Reconnect", status: "active", lastProvider: "fake", lastModel: "reconnect",
+          createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), archivedAt: null,
+          activeRun: { id: runId, status: "running", lastEventSequence: streamRequests > 0 ? 4 : 3 },
+          messages: [{ id: "reconnect-user", sequence: 1, role: "user", content: { text: "seguí" }, createdAt: new Date().toISOString() }],
+        }) });
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], nextCursor: null }) });
+    });
+    await page.route(`**/api/agent/runs/${runId}`, (route) => route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: runId, conversationId, status: "running", provider: "fake", model: "reconnect",
+        startedAt: new Date().toISOString(), completedAt: null, inputTokens: 2, outputTokens: 0,
+        toolCallCount: 0, lastEventSequence: streamRequests > 0 ? 4 : 3,
+        errorCode: null, errorMessage: null, toolCalls: [],
+      }),
+    }));
+
+    await page.goto("/");
+    await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+    await expect.poll(() => seenLastEventIds.slice(0, 2), { timeout: 8_000 }).toEqual(["", "4"]);
+    await expect(page.getByText("RECUPERADO OK", { exact: true })).toBeVisible();
+    await expect(page.getByText("RECUPERADORECUPERADO OK", { exact: true })).toHaveCount(0);
+  } finally {
+    await new Promise<void>((resolve) => streamServer.close(() => resolve()));
+  }
 });
