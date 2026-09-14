@@ -194,11 +194,11 @@
 
 ## Phase 9: Polish & Cross-Cutting Convergence
 
-- [ ] T077 [P] Agregar pruebas explícitas de que borrar conversación no toca dominio y result projectors no filtran secretos en `workspace/backend/tests/agent-chat/security.test.ts`.
-- [ ] T078 [P] Verificar y extender test existente de no mutación de `ai-advisor` en `workspace/backend/tests/ai-advisor/ai-advisor.service.test.ts` sin cambiar su contrato.
-- [ ] T079 [P] Completar accesibilidad, focus, 44×44 px, responsive 390×844 y dark/light en `workspace/frontend/tests/agent-chat.spec.ts` y componentes `agent/*`.
-- [ ] T080 Ejecutar quickstart focal completo de `specs/001-chat-con-ia/quickstart.md` con provider fake/determinístico para contrato y registrar hallazgos.
-- [ ] T081 Ejecutar `prisma generate`, migrate deploy/status sobre campaña controlada, `PRAGMA integrity_check`/`foreign_key_check`, backend build y Vitest completo con Node `v24.18.0`.
+- [X] T077 [P] Agregar pruebas explícitas de que borrar conversación no toca dominio y result projectors no filtran secretos en `workspace/backend/tests/agent-chat/security.test.ts`.
+- [X] T078 [P] Verificar y extender test existente de no mutación de `ai-advisor` en `workspace/backend/tests/ai-advisor/ai-advisor.service.test.ts` sin cambiar su contrato.
+- [X] T079 [P] Completar accesibilidad, focus, 44×44 px, responsive 390×844 y dark/light en `workspace/frontend/tests/agent-chat.spec.ts` y componentes `agent/*`.
+- [X] T080 Ejecutar quickstart focal completo de `specs/001-chat-con-ia/quickstart.md` con provider fake/determinístico para contrato y registrar hallazgos.
+- [X] T081 Ejecutar `prisma generate`, migrate deploy/status sobre campaña controlada, `PRAGMA integrity_check`/`foreign_key_check`, backend build y Vitest completo con Node `v24.18.0`.
 - [ ] T082 Ejecutar frontend `typecheck`, `lint`, `build` standalone y Playwright completo `workers:1`, `retries:0`, sin skips/filtros.
 - [ ] T083 Restaurar `workspace/backend/prisma/dev.db` al SHA-256 exacto pre-campaña y detener servicios/puertos 11436/11437.
 - [ ] T084 Actualizar `features/`/grounding y documentación viva del agente sólo después de gates verdes.

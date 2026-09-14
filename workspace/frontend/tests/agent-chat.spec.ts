@@ -42,6 +42,10 @@ test.beforeAll(async () => {
       const hasToolResult = toolMessages.length > 0;
       const range = currentRanges();
 
+      if (prompt.includes("compuesto") && !hasToolResult) {
+        openAiSse(response, [{ id: "fake-general", choices: [{ delta: { content: "El interes compuesto reinvierte rendimientos sobre el capital acumulado." }, finish_reason: "stop" }] }]);
+        return;
+      }
       if (prompt.includes("registrá un gasto") && hasToolResult) {
         openAiSse(response, [{ id: "fake-r2-final", choices: [{ delta: { content: "Movimiento registrado una sola vez." }, finish_reason: "stop" }] }]);
         return;
@@ -134,6 +138,35 @@ test("Agente IA: launcher global, minimizar/reabrir y mobile", async ({ page }) 
   await expect(page.getByRole("button", { name: "Abrir Agente IA" })).toBeVisible();
 });
 
+
+test("Quickstart focal: conversación general no usa tools y conserva continuidad", async ({ page }) => {
+  let conversationId: string | null = null;
+  try {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+    const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
+    const createResponse = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === "/api/agent/conversations" && response.request().method() === "POST");
+
+    await composer.fill("Hola, explicame que es interes compuesto");
+    await page.getByRole("button", { name: "Enviar mensaje" }).click();
+    conversationId = ((await (await createResponse).json()) as { id: string }).id;
+
+    await expect(page.getByText("El interes compuesto reinvierte rendimientos sobre el capital acumulado.", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("agent-tool-card")).toHaveCount(0);
+    await page.getByRole("button", { name: "Minimizar Agente IA" }).click();
+    await page.getByRole("button", { name: "Abrir Agente IA" }).click();
+    await expect(page.getByText("Hola, explicame que es interes compuesto", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /^Movimientos$/ }).click();
+    await expect(page.getByTestId("agent-chat-panel")).toBeVisible();
+  } finally {
+    if (conversationId) {
+      const deleted = await page.request.delete(`${API_BASE_URL}/api/agent/conversations/${conversationId}`);
+      expect(deleted.status()).toBe(204);
+    }
+  }
+});
 
 test("Agente IA: read tools reales, multi-tool, navegación y tool inválida", async ({ page }) => {
   let conversationId: string | null = null;
@@ -893,4 +926,68 @@ test("Agente IA US6: reconnect usa Last-Event-ID y deduplica por runId sequence"
   } finally {
     await new Promise<void>((resolve) => streamServer.close(() => resolve()));
   }
+});
+
+
+test("FEAT-007 — Agente IA cumple focus, 44x44, 390x844 y dark/light", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.route("**/api/settings", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      displayName: "Javi", locale: "es-AR", timezone: "America/Argentina/Tucuman",
+      defaultCurrency: "ARS", theme: "system", hideAmounts: false, updatedAt: new Date().toISOString(),
+    }),
+  }));
+  await page.route("**/api/agent/conversations**", async (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === "GET" && url.pathname === "/api/agent/conversations") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [], nextCursor: null }) });
+    }
+    return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ code: "NOT_FOUND" }) });
+  });
+
+  await page.goto("/");
+  const launcher = page.getByRole("button", { name: "Abrir Agente IA" });
+  const launcherBox = await launcher.boundingBox();
+  expect(launcherBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+  expect(launcherBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  await launcher.click();
+  const panel = page.getByTestId("agent-chat-panel");
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute("data-mobile", "true");
+  const panelBox = await panel.boundingBox();
+  expect(panelBox?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect(panelBox?.y ?? -1).toBeGreaterThanOrEqual(0);
+  expect((panelBox?.x ?? 0) + (panelBox?.width ?? 999)).toBeLessThanOrEqual(390);
+  expect((panelBox?.y ?? 0) + (panelBox?.height ?? 999)).toBeLessThanOrEqual(844);
+
+  const undersized = await panel.locator("button, textarea, input, [role='button']").evaluateAll((elements) =>
+    elements.flatMap((element) => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return [];
+      if (rect.width >= 44 && rect.height >= 44) return [];
+      const label = element.getAttribute("aria-label") ?? element.textContent?.trim() ?? element.tagName;
+      return [{ label, width: Math.round(rect.width), height: Math.round(rect.height) }];
+    }),
+  );
+  expect(undersized).toEqual([]);
+
+  const newChat = page.getByRole("button", { name: "Nuevo chat" });
+  await newChat.focus();
+  await expect(newChat).toBeFocused();
+
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(panel).toBeVisible();
+  const composer = page.getByRole("textbox", { name: "Mensaje para Agente IA" });
+  await expect(composer).toBeVisible();
+  await composer.focus();
+  await expect(composer).toBeFocused();
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await expect(panel).toBeVisible();
 });

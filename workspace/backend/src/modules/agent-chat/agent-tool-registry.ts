@@ -174,7 +174,7 @@ const statementIdSchema = z.object({ statementId: uuidSchema });
 const draftIdSchema = z.object({ draftId: uuidSchema });
 const restoreSchema = z.object({ backupId: uuidSchema });
 
-const SECRET_KEYS = /(?:api[_-]?key|token|secret|password|storagepath|filepath|promptfilepath|rawresponsepath|databaseurl|authorization|cookie)/i;
+const SECRET_KEYS = /(?:api[_-]?key|token|secret|password|storagepath|filepath|promptfilepath|rawresponsepath|databaseurl|authorization|cookie|(?:absolute)?path)/i;
 
 function projectValue(value: unknown): AgentJsonValue | undefined {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value;

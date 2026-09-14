@@ -1,4 +1,59 @@
+import { createServer, type Server } from "node:http";
 import { expect, test } from "@playwright/test";
+
+const PROVIDER_PORT = Number(process.env.CAJAAPP_AGENT_FAKE_PROVIDER_PORT ?? 11501);
+let providerServer: Server;
+
+type AdvisorProviderPayload = {
+  allowedSourceIds?: string[];
+  outputContract?: { schemaVersion?: string };
+};
+
+test.beforeAll(async () => {
+  providerServer = createServer((request, response) => {
+    let raw = "";
+    request.on("data", (chunk) => { raw += chunk; });
+    request.on("end", () => {
+      try {
+        const body = JSON.parse(raw || "{}") as { messages?: Array<{ role?: string; content?: string }> };
+        const userMessage = [...(body.messages ?? [])].reverse().find((message) => message.role === "user");
+        const payload = JSON.parse(userMessage?.content ?? "{}") as AdvisorProviderPayload;
+        const sourceId = payload.allowedSourceIds?.[0];
+        if (!sourceId) {
+          response.writeHead(422, { "content-type": "application/json" });
+          response.end(JSON.stringify({ error: { message: "Missing allowed source for deterministic advisor test." } }));
+          return;
+        }
+        const output = {
+          schemaVersion: payload.outputContract?.schemaVersion ?? "advisor-response-v1.0.0",
+          title: "Lectura determinística del período",
+          answer: "La evidencia disponible permite describir el período usando fuentes vigentes de CajaApp.",
+          confidence: "medium",
+          claims: [{ id: "claim-e2e", text: "La lectura se apoya en una fuente vigente de CajaApp.", kind: "fact", sourceIds: [sourceId] }],
+          risks: [], alternatives: [], limitations: [], followUpQuestions: [],
+        };
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({
+          id: "advisor-e2e", model: "fake-agent",
+          choices: [{ finish_reason: "stop", message: { role: "assistant", content: JSON.stringify(output) } }],
+          usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
+        }));
+      } catch {
+        response.writeHead(500, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: { message: "Invalid deterministic advisor request." } }));
+      }
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    providerServer.once("error", reject);
+    providerServer.listen(PROVIDER_PORT, "127.0.0.1", () => {
+      providerServer.off("error", reject);
+      resolve();
+    });
+  });
+});
+
+test.afterAll(async () => new Promise<void>((resolve) => providerServer.close(() => resolve())));
 
 
 const API_BASE_URL = process.env.CAJAAPP_API_BASE_URL ?? "http://127.0.0.1:11436";

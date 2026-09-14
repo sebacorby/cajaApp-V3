@@ -20,9 +20,9 @@ export function ConversationDrawer(props: ConversationDrawerProps) {
       <div className="flex h-full w-[82%] max-w-xs flex-col border-r bg-card shadow-xl">
         <div className="flex items-center justify-between border-b p-3">
           <p className="font-semibold">Conversaciones</p>
-          <Button variant="ghost" size="icon" aria-label="Cerrar historial" onClick={props.onClose}><X className="size-4" /></Button>
+          <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Cerrar historial" onClick={props.onClose}><X className="size-4" /></Button>
         </div>
-        <div className="p-3"><Button className="w-full" variant="outline" onClick={props.onNew}><Plus /> Nuevo chat</Button></div>
+        <div className="p-3"><Button className="min-h-11 w-full" variant="outline" onClick={props.onNew}><Plus /> Nuevo chat</Button></div>
         <div className="flex-1 space-y-1 overflow-y-auto px-2 pb-3">
           {props.items.length === 0 ? (
             <p className="px-2 py-4 text-sm text-muted-foreground">Todavía no hay conversaciones.</p>

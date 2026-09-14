@@ -27,16 +27,16 @@ export function ConversationHeader(props: ConversationHeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" aria-label="Nuevo chat" title="Nuevo chat" onClick={props.onNewChat}>
+        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Nuevo chat" title="Nuevo chat" onClick={props.onNewChat}>
           <Plus className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Historial de Agente IA" title="Historial" onClick={props.onHistory}>
+        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Historial de Agente IA" title="Historial" onClick={props.onHistory}>
           <History className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Minimizar Agente IA" title="Minimizar" onClick={props.onMinimize}>
+        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Minimizar Agente IA" title="Minimizar" onClick={props.onMinimize}>
           <Minus className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Cerrar Agente IA" title="Cerrar" onClick={props.onClose}>
+        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Cerrar Agente IA" title="Cerrar" onClick={props.onClose}>
           <X className="size-4" />
         </Button>
       </div>

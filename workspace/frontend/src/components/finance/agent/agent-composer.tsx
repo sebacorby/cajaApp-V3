@@ -61,6 +61,7 @@ export function AgentComposer(props: AgentComposerProps) {
           type="button"
           variant="ghost"
           size="icon"
+          className="min-h-11 min-w-11"
           disabled={props.disabled || props.running}
           aria-label="Adjuntar archivo"
           title="Adjuntar archivo"
@@ -83,12 +84,13 @@ export function AgentComposer(props: AgentComposerProps) {
           }}
         />
         {props.running ? (
-          <Button type="button" size="icon" variant="outline" aria-label="Detener respuesta" onClick={props.onStop}>
+          <Button type="button" size="icon" variant="outline" className="min-h-11 min-w-11" aria-label="Detener respuesta" onClick={props.onStop}>
             <Square className="size-4" />
           </Button>
         ) : (          <Button
             type="button"
             size="icon"
+            className="min-h-11 min-w-11"
             aria-label="Enviar mensaje"
             disabled={!canSend || props.disabled}
             onClick={props.onSend}

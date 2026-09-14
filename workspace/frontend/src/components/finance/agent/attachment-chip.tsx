@@ -38,7 +38,7 @@ export function AttachmentChip({ fileName, status, error, onRemove }: Attachment
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className="size-11 shrink-0"
           aria-label={`Quitar ${fileName}`}
           onClick={onRemove}
         >

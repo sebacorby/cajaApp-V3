@@ -961,3 +961,25 @@ describe("AI Advisor fingerprint consistency", () => {
     expect(ctxBase.sourceFingerprint).toBe(ctxQuestion.sourceFingerprint);
   });
 });
+
+describe("AI Advisor explain-only boundary", () => {
+  it("ask persiste sólo la interacción del advisor y no invoca mutaciones financieras", async () => {
+    vi.clearAllMocks();
+    setupCollectedMocks();
+    const provider = makeProvider({ rawJson: makeValidAnswerOutput() });
+    const service = new AiAdvisorService(provider);
+
+    await service.ask({
+      from: "2026-07-01",
+      to: "2026-07-31",
+      mode: "analysis",
+      currency: "ARS",
+      question: "Explicame el período sin modificar nada",
+    });
+
+    expect(advisorMocks.prismaAiCreate).toHaveBeenCalledTimes(1);
+    expect(advisorMocks.movementMutation).not.toHaveBeenCalled();
+    expect(advisorMocks.budgetMutation).not.toHaveBeenCalled();
+    expect(advisorMocks.goalMutation).not.toHaveBeenCalled();
+  });
+});
